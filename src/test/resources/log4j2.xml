@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" strict="true">
+    <Properties>
+        <Property name="filename">logfile.log</Property>
+    </Properties>
+    <Appenders>
+        <Appender type="Console" name="Console" target="SYSTEM_OUT">
+            <Layout type="PatternLayout">
+                <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </Layout>
+        </Appender>
+        <Appender type="File" name="FileAppender" fileName="${filename}">
+            <Layout type="PatternLayout">
+                <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+            </Layout>
+        </Appender>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.hibernate.SQL" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <!--Logger name="org.hibernate.type.descriptor.sql" level="trace" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger-->
+        <Logger name="com.umar.apps" level="trace" additivity="false">
+            <!--AppenderRef ref="FileAppender"/-->
+            <AppenderRef ref="Console"/>
+        </Logger>
+    </Loggers>
+</Configuration>
