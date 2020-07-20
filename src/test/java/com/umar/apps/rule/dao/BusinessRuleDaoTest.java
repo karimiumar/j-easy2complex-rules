@@ -11,10 +11,7 @@ import com.umar.apps.rule.dao.api.core.RuleDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +19,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BusinessRuleDaoTest {
     final static RuleDao ruleDao = new RuleDaoImpl("test_rulesPU");
     final static RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl("test_rulesPU");
@@ -37,7 +35,8 @@ public class BusinessRuleDaoTest {
 
     }
 
-    @Test @Order(1)
+    @Test
+    @Order(1)
     public void whenGivenDataThenCounterPartySTPRuleIsCreated() {
         BusinessRule cptyStpRule = createRule("Counterparty STP Rule", "NON-STP",1, "Historic Defaulter Party X", Map.of("counterParty", "java.lang.String"));
         assertNotEquals(-1L, cptyStpRule.getId());

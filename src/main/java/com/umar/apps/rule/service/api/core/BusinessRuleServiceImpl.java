@@ -109,18 +109,30 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             logger.info("Creating a new BusinessRule: {}", businessRule);
             //Need Hibernate's Session object in order to perform save, update or saveUpdate. JPA merge/persist is not enough
             Session session = entityManager.unwrap(Session.class);
-            attributeNameTypeMap.forEach((key, value) -> {
+            attributeNameTypeMap.forEach((attributeName, attributeType) -> {
                 RuleAttribute ruleAttribute = new RuleAttribute();
-                ruleAttribute.setAttributeName(key);
-                ruleAttribute.setAttributeType(value);
+                ruleAttribute.setAttributeName(attributeName);
+                ruleAttribute.setAttributeType(attributeType);
                 ruleAttribute.setRuleType(ruleType);
-                businessRule.addRuleAttribute(ruleAttribute);
-                session.saveOrUpdate(ruleAttribute);
+                Optional<RuleAttribute> optionalRuleAttribute = ruleAttributeDao.findRuleAttribute(attributeName, attributeType, businessRule.getRuleType());
+                if(optionalRuleAttribute.isPresent()) {
+                    RuleAttribute ra = optionalRuleAttribute.get();
+                    fireUpdate(businessRule, entityManager, session, ra);
+                }else {
+                    businessRule.addRuleAttribute(ruleAttribute);
+                    session.saveOrUpdate(ruleAttribute);
+                }
             });
             RuleValue ruleValue = new RuleValue();
             ruleValue.setOperand(operand);
-            businessRule.addRuleValue(ruleValue);
-            session.saveOrUpdate(ruleValue);
+            Optional<RuleValue> optionalRuleValue = ruleValueDao.findByOperand(operand);
+            if(optionalRuleValue.isPresent()){
+                RuleValue rv = optionalRuleValue.get();
+                fireUpdate(businessRule, entityManager, session, rv);
+            }else {
+                businessRule.addRuleValue(ruleValue);
+                session.saveOrUpdate(ruleValue);
+            }
             session.saveOrUpdate(businessRule);
             reference.set(businessRule);
         }, ruleDao);

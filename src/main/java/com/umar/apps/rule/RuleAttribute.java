@@ -23,8 +23,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
 
 
     @Id
-    @SequenceGenerator(name = "rule_attr_seq", sequenceName = "RULE_ATTR_SEQ")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "rule_attr_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "attribute_name")
@@ -36,16 +35,24 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     @Column(name = "rule_type")
     private String ruleType;
 
+    @Column(name = "version")
+    private int version;
+
     @ManyToOne
     @JoinTable(
             name = "rule_attribute",
             joinColumns = @JoinColumn(name = "attribute_id"),
-            inverseJoinColumns = @JoinColumn(name = "rule_id")
+            inverseJoinColumns = @JoinColumn(name = "rule_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"attribute_id","rule_id"})
     )
     private BusinessRule businessRule;
 
     public Long getId() {
         return id;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public void setBusinessRule(BusinessRule rule) {

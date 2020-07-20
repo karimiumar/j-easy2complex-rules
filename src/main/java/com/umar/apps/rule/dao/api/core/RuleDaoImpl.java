@@ -177,7 +177,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 .ON().COLUMN(RULE$RULE).EQ(RULE_VALUE$RULE)
                 .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
                 .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType")
-                .AND().COLUMN(RULE_VALUE$OPERAND).COLUMN(" IN : operands")
+                .AND().COLUMN(RULE_VALUE$OPERAND).IN(":operands")
                 .getSQL();
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
@@ -187,9 +187,8 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                         .setParameter("ruleType", ruleType)
                         .setParameterList("operands", operands).getSingleResult();
                 result.set(row);
-            }catch (Exception e) {
+            }catch (NoResultException e) {
                 //Simply ignore it. This is expected when no data exist.
-                e.printStackTrace();
             }
         });
         if(null != result.get()){

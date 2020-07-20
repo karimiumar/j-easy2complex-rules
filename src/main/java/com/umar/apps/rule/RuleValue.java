@@ -16,19 +16,22 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
     public static final String RULE_VALUE$RULE = "ruleval.businessRule";
 
     @Id
-    @SequenceGenerator(name = "rule_val_seq", sequenceName = "RULE_VAL_SEQ")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "rule_val_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name="operand", unique = true)
     private String operand;
+
+    @Column(name = "version")
+    private int version;
 
     @ManyToOne()
     //@JoinColumn(name = "rule_id")
     @JoinTable(
             name = "rule_operands",
             joinColumns = @JoinColumn(name = "value_id"),
-            inverseJoinColumns = @JoinColumn(name = "rule_id")
+            inverseJoinColumns = @JoinColumn(name = "rule_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"value_id","rule_id"})
     )
     private BusinessRule businessRule;
 
@@ -42,6 +45,10 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
 
     public String getOperand() {
         return operand;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public void setOperand(String operand) {

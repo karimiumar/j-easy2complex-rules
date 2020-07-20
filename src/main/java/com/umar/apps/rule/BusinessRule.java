@@ -28,8 +28,7 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     public static final String RULE$ACTION = "rule.ruleAction";
 
     @Id
-    @SequenceGenerator(name = "rules_seq", sequenceName = "RULES_SEQ")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "rules_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "rule_name")
@@ -50,8 +49,15 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     @OneToMany(mappedBy = "businessRule",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch= FetchType.EAGER, orphanRemoval = true)
     private final Set<RuleValue> ruleValues = new HashSet<>();
 
+    @Column(name = "version")
+    private int version;
+
     //@Column(name = "rule_action")
     @Transient private RuleAction ruleAction;
+
+    public int getVersion() {
+        return version;
+    }
 
     public BusinessRule(){}
 
