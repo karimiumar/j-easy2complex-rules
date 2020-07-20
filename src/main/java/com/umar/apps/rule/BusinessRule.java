@@ -141,13 +141,12 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         return active == rule.active &&
                 Objects.equals(id, rule.id) &&
                 Objects.equals(ruleName, rule.ruleName) &&
-                Objects.equals(ruleType, rule.ruleType) &&
-                Objects.equals(priority, rule.priority);
+                Objects.equals(ruleType, rule.ruleType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, ruleName, ruleType, active, priority);
+        return Objects.hash(id, ruleName, ruleType, active);
     }
 
     @Override
