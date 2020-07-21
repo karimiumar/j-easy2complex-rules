@@ -4,7 +4,7 @@ import com.umar.apps.rule.BusinessRule;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
 import com.umar.simply.jdbc.dml.operations.SelectOp;
-import com.umar.simply.jdbc.dml.operations.SqlFunctions;
+import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;

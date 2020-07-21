@@ -12,7 +12,7 @@ import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
 import com.umar.simply.jdbc.dml.operations.SelectOp;
-import com.umar.simply.jdbc.dml.operations.SqlFunctions;
+import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;

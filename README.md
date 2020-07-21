@@ -6,3 +6,5 @@ Use the given maven command to install it locally.
 
 Once installed use ```mvn clean compile test``` command
 to test rule-engine. 
+
+It's a WIP
