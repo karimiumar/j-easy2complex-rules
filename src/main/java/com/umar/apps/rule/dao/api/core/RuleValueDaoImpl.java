@@ -4,6 +4,7 @@ import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
 import com.umar.simply.jdbc.dml.operations.SelectOp;
+import com.umar.simply.jdbc.dml.operations.SqlFunctions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,15 +18,18 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
 
     private static final Logger logger = LogManager.getLogger(RuleValueDaoImpl.class);
 
-    public RuleValueDaoImpl(String persistenceUnit) {
+    private final SqlFunctions<SelectOp> sqlFunctions;
+
+    public RuleValueDaoImpl(String persistenceUnit, final SqlFunctions<SelectOp> sqlFunctions) {
         super(RuleValue.class, persistenceUnit);
+        this.sqlFunctions = sqlFunctions;
     }
 
     @Override
     public Optional<RuleValue> findByOperand(String operand) {
         logger.info("findByOperand() with operand {}", operand);
         AtomicReference<Object> result = new AtomicReference<>();
-        String sql = SelectOp.create()
+        String sql = sqlFunctions
                 .SELECT().COLUMN(RULE_VALUE)
                 .FROM(RULE_VALUE$ALIAS)
                 .WHERE().COLUMN(RULE_VALUE$OPERAND).EQ(":operand")
@@ -51,7 +55,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
     public Collection<RuleValue> findAll() {
         logger.info("findAll()");
         Collection<RuleValue> ruleValues = new ArrayList<>(Collections.emptyList());
-        String sql = SelectOp.create()
+        String sql = sqlFunctions
                 .SELECT()
                 .COLUMN(RULE_VALUE)
                 .FROM(RULE_VALUE$ALIAS)

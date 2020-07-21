@@ -11,6 +11,8 @@ import com.umar.apps.rule.dao.api.core.RuleDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
+import com.umar.simply.jdbc.dml.operations.SelectOp;
+import com.umar.simply.jdbc.dml.operations.SqlFunctions;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
@@ -21,10 +23,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BusinessRuleDaoTest {
-    final static RuleDao ruleDao = new RuleDaoImpl("test_rulesPU");
-    final static RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl("test_rulesPU");
-    final static RuleValueDao ruleValueDao = new RuleValueDaoImpl("test_rulesPU");
+    final static SqlFunctions<SelectOp> sqlFunctions = SelectOp.create();
+    final static RuleDao ruleDao = new RuleDaoImpl("test_rulesPU", sqlFunctions);
+    final static RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl("test_rulesPU", sqlFunctions);
+    final static RuleValueDao ruleValueDao = new RuleValueDaoImpl("test_rulesPU", sqlFunctions);
     final static BusinessRuleService ruleService = new BusinessRuleServiceImpl(ruleDao, ruleAttributeDao,ruleValueDao);
+
     @AfterAll
     public static void after() {
         ruleDao.closeEntityManagerFactory();
