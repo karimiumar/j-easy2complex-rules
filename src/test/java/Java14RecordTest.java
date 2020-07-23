@@ -7,13 +7,12 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ExampleTest {
+public class Java14RecordTest {
     @Test
     public void test() {
         assertNotEquals(new Name(12L,"Umar Ali"), new Name(12L, "Ali Umar"), "Both are different names");
         NamesDao namesDao = new NamesDao();
         Name umar = new Name(12L,"Mohammad Umar Ali Karimi");
-        boolean succeededInSavingRecordType = false;
         //record types are final so won't be recognised as valid entities by JPA.
         assertThrows(Exception.class, ()-> namesDao.save(umar));
         assertThrows(Exception.class, namesDao::findAll);

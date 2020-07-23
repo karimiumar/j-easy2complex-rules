@@ -1,33 +1,24 @@
 import com.umar.simply.jdbc.dml.operations.InsertOp;
 import com.umar.simply.jdbc.dml.operations.SelectOp;
 import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
-import org.apache.openwebbeans.junit5.Cdi;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Alternative;
-import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Qualifier;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-//@Cdi(disableDiscovery = true, classes = MyBean.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OpenWebbeansTest {
 
@@ -98,6 +89,8 @@ interface ItemDao {
 class ItemProcessor {
     private ItemDao itemDao;
     private SqlFunctionProducer sqlFunctionProducer;
+
+    //Required for CDI.
     protected ItemProcessor(){}
 
     @Inject
