@@ -3,33 +3,42 @@ package com.umar.apps.rule.dao.api.core;
 import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import com.umar.simply.jdbc.dml.operations.SelectOp;
-import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
+import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.rule.RuleValue.*;
 
+@ApplicationScoped
+@Named
 public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements RuleValueDao {
 
     private static final Logger logger = LogManager.getLogger(RuleValueDaoImpl.class);
 
-    private final SqlFunctions<SelectOp> sqlFunctions;
+    @Inject private final SelectFunction selectFunction;
 
-    public RuleValueDaoImpl(String persistenceUnit, final SqlFunctions<SelectOp> sqlFunctions) {
+    //Constructor needed for CDI. Do not remove
+    protected RuleValueDaoImpl() {
+        this(null, null);
+    }
+
+    public RuleValueDaoImpl(String persistenceUnit, final SelectFunction selectFunction) {
         super(RuleValue.class, persistenceUnit);
-        this.sqlFunctions = sqlFunctions;
+        this.selectFunction = selectFunction;
     }
 
     @Override
     public Optional<RuleValue> findByOperand(String operand) {
         logger.info("findByOperand() with operand {}", operand);
         AtomicReference<Object> result = new AtomicReference<>();
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE_VALUE)
                 .FROM(RULE_VALUE$ALIAS)
                 .WHERE().COLUMN(RULE_VALUE$OPERAND).EQ(":operand")
@@ -55,7 +64,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
     public Collection<RuleValue> findAll() {
         logger.info("findAll()");
         Collection<RuleValue> ruleValues = new ArrayList<>(Collections.emptyList());
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT()
                 .COLUMN(RULE_VALUE)
                 .FROM(RULE_VALUE$ALIAS)

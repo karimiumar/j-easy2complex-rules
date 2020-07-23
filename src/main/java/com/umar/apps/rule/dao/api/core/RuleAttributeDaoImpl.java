@@ -3,32 +3,41 @@ package com.umar.apps.rule.dao.api.core;
 import com.umar.apps.rule.RuleAttribute;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import com.umar.simply.jdbc.dml.operations.SelectOp;
-import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
+import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.rule.RuleAttribute.*;
 
+@ApplicationScoped
+@Named
 public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> implements RuleAttributeDao {
 
     private static final Logger logger = LogManager.getLogger(RuleAttributeDaoImpl.class);
-    private final SqlFunctions<SelectOp> sqlFunctions;
+    @Inject private final SelectFunction selectFunction;
 
-    public RuleAttributeDaoImpl(String persistenceUnit, final SqlFunctions<SelectOp> sqlFunctions) {
+    //Constructor needed for CDI. Do not remove
+    protected RuleAttributeDaoImpl() {
+        this(null, null);
+    }
+
+    public RuleAttributeDaoImpl(String persistenceUnit, final SelectFunction selectFunction) {
         super(RuleAttribute.class, persistenceUnit);
-        this.sqlFunctions = sqlFunctions;
+        this.selectFunction = selectFunction;
     }
 
     @Override
     public Collection<RuleAttribute> findAll() {
         logger.info("findAll()");
         Collection<RuleAttribute> ruleValues = new ArrayList<>(Collections.emptyList());
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT()
                 .COLUMN(ATTRIB$ATTRIB)
                 .FROM(ATTRIB$ALIAS)
@@ -46,7 +55,7 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
     public Optional<RuleAttribute> findRuleAttribute(String attributeName, String attributeType, String ruleType) {
         logger.info("findRuleAttribute() with attributeName: {}, attributeType: {}, ruleType: {}", attributeName, attributeType, ruleType);
         AtomicReference<Object> result = new AtomicReference<>();
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(ATTRIB$ATTRIB)
                 .FROM(ATTRIB$ALIAS)
                 .WHERE()

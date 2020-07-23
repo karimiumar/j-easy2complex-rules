@@ -3,34 +3,44 @@ package com.umar.apps.rule.dao.api.core;
 import com.umar.apps.rule.BusinessRule;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import com.umar.simply.jdbc.dml.operations.SelectOp;
-import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
+import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.persistence.NoResultException;
+import javax.persistence.Persistence;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.rule.BusinessRule.*;
 import static com.umar.apps.rule.RuleValue.*;
 
+@ApplicationScoped
+@Named
 public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements RuleDao {
 
     private static final Logger logger = LogManager.getLogger(RuleDaoImpl.class);
-    private final SqlFunctions<SelectOp> sqlFunctions;
+    @Inject private final SelectFunction selectFunction;
 
-    public RuleDaoImpl(final String persistenceUnit, final SqlFunctions<SelectOp> sqlFunctions) {
+    //Constructor needed for CDI. Do not remove
+    protected RuleDaoImpl() {
+        this(null, null);
+    }
+
+    public RuleDaoImpl(final String persistenceUnit, final SelectFunction selectFunction) {
         super(BusinessRule.class, persistenceUnit);
-        this.sqlFunctions = sqlFunctions;
+        this.selectFunction = selectFunction;
     }
 
     @Override
     public Collection<BusinessRule> findAll() {
         logger.info("findAll()");
         Collection<BusinessRule> rules = new ArrayList<>(Collections.emptyList());
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE)
                 .FROM(RULE$ALIAS)
                 .getSQL();
@@ -48,7 +58,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Collection<BusinessRule> findByName(String ruleName) {
         logger.info("findByName() with name: {}", ruleName);
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE)
                 .FROM(RULE$ALIAS)
                 .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
@@ -70,7 +80,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Collection<BusinessRule> findByType(String type) {
         logger.info("findByType() with type: {}", type);
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE)
                 .FROM(RULE$ALIAS)
                 .WHERE().COLUMN(RULE$RULE_TYPE).EQ(":type")
@@ -92,7 +102,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Collection<BusinessRule> findActiveRules(boolean isActive) {
         logger.info("findActiveRules() with isActive: {}", isActive);
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE)
                 .FROM(RULE$ALIAS)
                 .WHERE().COLUMN(RULE$ACTIVE).EQ(":active")
@@ -112,7 +122,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType) {
         logger.info("findByNameAndType() with ruleName: {}, ruleType: {}", ruleName, ruleType);
         AtomicReference<Object> result = new AtomicReference<>();
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT()
                 .COLUMN(RULE$RULE)
                 .FROM(RULE$ALIAS)
@@ -144,7 +154,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Optional<BusinessRule> findByNameTypeAndOperand(String ruleName, String ruleType, String operand) {
         logger.info("findByNameTypeAndOperand() with ruleName: {}, ruleType: {}, operand: {}", ruleName, ruleType, operand);
         AtomicReference<Object> result = new AtomicReference<>();
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE).FROM(RULE$ALIAS)
                 .JOIN().TABLE(RULE_VALUE$ALIAS)
                 .ON().COLUMN(RULE$RULE).EQ(RULE_VALUE$RULE)
@@ -174,7 +184,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Optional<BusinessRule> findByNameTypeAndOperands(String ruleName, String ruleType, List<String> operands) {
         logger.info("findByNameTypeAndOperand() with ruleName: {}, ruleType: {}, operand: {}", ruleName, ruleType, operands);
         AtomicReference<BusinessRule> result = new AtomicReference<>();
-        String sql = sqlFunctions
+        String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE).FROM(RULE$ALIAS)
                 .JOIN().TABLE(RULE_VALUE$ALIAS)
                 .ON().COLUMN(RULE$RULE).EQ(RULE_VALUE$RULE)

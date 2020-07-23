@@ -12,6 +12,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.List;
@@ -20,14 +24,20 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+@ApplicationScoped
+@Named
 public class BusinessRuleServiceImpl implements BusinessRuleService {
 
-    private final RuleDao ruleDao;
-    private final RuleAttributeDao ruleAttributeDao;
-    private final RuleValueDao ruleValueDao;
+    private RuleDao ruleDao;
+    private RuleAttributeDao ruleAttributeDao;
+    private RuleValueDao ruleValueDao;
 
     private static final Logger logger = LogManager.getLogger(BusinessRuleServiceImpl.class);
 
+    //Constructor needed for CDI. Do not remove
+    protected BusinessRuleServiceImpl(){}
+
+    @Inject
     public BusinessRuleServiceImpl(final RuleDao ruleDao, final RuleAttributeDao ruleAttributeDao, final RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;
         this.ruleAttributeDao = ruleAttributeDao;
