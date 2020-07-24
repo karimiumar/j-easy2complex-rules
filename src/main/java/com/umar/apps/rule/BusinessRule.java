@@ -26,6 +26,7 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     public static final String RULE$ACTIVE = "rule.active";
     public static final String RULE$RULE_ATTRIBS = "rule.ruleAttributes";
     public static final String RULE$ACTION = "rule.ruleAction";
+    public static final String RULE$RULE_VALUES = "rule.ruleValues";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

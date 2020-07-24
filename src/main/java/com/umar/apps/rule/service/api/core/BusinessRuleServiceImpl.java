@@ -3,6 +3,7 @@ package com.umar.apps.rule.service.api.core;
 import com.umar.apps.rule.BusinessRule;
 import com.umar.apps.rule.RuleAttribute;
 import com.umar.apps.rule.RuleValue;
+import com.umar.apps.rule.api.Condition;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
@@ -13,14 +14,13 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -35,13 +35,14 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     private static final Logger logger = LogManager.getLogger(BusinessRuleServiceImpl.class);
 
     //Constructor needed for CDI. Do not remove
-    protected BusinessRuleServiceImpl(){}
+    protected BusinessRuleServiceImpl() {
+    }
 
     @Inject
     public BusinessRuleServiceImpl(final RuleDao ruleDao, final RuleAttributeDao ruleAttributeDao, final RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;
         this.ruleAttributeDao = ruleAttributeDao;
-        this.ruleValueDao =ruleValueDao;
+        this.ruleValueDao = ruleValueDao;
     }
 
     @Override
@@ -72,10 +73,10 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                     ruleAttribute.setAttributeType(attributeType);
                     ruleAttribute.setRuleType(ruleType);
                     Optional<RuleAttribute> optionalRuleAttribute = ruleAttributeDao.findRuleAttribute(attributeName, attributeType, businessRule.getRuleType());
-                    if(optionalRuleAttribute.isPresent()) {
+                    if (optionalRuleAttribute.isPresent()) {
                         RuleAttribute ra = optionalRuleAttribute.get();
                         fireUpdate(businessRule, entityManager, session, ra);
-                    }else {
+                    } else {
                         businessRule.addRuleAttribute(ruleAttribute);
                         session.saveOrUpdate(ruleAttribute);
                     }
@@ -84,10 +85,10 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                     RuleValue ruleValue = new RuleValue();
                     ruleValue.setOperand(operand);
                     Optional<RuleValue> optionalRuleValue = ruleValueDao.findByOperand(operand);
-                    if(optionalRuleValue.isPresent()){
+                    if (optionalRuleValue.isPresent()) {
                         RuleValue rv = optionalRuleValue.get();
                         fireUpdate(businessRule, entityManager, session, rv);
-                    }else {
+                    } else {
                         businessRule.addRuleValue(ruleValue);
                         session.saveOrUpdate(ruleValue);
                     }
@@ -104,11 +105,11 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         logger.info("createRule() ruleName: {}, ruleType: {}, priority: {}, operand: {}", ruleName, ruleType, priority, operand);
         //First search a Business Rule by Name, Type and Operand.//TODO add rule active status field to the query list
         BusinessRule persistedRule = findByNameTypeAndOperand(ruleName, ruleType, operand);
-        if(null == persistedRule) {
+        if (null == persistedRule) {
             //Search rule by Name and Type.//TODO add rule active status field to the query list
             persistedRule = findByNameAndType(ruleName, ruleType);
         }
-        if(null != persistedRule) {
+        if (null != persistedRule) {
             fireUpdate(persistedRule, operand, attributeNameTypeMap);
             return persistedRule;
         }
@@ -125,10 +126,10 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 ruleAttribute.setAttributeType(attributeType);
                 ruleAttribute.setRuleType(ruleType);
                 Optional<RuleAttribute> optionalRuleAttribute = ruleAttributeDao.findRuleAttribute(attributeName, attributeType, businessRule.getRuleType());
-                if(optionalRuleAttribute.isPresent()) {
+                if (optionalRuleAttribute.isPresent()) {
                     RuleAttribute ra = optionalRuleAttribute.get();
                     fireUpdate(businessRule, entityManager, session, ra);
-                }else {
+                } else {
                     businessRule.addRuleAttribute(ruleAttribute);
                     session.saveOrUpdate(ruleAttribute);
                 }
@@ -136,10 +137,10 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             RuleValue ruleValue = new RuleValue();
             ruleValue.setOperand(operand);
             Optional<RuleValue> optionalRuleValue = ruleValueDao.findByOperand(operand);
-            if(optionalRuleValue.isPresent()){
+            if (optionalRuleValue.isPresent()) {
                 RuleValue rv = optionalRuleValue.get();
                 fireUpdate(businessRule, entityManager, session, rv);
-            }else {
+            } else {
                 businessRule.addRuleValue(ruleValue);
                 session.saveOrUpdate(ruleValue);
             }
@@ -147,6 +148,50 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             reference.set(businessRule);
         }, ruleDao);
         return reference.get();
+    }
+
+    public <T> Condition getSTPCondition(T workflowItem, String ruleType, String ruleName) {
+        //TODO: Replace with find attributes of WorkflowItem
+        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
+        if(optionalBusinessRule.isPresent()) {
+            BusinessRule businessRule = optionalBusinessRule.get();
+            AtomicReference<Object> object = new AtomicReference<>();
+            AtomicReference<Object> valueObject = new AtomicReference<>();
+            Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
+            //There will be only one STP attribute for a given rule name
+            RuleAttribute ruleAttribute = ruleAttributes.iterator().next();
+            String attributeName = ruleAttribute.getAttributeName();
+            try {
+                Field field = workflowItem.getClass().getDeclaredField(attributeName);
+                field.setAccessible(true);
+                Object value = field.get(workflowItem);
+                valueObject.set(value);
+                Optional<RuleValue> optionalRuleValue = ruleDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute);
+                if(optionalRuleValue.isPresent()){
+                    RuleValue ruleValue = optionalRuleValue.get();
+                    String operand = ruleValue.getOperand();
+                    String attributeType = ruleAttribute.getAttributeType();
+                    //TODO:Use Factory Pattern here
+                    if(attributeType.equals("java.lang.Double")){
+                        Double op = Double.parseDouble(operand);
+                        object.set(op);
+                    } else if(attributeType.equals("java.time.LocalDate")) {
+                        LocalDate settlementDate = LocalDate.parse(operand);
+                        object.set(settlementDate);
+                    }
+                    else {
+                        object.set(operand);
+                    }
+                }
+            }catch (NoSuchFieldException | IllegalAccessException e) {
+                //eat up
+                logger.info("Exception Thrown: {}", e.getMessage());
+            }
+            Object obj = object.get();
+            Object value = valueObject.get();
+            return condition -> value.equals(obj);
+        }
+        return Condition.FALSE;
     }
 
     private void fireUpdate(BusinessRule businessRule, String operand, Map<String, String> attributeNameTypeMap) {
@@ -159,7 +204,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 ruleAttribute.setAttributeType(attributeType);
                 ruleAttribute.setRuleType(businessRule.getRuleType());
                 Optional<RuleAttribute> optionalRuleAttribute = ruleAttributeDao.findRuleAttribute(attributeName, attributeType, businessRule.getRuleType());
-                if(optionalRuleAttribute.isPresent()){
+                if (optionalRuleAttribute.isPresent()) {
                     RuleAttribute ra = optionalRuleAttribute.get();
                     logger.info("RuleAttribute: {} is present in db. Firing Update", ra);
                     fireUpdate(businessRule, entityManager, session, ra);
@@ -170,7 +215,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             RuleValue ruleValue = new RuleValue();
             ruleValue.setOperand(operand);
             Optional<RuleValue> optionalRuleValue = ruleValueDao.findByOperand(operand);
-            if(optionalRuleValue.isPresent()) {
+            if (optionalRuleValue.isPresent()) {
                 RuleValue value = optionalRuleValue.get();
                 logger.info("RuleValue: {} is present in db. Firing Update", value);
                 fireUpdate(businessRule, entityManager, session, value);
@@ -179,20 +224,20 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             }
             if (!entityManager.contains(businessRule)) {
                 logger.info("""
-                                    EntityManager doesn't contain BusinessRule: {} and is detached.
-                                    "Reattaching it by finding from the current context.""", businessRule);
+                        EntityManager doesn't contain BusinessRule: {} and is detached.
+                        "Reattaching it by finding from the current context.""", businessRule);
                 entityManager.find(BusinessRule.class, businessRule.getId());
                 session.merge(businessRule);
             }
-        },ruleDao);
+        }, ruleDao);
     }
 
     private void fireUpdate(BusinessRule businessRule, EntityManager entityManager, Session session, RuleValue value) {
         logger.info("RuleValue: {} is present in db", value);
         if (!entityManager.contains(value)) {
             logger.info("""
-                            EntityManager doesn't contain RuleValue: {} and is detached.
-                            "Reattaching it by finding from the current context.""", value);
+                    EntityManager doesn't contain RuleValue: {} and is detached.
+                    "Reattaching it by finding from the current context.""", value);
             RuleValue rv = entityManager.find(RuleValue.class, value.getId());
             businessRule.addRuleValue(rv);
             session.saveOrUpdate(rv);
@@ -201,10 +246,10 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     private void fireUpdate(BusinessRule businessRule, EntityManager entityManager, Session session, RuleAttribute ruleAttribute) {
         logger.info("RuleAttribute: {} is present in db", ruleAttribute);
-        if(!entityManager.contains(ruleAttribute)){
+        if (!entityManager.contains(ruleAttribute)) {
             logger.info("""
-                EntityManager doesn't contain RuleAttribute: {} and is detached. 
-                Reattaching it by finding from the current context.""", ruleAttribute);
+                    EntityManager doesn't contain RuleAttribute: {} and is detached. 
+                    Reattaching it by finding from the current context.""", ruleAttribute);
             RuleAttribute attribute = entityManager.find(RuleAttribute.class, ruleAttribute.getId());
             businessRule.addRuleAttribute(attribute);
             session.saveOrUpdate(attribute);
@@ -236,10 +281,10 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 .build();
     }
 
-    private void doInJPA(Consumer<EntityManager> consumer, GenericDao<?, Long> dao){
+    private void doInJPA(Consumer<EntityManager> consumer, GenericDao<?, Long> dao) {
         EntityManager entityManager = dao.getEMF().createEntityManager();
         EntityTransaction transaction = entityManager.getTransaction();
-        if(!transaction.isActive()) {
+        if (!transaction.isActive()) {
             transaction.begin();
         }
         consumer.accept(entityManager);

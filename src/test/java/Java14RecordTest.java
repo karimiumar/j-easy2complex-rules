@@ -13,7 +13,7 @@ public class Java14RecordTest {
         assertNotEquals(new Name(12L,"Umar Ali"), new Name(12L, "Ali Umar"), "Both are different names");
         NamesDao namesDao = new NamesDao();
         Name umar = new Name(12L,"Mohammad Umar Ali Karimi");
-        //record types are final so won't be recognised as valid entities by JPA.
+        //record types are final so won't be recognised as valid entities by JPA. However, it does create table
         assertThrows(Exception.class, ()-> namesDao.save(umar));
         assertThrows(Exception.class, namesDao::findAll);
     }

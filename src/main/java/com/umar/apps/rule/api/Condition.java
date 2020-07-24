@@ -10,6 +10,8 @@ import java.util.Objects;
 @FunctionalInterface
 public interface Condition {
 
+    Condition FALSE = fact->false;
+
     Boolean evaluate(Fact<?> fact);
     /**
      * The AND operation applied on facts. Rule will only be applicable

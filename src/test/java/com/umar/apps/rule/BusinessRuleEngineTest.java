@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BusinessRuleEngineTest {
-    //final static RuleDao ruleDao = new RuleDaoImpl("test_rulesPU");
+
     @Test
     public void givenTrade_WhenAllFacts_ThenTradeMarkedNonSTP() {
 

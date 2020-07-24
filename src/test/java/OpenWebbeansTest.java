@@ -41,35 +41,14 @@ public class OpenWebbeansTest {
     }
 
     @Test
-    public void givenContainerWhenItemProcessor_execute_ThenPrintItems() {
+    public void givenContainerWhenItemProcessor$execute_ThenPrintItems() {
         ItemProcessor processor = container.select(ItemProcessor.class).get();
         processor.execute();
     }
 
 }
 
-class Item {
-    private final int value;
-    private final int limit;
-
-    Item(int value, int limit) {
-        this.value = value;
-        this.limit = limit;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + String.format(" [Value=%d, Limit=%d]", value, limit);
-    }
-}
+record Item(int value, int limit) {}
 
 @Qualifier @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD

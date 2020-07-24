@@ -2,6 +2,8 @@ package com.umar.apps.rule.service.api;
 
 import com.umar.apps.rule.BusinessRule;
 import com.umar.apps.rule.RuleAttribute;
+import com.umar.apps.rule.api.Condition;
+import com.umar.apps.rule.engine.WorkflowItem;
 
 import java.util.List;
 import java.util.Map;
@@ -46,5 +48,15 @@ public interface BusinessRuleService {
      * @return Returns a {@link BusinessRule}
      */
     BusinessRule createRule(String ruleName, String ruleType, int priority, String operand, Map<String, String> attributeNameTypeMap);
+
+    /**
+     * Uses Java reflection API to get {@link Condition} based on given parameters.
+     *
+     * @param workflowItem The workflowItem instance
+     * @param ruleType The rule type to use
+     * @param ruleName The rule name to be used for condition
+     * @return Returns a {@link Condition}
+     */
+    public  <T> Condition getSTPCondition(T workflowItem, String ruleType, String ruleName);
 
 }

@@ -63,4 +63,14 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      * @return Returns an optional
      */
     Optional<BusinessRule> findByNameTypeAndOperands(String ruleName, String ruleType, List<String> operands);
+
+    /**
+     * Finds a {@link RuleValue} for the given set of params
+     *
+     * @param ruleName The rule name
+     * @param ruleType The rule type
+     * @param ruleAttribute The {@link RuleAttribute} rule attribute
+     * @return Returns an optional
+     */
+    Optional<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute);
 }

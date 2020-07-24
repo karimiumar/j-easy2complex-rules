@@ -1,6 +1,8 @@
 package com.umar.apps.rule.dao.api.core;
 
 import com.umar.apps.rule.BusinessRule;
+import com.umar.apps.rule.RuleAttribute;
+import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
@@ -17,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.rule.BusinessRule.*;
+import static com.umar.apps.rule.RuleAttribute.*;
 import static com.umar.apps.rule.RuleValue.*;
 
 @ApplicationScoped
@@ -209,5 +212,35 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             return Optional.of(businessRule);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute) {
+        logger.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}", ruleName, ruleType, ruleAttribute);
+        AtomicReference<RuleValue> result = new AtomicReference<>();
+        String sql = selectFunction.select()
+                .SELECT()
+                .COLUMN(RULE_VALUE)
+                .FROM(RULE$ALIAS)
+                .JOIN().TABLE(ATTRIB$ALIAS)
+                .ON().COLUMN(ATTRIB$RULE_TYPE).EQ(RULE$RULE_TYPE)
+                .JOIN().TABLE(RULE_VALUE$ALIAS)
+                .ON().COLUMN(RULE_VALUE$RULE).EQ(RULE$RULE)
+                .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
+                .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType")
+                .AND().COLUMN(ATTRIB$ATTRIB_NAME).EQ(":attributeName")
+                .AND().COLUMN(ATTRIB$ATTRIB_TYPE).EQ(":attributeType")
+                .getSQL();
+        executeInTransaction(entityManager -> {
+            Session session = entityManager.unwrap(Session.class);
+            RuleValue ruleValue = session.createQuery(sql, RuleValue.class)
+                    .setParameter("ruleName", ruleName)
+                    .setParameter("ruleType", ruleType)
+                    .setParameter("attributeName", ruleAttribute.getAttributeName())
+                    .setParameter("attributeType", ruleAttribute.getAttributeType())
+                    .uniqueResult();
+            result.set(ruleValue);
+        });
+        return Optional.ofNullable(result.get());
     }
 }
