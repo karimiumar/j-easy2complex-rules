@@ -63,13 +63,6 @@ public class BusinessRuleServiceCDITest {
         assertEquals("java.lang.String", ruleAttribute.getAttributeType());
         RuleValue ruleValue = ruleValueDao.findByOperand("Historic Defaulter Party X").orElseThrow();
         assertEquals("Historic Defaulter Party X", ruleValue.getOperand());
-        //This should be done at the time of Rule evaluation
-        /*
-        cptyStpRule.setRuleAction(workflowItem -> {
-            trade.setStpAllowed(false);
-            trade.setComment("Counterparty marked as Non-STP");
-        });
-        */
     }
     @Test @Order(2)
     public void whenGivenDataThenCounterPartySTPRuleIsAmendedAndNewOperandIsAdded() {

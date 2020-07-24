@@ -29,7 +29,9 @@ package com.umar.apps.rule.api.core;
 import com.umar.apps.rule.api.Action;
 import com.umar.apps.rule.api.Condition;
 import com.umar.apps.rule.api.Facts;
+import com.umar.apps.rule.api.Rule;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -37,11 +39,13 @@ public class DefaultRule extends BasicRule {
 
     private final Set<Condition> conditions;
     private final List<Action> actions;
+    private final Comparator<Rule> comparator;
 
-    DefaultRule(String name, String description, int priority, Set<Condition> conditions, List<Action> actions) {
+    DefaultRule(String name, String description, int priority, Comparator<Rule> comparator, Set<Condition> conditions, List<Action> actions) {
         super(name,description, priority);
         this.actions = actions;
         this.conditions = conditions;
+        this.comparator = comparator;
     }
 
     @Override
@@ -62,5 +66,10 @@ public class DefaultRule extends BasicRule {
         for(Action action: actions) {
             action.execute(facts);
         }
+    }
+
+    @Override
+    public int compareTo(Rule rule) {
+        return comparator.compare(this, rule);
     }
 }

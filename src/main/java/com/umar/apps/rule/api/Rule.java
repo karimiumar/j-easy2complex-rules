@@ -33,6 +33,7 @@ package com.umar.apps.rule.api;
  */
 public interface Rule extends Comparable<Rule> {
 
+    Long getId();
     /**
      * Default rule name.
      */

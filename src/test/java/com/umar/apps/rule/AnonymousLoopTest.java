@@ -6,25 +6,26 @@ import com.umar.apps.rule.api.core.RuleBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AnonymousLoopTest {
     @Test
     public void test() {
-        Facts facts = new Facts();
-        Rules rules = new Rules();
         RulesEngine rulesEngine = new InferenceRuleEngine();
         List<Name> names = NamesFactory.fetchNames();
-        for(Name name: names) {
-            facts.put("name", name);
-            Condition condition = fact -> !name.name().isEmpty();
-            Rule nameRule = new RuleBuilder()
-                    .name("Name Rule")
-                    .when(condition).then(action -> {
-                        System.out.println(name);
-                    }).build();
+        Rules rules = new Rules();
+        Facts facts = new Facts();
+        AtomicReference<Integer> countRef = new AtomicReference<>(1);
+        names.forEach(personName -> {
+            facts.put("name-" + countRef.get(), personName);
+            countRef.set(countRef.get()+1);
+            Condition condition = fact -> !personName.name().isEmpty();
+            //Hack the comparator logic of DefaultRule/BasicRule in order to override their internal logic as below.
+            Rule nameRule = new RuleBuilder((o1, o2) -> personName.name().compareTo(o1.getName()))
+                    .when(condition).then(action -> System.out.println("In Action:" + personName)).build();
             rules.register(nameRule);
-            rulesEngine.fire(rules, facts);
-        }
+        });
+        rulesEngine.fire(rules, facts);
     }
 }
 
@@ -32,6 +33,6 @@ record Name(Integer id, String name){}
 
 class NamesFactory{
     static List<Name> fetchNames(){
-        return List.of(new Name(10, "Sara"), new Name(20, "Zara"), new Name(30, "Lara"));
+        return List.of(new Name(10, "Sara"), new Name(20, "Zara"), new Name(30, ""),new Name(40, "Lara"));
     }
 }

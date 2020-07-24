@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -81,33 +80,24 @@ public class RuleEngineCDITest {
     public void givenCashFlows_WhenFact_Then_ApplyRules() {
         CashflowDao cashflowDao = container.select(CashflowDao.class).get();
         BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
-        Facts facts = new Facts();
-        Rules rules = new Rules();
         RulesEngine rulesEngine = new InferenceRuleEngine();
         Collection<Cashflow> cashflows = cashflowDao.findAll();
+        Facts facts = new Facts();
+        Rules rules = new Rules();
+        int cnt = 1;
         for(Cashflow cashflow: cashflows) {
-            facts.put("cashflow", cashflow);
+            facts.put("cashflow-" + cnt, cashflow);
+            cnt++;
             Condition condition = ruleService.getSTPCondition(cashflow, "NON-STP", "Counterparty STP Rule");
-            Rule stpRules = getRule(cashflowDao, cashflow, condition);
+            //Hack the comparator logic of DefaultRule/BasicRule in order to override their internal logic as below.
+            //Otherwise the first cashflow in the collection will be the only Rule in Rules registered.
+            Rule stpRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
+                    .when(condition).then(action -> {
+                        cashflowDao.applySTPRule(cashflow, "Cashflow marked as NON-STP.");
+                    }).build();
             rules.register(stpRules);
-            rulesEngine.fire(rules, facts);
         }
-    }
-
-    private Rule getRule(CashflowDao cashflowDao, Cashflow cashflow, Condition condition) {
-        System.out.println("Cashflow to evaluate:" + cashflow.getId());
-        return new RuleBuilder().when(condition).then(new Action() {
-            @Override
-            public void execute(Facts facts) throws Exception {
-                System.out.println("Cashflow Id to Load: " + cashflow.getId());
-                //cashflowDao.applySTPRule(cashflow, "Cashflow marked as NON-STP.");
-            }
-        }).build();
-        /*return new RuleBuilder()
-                        .when(condition).then(action -> {
-                            System.out.println("Cashflow to evaluate:" + cashflow.getId());
-                            cashflowDao.applySTPRule(cashflow, "Cashflow marked as NON-STP.");
-                        }).build();*/
+        rulesEngine.fire(rules, facts);
     }
 
     @Test @Order(3)

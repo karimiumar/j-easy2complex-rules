@@ -30,7 +30,7 @@ public class BusinessRuleEngineTest {
         Condition counterPartyCondition = getCondition(trade, "counterParty", "Historic Defaulter Party X");
         Condition currencyCondition = getCondition(trade, "currency", "KOD");
         Condition amountCondition = getCondition(trade, "amount", 2300000.00);
-        Rule stpRules = new RuleBuilder()
+        Rule stpRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(trade.getId()))
                 .name("STP Rules")
                 .when(counterPartyCondition.and(currencyCondition).and(amountCondition)).then(action -> {
                     applySTPRule(tradeDao, trade, "Trade marked as NON-STP.");
@@ -61,7 +61,7 @@ public class BusinessRuleEngineTest {
         Condition currencyCondition = getCondition(trade, "currency", "KOD");//Store this fact in Database. Use reflection API to invoke this equals
         Condition amountCondition = getCondition(trade, "amount", 2300000.00);//Store this fact in Database. Use reflection API to invoke this equals
         //All the conditions should be part of database objects and created at runtime.
-        Rule stpRules = new RuleBuilder()
+        Rule stpRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(trade.getId()))
                 .name("STP Rules")
                 .when(counterPartyCondition.and(currencyCondition).and(amountCondition)).then(action -> {
                     applySTPRule(tradeDao, trade, "Trade marked as NON-STP.");
@@ -92,7 +92,7 @@ public class BusinessRuleEngineTest {
         Condition currencyCondition = getCondition(trade, "currency", "KOD");//Store this fact in Database. Use reflection API to invoke this equals
         Condition amountCondition = getCondition(trade, "amount", 2300000.00);//Store this fact in Database. Use reflection API to invoke this equals
         //All the conditions should be part of database objects and created at runtime.
-        Rule stpRules = new RuleBuilder()
+        Rule stpRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(trade.getId()))
                 .name("STP Rules")
                 .when(counterPartyCondition.or(currencyCondition).or(amountCondition)).then(action -> {
                     applySTPRule(tradeDao, trade, "Trade marked as NON-STP.");
@@ -121,7 +121,7 @@ public class BusinessRuleEngineTest {
         facts.put("trade", trade);
         Condition counterPartyCondition = getCondition(trade, "counterParty", "Historic Defaulter Party X");//Store this fact in Database. Use reflection API to invoke this equals
         //All the conditions should be part of database objects and created at runtime.
-        Rule stpRules = new RuleBuilder()
+        Rule stpRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(trade.getId()))
                 .name("STP Rules")
                 .when(counterPartyCondition.not()).then(action -> {
                     applySTPRule(tradeDao, trade, "Trade marked as NON-STP. Rule Condition inversed.");
@@ -152,7 +152,7 @@ public class BusinessRuleEngineTest {
         Condition currencyCondition = getCondition(trade, "currency", "KOD");//Store this fact in Database. Use reflection API to invoke this equals
         Condition amountCondition = getCondition(trade, "amount", 2300000.00);//Store this fact in Database. Use reflection API to invoke this equals
         //All the conditions should be part of database objects and created at runtime.
-        Rule stpRules = new RuleBuilder()
+        Rule stpRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(trade.getId()))
                 .name("STP Rules")
                 .when(counterPartyCondition.or(currencyCondition).or(amountCondition))
                 .then(action -> {

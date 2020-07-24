@@ -5,11 +5,12 @@ import com.umar.apps.rule.engine.WorkflowItem;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @Entity
 @Table(name = "cashflows")
-public class Cashflow implements WorkflowItem<Long> {
+public class Cashflow implements WorkflowItem<Long>, Comparable<Cashflow> {
 
     public static final String CASHFLOW = "cf";
     public static final String CASHFLOW_ALIAS = "Cashflow cf";
@@ -125,6 +126,26 @@ public class Cashflow implements WorkflowItem<Long> {
         return note;
     }
 
+    @Override
+    public int compareTo(Cashflow other) {
+        int cptyDiff = counterParty.compareTo(other.counterParty);
+        if(cptyDiff != 0) return cptyDiff;
+
+        int settlementDateDiff = settlementDate.compareTo(other.settlementDate);
+        if(settlementDateDiff != 0) return settlementDateDiff;
+
+        int idDiff = id.compareTo(other.id);
+        if(idDiff != 0) return idDiff;
+
+        int currDiff = currency.compareTo(other.currency);
+        if(currDiff != 0) return currDiff;
+
+        int createdOnDiff = createdOn.compareTo(other.createdOn);
+        if(createdOnDiff != 0) return createdOnDiff;
+
+        return amount.compareTo(other.amount);
+    }
+
     public static class CashflowBuilder {
 
         public CashflowBuilder with(Consumer<CashflowBuilder> consumer) {
@@ -148,5 +169,23 @@ public class Cashflow implements WorkflowItem<Long> {
     @Override
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Cashflow cashflow)) return false;
+        return stpAllowed == cashflow.stpAllowed &&
+                id.equals(cashflow.id) &&
+                counterParty.equals(cashflow.counterParty) &&
+                currency.equals(cashflow.currency) &&
+                settlementDate.equals(cashflow.settlementDate) &&
+                amount.equals(cashflow.amount) &&
+                createdOn.equals(cashflow.createdOn);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, counterParty, currency, settlementDate, amount, createdOn, stpAllowed);
     }
 }

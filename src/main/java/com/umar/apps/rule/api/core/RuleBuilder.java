@@ -40,6 +40,11 @@ public class RuleBuilder {
     private int priority = Rule.DEFAULT_PRIORITY;
     private final Set<Condition> conditions = new LinkedHashSet<>();
     private final List<Action> actions = new ArrayList<>();
+    private Comparator<Rule> comparator;
+
+    public RuleBuilder(Comparator<Rule> comparator) {
+        this.comparator = comparator;
+    }
 
     /**
      * Sets the Rule name
@@ -117,6 +122,6 @@ public class RuleBuilder {
      * @return Returns an instance of Rule
      */
     public Rule build() {
-        return new DefaultRule(name, description, priority, conditions, actions);
+        return new DefaultRule(name, description, priority, comparator, conditions, actions);
     }
 }

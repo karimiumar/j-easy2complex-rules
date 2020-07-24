@@ -74,6 +74,11 @@ public class BasicRule implements Rule {
     }
 
     @Override
+    public Long getId() {
+        return 0L;
+    }
+
+    @Override
     public String getName() {
         return name;
     }
