@@ -36,11 +36,10 @@ import java.util.*;
  */
 public class RuleBuilder {
     private String name = Rule.DEFAULT_NAME;
-    private String description = Rule.DEFAULT_DESCRIPTION;
     private int priority = Rule.DEFAULT_PRIORITY;
     private final Set<Condition> conditions = new LinkedHashSet<>();
     private final List<Action> actions = new ArrayList<>();
-    private Comparator<Rule> comparator;
+    private final Comparator<Rule> comparator;
 
     public RuleBuilder(Comparator<Rule> comparator) {
         this.comparator = comparator;
@@ -54,16 +53,6 @@ public class RuleBuilder {
      */
     public RuleBuilder name(String name) {
         this.name = name;
-        return this;
-    }
-
-    /**
-     * Sets the Rule description
-     * @param description The description of Rule
-     * @return Returns the instance
-     */
-    public RuleBuilder description(String description) {
-        this.description = description;
         return this;
     }
 
@@ -89,17 +78,6 @@ public class RuleBuilder {
         return this;
     }
 
-    /**
-     * Set the rule condition
-     *
-     * @param conditions The set of conditions applicable to the Rule
-     * @return Returns this instance
-     */
-    public RuleBuilder when(Set<Condition> conditions) {
-        this.conditions.addAll(conditions);
-        return this;
-    }
-
     public RuleBuilder and(Condition condition) {
         this.conditions.add(condition);
         return this;
@@ -122,6 +100,6 @@ public class RuleBuilder {
      * @return Returns an instance of Rule
      */
     public Rule build() {
-        return new DefaultRule(name, description, priority, comparator, conditions, actions);
+        return new DefaultRule(name, priority, comparator, conditions, actions);
     }
 }

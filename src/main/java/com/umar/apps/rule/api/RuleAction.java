@@ -4,5 +4,5 @@ import com.umar.apps.rule.engine.WorkflowItem;
 
 @FunctionalInterface
 public interface RuleAction {
-    void apply(WorkflowItem workflowItem);
+    void apply(WorkflowItem<Long> workflowItem);
 }

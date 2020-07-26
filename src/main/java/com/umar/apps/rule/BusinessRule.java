@@ -1,6 +1,5 @@
 package com.umar.apps.rule;
 
-import com.umar.apps.rule.api.RuleAction;
 import com.umar.apps.rule.engine.WorkflowItem;
 
 import javax.persistence.*;
@@ -25,8 +24,6 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     public static final String RULE$RULE_TYPE = "rule.ruleType";
     public static final String RULE$ACTIVE = "rule.active";
     public static final String RULE$RULE_ATTRIBS = "rule.ruleAttributes";
-    public static final String RULE$ACTION = "rule.ruleAction";
-    public static final String RULE$RULE_VALUES = "rule.ruleValues";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,14 +44,8 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     @OneToMany(mappedBy = "businessRule", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER, orphanRemoval = true)
     private final Set<RuleAttribute> ruleAttributes = new HashSet<>();
 
-    @OneToMany(mappedBy = "businessRule",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch= FetchType.EAGER, orphanRemoval = true)
-    private final Set<RuleValue> ruleValues = new HashSet<>();
-
     @Column(name = "version")
     private int version;
-
-    //@Column(name = "rule_action")
-    @Transient private RuleAction ruleAction;
 
     public int getVersion() {
         return version;
@@ -69,9 +60,6 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         priority = builder.priority;
         if(null != builder.ruleAttribute) {
             addRuleAttribute(builder.ruleAttribute);
-        }
-        if(null != builder.ruleValue) {
-            addRuleValue(builder.ruleValue);
         }
     }
 
@@ -107,14 +95,6 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         this.active = active;
     }
 
-    public RuleAction getRuleAction() {
-        return ruleAction;
-    }
-
-    public void setRuleAction(RuleAction ruleAction) {
-        this.ruleAction = ruleAction;
-    }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -132,28 +112,20 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         return ruleAttributes;
     }
 
-    public Set<RuleValue> getRuleValues() {
-        return ruleValues;
-    }
-
-    public void addRuleValue(RuleValue ruleValue) {
-        this.ruleValues.add(ruleValue);
-        ruleValue.setBusinessRule(this);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BusinessRule rule)) return false;
-        return active == rule.active &&
-                Objects.equals(id, rule.id) &&
-                Objects.equals(ruleName, rule.ruleName) &&
-                Objects.equals(ruleType, rule.ruleType);
+        if (!(o instanceof BusinessRule that)) return false;
+        return priority == that.priority &&
+                active == that.active &&
+                ruleName.equals(that.ruleName) &&
+                ruleType.equals(that.ruleType) &&
+                ruleAttributes.equals(that.ruleAttributes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, ruleName, ruleType, active);
+        return Objects.hash(ruleName, priority, ruleType, active, ruleAttributes);
     }
 
     @Override
@@ -173,7 +145,6 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         public boolean active;
         public int priority;
         public RuleAttribute ruleAttribute;
-        public RuleValue ruleValue;
 
         public BusinessRuleBuilder(String ruleName, String ruleType) {
             this.ruleName = ruleName;

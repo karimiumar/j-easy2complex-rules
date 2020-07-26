@@ -4,12 +4,14 @@ import com.umar.apps.rule.engine.WorkflowItem;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "attributes"
         , uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"attribute_name", "type", "rule_type"})
+        @UniqueConstraint(columnNames = {"attribute_name", "rule_type"})
 }
 )
 public class RuleAttribute implements WorkflowItem<Long>, Serializable {
@@ -18,8 +20,9 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     public static final String ATTRIB$ALIAS = "RuleAttribute attr";
     public static final String ATTRIB$ATTRIB = "attr";
     public static final String ATTRIB$ATTRIB_NAME ="attr.attributeName";
-    public static final String ATTRIB$ATTRIB_TYPE ="attr.attributeType";
     public static final String ATTRIB$RULE_TYPE ="attr.ruleType";
+    public static final String ATTRIB$RULE = "attr.businessRule";
+    public static final String ATTRIB$DISPLAY_NAME = "attr.displayName";
 
 
     @Id
@@ -29,14 +32,14 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     @Column(name = "attribute_name")
     private String attributeName;
 
-    @Column(name = "type")
-    private String attributeType;
-
     @Column(name = "rule_type")
     private String ruleType;
 
     @Column(name = "version")
     private int version;
+
+    @Column(name = "display_name")
+    private String displayName;
 
     @ManyToOne
     @JoinTable(
@@ -46,6 +49,9 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
             uniqueConstraints = @UniqueConstraint(columnNames = {"attribute_id","rule_id"})
     )
     private BusinessRule businessRule;
+
+    @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch= FetchType.EAGER, orphanRemoval = true)
+    private final Set<RuleValue> ruleValues = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -75,14 +81,6 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         this.attributeName = attributeName;
     }
 
-    public String getAttributeType() {
-        return attributeType;
-    }
-
-    public void setAttributeType(String attributeType) {
-        this.attributeType = attributeType;
-    }
-
     public String getRuleType() {
         return ruleType;
     }
@@ -91,19 +89,47 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         this.ruleType = ruleType;
     }
 
+    public Set<RuleValue> getRuleValues() {
+        return ruleValues;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void removeRuleValue(RuleValue ruleValue) {
+        ruleValues.remove(ruleValue);
+        ruleValue.setRuleAttribute(null);
+    }
+
+    public void addRuleValue(RuleValue ruleValue) {
+        ruleValues.add(ruleValue);
+        ruleValue.setRuleAttribute(this);
+    }
+
+    public boolean equalByNameAndType(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RuleAttribute that)) return false;
+        return attributeName.equals(that.attributeName) &&
+                ruleType.equals(that.ruleType);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof RuleAttribute that)) return false;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(attributeName, that.attributeName) &&
-                Objects.equals(attributeType, that.attributeType) &&
-                Objects.equals(ruleType, that.ruleType);
+        return attributeName.equals(that.attributeName) &&
+                ruleType.equals(that.ruleType) &&
+                ruleValues.equals(that.ruleValues);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, attributeName, attributeType, ruleType);
+        return Objects.hash(attributeName, ruleType, ruleValues);
     }
 
     @Override
@@ -111,7 +137,6 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         return "RuleAttribute{" +
                 "id=" + id +
                 ", attributeName='" + attributeName + '\'' +
-                ", attributeType='" + attributeType + '\'' +
                 ", ruleType='" + ruleType + '\'' +
                 '}';
     }

@@ -40,11 +40,6 @@ public interface Rule extends Comparable<Rule> {
     String DEFAULT_NAME = "rule";
 
     /**
-     * Default rule description.
-     */
-    String DEFAULT_DESCRIPTION = "description";
-
-    /**
      * Default rule priority.
      */
     int DEFAULT_PRIORITY = Integer.MAX_VALUE - 1;
@@ -55,14 +50,6 @@ public interface Rule extends Comparable<Rule> {
      */
     default String getName() {
         return DEFAULT_NAME;
-    }
-
-    /**
-     * Getter for rule description.
-     * @return rule description
-     */
-    default String getDescription() {
-        return DEFAULT_DESCRIPTION;
     }
 
     /**

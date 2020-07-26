@@ -34,7 +34,6 @@ import java.lang.reflect.Proxy;
 public class RuleProxy implements InvocationHandler {
 
     private String name;
-    private String description;
     private Integer priority;
     private Method [] methods;
     private Method compareToMethod;
@@ -62,7 +61,6 @@ public class RuleProxy implements InvocationHandler {
         String methodName = method.getName();
         return switch (methodName) {
             case "getName" -> getRuleName();
-            case "getDescription" -> getRuleDescription();
             case "getPriority" -> getRulePriority();
             case "compareTo" -> compareToMethod(args);
             default -> null;
@@ -111,7 +109,7 @@ public class RuleProxy implements InvocationHandler {
         return this.methods;
     }
 
-    private int compareTo(final Rule otherRule) throws Exception {
+    private int compareTo(final Rule otherRule) {
         int otherPriority = otherRule.getPriority();
         int priority = getRulePriority();
         if (priority < otherPriority) {
@@ -132,14 +130,7 @@ public class RuleProxy implements InvocationHandler {
         return this.name;
     }
 
-    private String getRuleDescription() {
-        if (this.description == null) {
-            this.description = Rule.DEFAULT_DESCRIPTION;
-        }
-        return this.description;
-    }
-
-    private int getRulePriority() throws Exception {
+    private int getRulePriority() {
         if (this.priority == null) {
             this.priority = Rule.DEFAULT_PRIORITY;
         }

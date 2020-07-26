@@ -34,25 +34,18 @@ public class BasicRule implements Rule {
 
     protected String name;
 
-    protected String description;
-
     protected int priority;
 
     public BasicRule() {
-        this(Rule.DEFAULT_NAME, Rule.DEFAULT_DESCRIPTION, Rule.DEFAULT_PRIORITY);
+        this(Rule.DEFAULT_NAME, Rule.DEFAULT_PRIORITY);
     }
 
     public BasicRule(String name) {
-        this(name, Rule.DEFAULT_DESCRIPTION, Rule.DEFAULT_PRIORITY);
+        this(name, Rule.DEFAULT_PRIORITY);
     }
 
-    public BasicRule(String name, String description) {
-        this(name, description, Rule.DEFAULT_PRIORITY);
-    }
-
-    public BasicRule(String defaultName, String defaultDescription, int defaultPriority) {
+    public BasicRule(String defaultName, int defaultPriority) {
         name = defaultName;
-        description = defaultDescription;
         priority = defaultPriority;
     }
 
@@ -88,11 +81,6 @@ public class BasicRule implements Rule {
         return priority;
     }
 
-    @Override
-    public String getDescription() {
-        return description;
-    }
-
     /*
      * Rules are unique according to their names within a rules engine registry.
      */
@@ -102,12 +90,11 @@ public class BasicRule implements Rule {
         if (!(o instanceof BasicRule)) return false;
         BasicRule basicRule = (BasicRule) o;
         return priority == basicRule.priority &&
-                name.equals(basicRule.name) &&
-                description.equals(basicRule.description);
+                name.equals(basicRule.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, priority);
+        return Objects.hash(name, priority);
     }
 }

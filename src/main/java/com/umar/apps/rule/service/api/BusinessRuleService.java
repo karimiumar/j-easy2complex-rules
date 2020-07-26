@@ -2,8 +2,6 @@ package com.umar.apps.rule.service.api;
 
 import com.umar.apps.rule.BusinessRule;
 import com.umar.apps.rule.RuleAttribute;
-import com.umar.apps.rule.api.Condition;
-import com.umar.apps.rule.engine.WorkflowItem;
 
 import java.util.List;
 import java.util.Map;
@@ -23,11 +21,10 @@ public interface BusinessRuleService {
      * @param ruleName The name of the Rule
      * @param ruleType The type of the Rule
      * @param priority The priority of the Rule
-     * @param attributeNameTypeMap A map of attributeName and attributeType
-     * @param attributeValues A List of attribute value operands
+     * @param attributeNameValuesMap A map of attributeName and corresponding values
      * @return Returns a {@link BusinessRule}
      */
-    BusinessRule createRule(String ruleName, String ruleType, int priority, Map<String, String> attributeNameTypeMap, List<String> attributeValues);
+    public BusinessRule createRule(String ruleName, String ruleType, int priority, Map<String, List<String>> attributeNameValuesMap);
 
     /**
      * Creates a {@link BusinessRule} for the given ruleName, ruleType. It first searches the db for the given ruleName and ruleType.
@@ -47,16 +44,6 @@ public interface BusinessRuleService {
      * @param attributeNameTypeMap A map of attributeName and attributeType
      * @return Returns a {@link BusinessRule}
      */
-    BusinessRule createRule(String ruleName, String ruleType, int priority, String operand, Map<String, String> attributeNameTypeMap);
-
-    /**
-     * Uses Java reflection API to get {@link Condition} based on given parameters.
-     *
-     * @param workflowItem The workflowItem instance
-     * @param ruleType The rule type to use
-     * @param ruleName The rule name to be used for condition
-     * @return Returns a {@link Condition}
-     */
-    public  <T> Condition getSTPCondition(T workflowItem, String ruleType, String ruleName);
+    //BusinessRule createRule(String ruleName, String ruleType, int priority, String operand, Map<String, String> attributeNameTypeMap);
 
 }

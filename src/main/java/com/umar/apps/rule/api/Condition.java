@@ -7,10 +7,9 @@ import java.util.Objects;
  *
  * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
  */
-@FunctionalInterface
 public interface Condition {
 
-    Condition FALSE = fact->false;
+    Condition FALSE = facts->false;
 
     Boolean evaluate(Fact<?> fact);
     /**

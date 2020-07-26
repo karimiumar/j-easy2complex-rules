@@ -159,8 +159,10 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         AtomicReference<Object> result = new AtomicReference<>();
         String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE).FROM(RULE$ALIAS)
+                .JOIN().TABLE(ATTRIB$ALIAS)
+                .ON().COLUMN(ATTRIB$RULE).EQ(RULE$RULE)
                 .JOIN().TABLE(RULE_VALUE$ALIAS)
-                .ON().COLUMN(RULE$RULE).EQ(RULE_VALUE$RULE)
+                .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
                 .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
                 .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType")
                 .AND().COLUMN(RULE_VALUE$OPERAND).EQ(":operand")
@@ -189,8 +191,10 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         AtomicReference<BusinessRule> result = new AtomicReference<>();
         String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE).FROM(RULE$ALIAS)
+                .JOIN().TABLE(ATTRIB$ALIAS)
+                .ON().COLUMN(ATTRIB$RULE).EQ(RULE$RULE)
                 .JOIN().TABLE(RULE_VALUE$ALIAS)
-                .ON().COLUMN(RULE$RULE).EQ(RULE_VALUE$RULE)
+                .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
                 .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
                 .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType")
                 .AND().COLUMN(RULE_VALUE$OPERAND).IN(":operands")
@@ -215,9 +219,9 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     }
 
     @Override
-    public Optional<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute) {
+    public Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute) {
         logger.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}", ruleName, ruleType, ruleAttribute);
-        AtomicReference<RuleValue> result = new AtomicReference<>();
+        Collection<RuleValue> values = new ArrayList<>(0);
         String sql = selectFunction.select()
                 .SELECT()
                 .COLUMN(RULE_VALUE)
@@ -225,22 +229,20 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 .JOIN().TABLE(ATTRIB$ALIAS)
                 .ON().COLUMN(ATTRIB$RULE_TYPE).EQ(RULE$RULE_TYPE)
                 .JOIN().TABLE(RULE_VALUE$ALIAS)
-                .ON().COLUMN(RULE_VALUE$RULE).EQ(RULE$RULE)
+                .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
                 .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
                 .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType")
                 .AND().COLUMN(ATTRIB$ATTRIB_NAME).EQ(":attributeName")
-                .AND().COLUMN(ATTRIB$ATTRIB_TYPE).EQ(":attributeType")
                 .getSQL();
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
-            RuleValue ruleValue = session.createQuery(sql, RuleValue.class)
+            List<RuleValue> ruleValues = session.createQuery(sql, RuleValue.class)
                     .setParameter("ruleName", ruleName)
                     .setParameter("ruleType", ruleType)
                     .setParameter("attributeName", ruleAttribute.getAttributeName())
-                    .setParameter("attributeType", ruleAttribute.getAttributeType())
-                    .uniqueResult();
-            result.set(ruleValue);
+                    .getResultList();
+            values.addAll(ruleValues);
         });
-        return Optional.ofNullable(result.get());
+        return values;
     }
 }

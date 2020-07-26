@@ -41,8 +41,8 @@ public class DefaultRule extends BasicRule {
     private final List<Action> actions;
     private final Comparator<Rule> comparator;
 
-    DefaultRule(String name, String description, int priority, Comparator<Rule> comparator, Set<Condition> conditions, List<Action> actions) {
-        super(name,description, priority);
+    DefaultRule(String name, int priority, Comparator<Rule> comparator, Set<Condition> conditions, List<Action> actions) {
+        super(name, priority);
         this.actions = actions;
         this.conditions = conditions;
         this.comparator = comparator;
@@ -50,11 +50,11 @@ public class DefaultRule extends BasicRule {
 
     @Override
     public boolean evaluate(Facts facts) {
-        boolean result = false;
         int index = 0;
         int size = facts.size();
+        boolean result = false;
         for (Condition condition: conditions) {
-            if(index >=size) break;
+            if(index >= size) break;
             result = condition.evaluate(facts.getFact(index++));
             if(!result) break;
         }

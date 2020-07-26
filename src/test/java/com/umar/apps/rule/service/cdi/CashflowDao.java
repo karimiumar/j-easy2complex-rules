@@ -99,7 +99,6 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
     }
 
     public void applySTPRule(Cashflow workflowItem, String note) {
-        System.out.println("Cashflow Id to Load: " + workflowItem.getId());
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             if(!entityManager.contains(workflowItem)) {
@@ -110,5 +109,21 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
                 session.merge(workflowItem);
             }
         });
+    }
+
+    public Collection<Cashflow> findBySettlementDate(LocalDate settlementDate) {
+        ArrayList<Cashflow> cashflows = new ArrayList<>(0);
+        String sql = selectFunction.select()
+                .SELECT().COLUMN(CASHFLOW).FROM(CASHFLOW_ALIAS)
+                .WHERE().COLUMN(CASHFLOW_SETT_DATE).EQ(":settlementDate")
+                .getSQL();
+        executeInTransaction(entityManager -> {
+            Session session = entityManager.unwrap(Session.class);
+            List<Cashflow> result = session.createQuery(sql, Cashflow.class)
+                    .setParameter("settlementDate", settlementDate)
+                    .getResultList();
+            cashflows.addAll(result);
+        });
+        return cashflows;
     }
 }

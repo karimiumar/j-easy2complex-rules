@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 @Entity
 @Table(name = "cashflows")
-public class Cashflow implements WorkflowItem<Long>, Comparable<Cashflow> {
+public class Cashflow implements WorkflowItem<Long> {
 
     public static final String CASHFLOW = "cf";
     public static final String CASHFLOW_ALIAS = "Cashflow cf";
@@ -124,26 +124,6 @@ public class Cashflow implements WorkflowItem<Long>, Comparable<Cashflow> {
 
     public String getNote() {
         return note;
-    }
-
-    @Override
-    public int compareTo(Cashflow other) {
-        int cptyDiff = counterParty.compareTo(other.counterParty);
-        if(cptyDiff != 0) return cptyDiff;
-
-        int settlementDateDiff = settlementDate.compareTo(other.settlementDate);
-        if(settlementDateDiff != 0) return settlementDateDiff;
-
-        int idDiff = id.compareTo(other.id);
-        if(idDiff != 0) return idDiff;
-
-        int currDiff = currency.compareTo(other.currency);
-        if(currDiff != 0) return currDiff;
-
-        int createdOnDiff = createdOn.compareTo(other.createdOn);
-        if(createdOnDiff != 0) return createdOnDiff;
-
-        return amount.compareTo(other.amount);
     }
 
     public static class CashflowBuilder {

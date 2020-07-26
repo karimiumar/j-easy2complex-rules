@@ -13,7 +13,7 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
     public static final String RULE_VALUE$ALIAS = "RuleValue ruleval";
     public static final String RULE_VALUE = "ruleval";
     public static final String RULE_VALUE$OPERAND ="ruleval.operand";
-    public static final String RULE_VALUE$RULE = "ruleval.businessRule";
+    public static final String RULE_VALUE$ATTRIB = "ruleval.ruleAttribute";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,12 +28,12 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
     @ManyToOne()
     //@JoinColumn(name = "rule_id")
     @JoinTable(
-            name = "rule_operands",
+            name = "attribute_operands",
             joinColumns = @JoinColumn(name = "value_id"),
-            inverseJoinColumns = @JoinColumn(name = "rule_id"),
-            uniqueConstraints = @UniqueConstraint(columnNames = {"value_id","rule_id"})
+            inverseJoinColumns = @JoinColumn(name = "attribute_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"value_id","attribute_id"})
     )
-    private BusinessRule businessRule;
+    private RuleAttribute ruleAttribute;
 
     public void setId(Long id) {
         this.id = id;
@@ -55,25 +55,24 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
         this.operand = operand;
     }
 
-    public BusinessRule getBusinessRule() {
-        return businessRule;
+    public void setRuleAttribute(RuleAttribute ruleAttribute) {
+        this.ruleAttribute = ruleAttribute;
     }
 
-    public void setBusinessRule(BusinessRule businessRule) {
-        this.businessRule = businessRule;
+    public RuleAttribute getRuleAttribute() {
+        return ruleAttribute;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof RuleValue value)) return false;
-        return Objects.equals(id, value.id) &&
-                Objects.equals(operand, value.operand);
+        return Objects.equals(operand, value.operand);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, operand);
+        return Objects.hash(operand);
     }
 
     @Override

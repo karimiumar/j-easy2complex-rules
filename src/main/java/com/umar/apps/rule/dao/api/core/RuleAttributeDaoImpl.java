@@ -52,8 +52,8 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
     }
 
     @Override
-    public Optional<RuleAttribute> findRuleAttribute(String attributeName, String attributeType, String ruleType) {
-        logger.info("findRuleAttribute() with attributeName: {}, attributeType: {}, ruleType: {}", attributeName, attributeType, ruleType);
+    public Optional<RuleAttribute> findRuleAttribute(String attributeName, String ruleType) {
+        logger.info("findRuleAttribute() with attributeName: {}, ruleType: {}", attributeName, ruleType);
         AtomicReference<Object> result = new AtomicReference<>();
         String sql = selectFunction.select()
                 .SELECT().COLUMN(ATTRIB$ATTRIB)
@@ -61,15 +61,12 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
                 .WHERE()
                 .COLUMN(ATTRIB$ATTRIB_NAME).EQ(":attributeName")
                 .AND()
-                .COLUMN(ATTRIB$ATTRIB_TYPE).EQ(":attributeType")
-                .AND()
                 .COLUMN(ATTRIB$RULE_TYPE).EQ(":ruleType")
                 .getSQL();
         executeInTransaction(entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
                         .setParameter("attributeName", attributeName)
-                        .setParameter("attributeType", attributeType)
                         .setParameter("ruleType", ruleType)
                         .getSingleResult()
                 );

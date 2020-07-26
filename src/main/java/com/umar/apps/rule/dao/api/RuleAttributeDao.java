@@ -8,13 +8,12 @@ import java.util.Optional;
 public interface RuleAttributeDao extends GenericDao<RuleAttribute, Long> {
 
     /**
-     * Finds a {@link RuleAttribute} for the given attribute name, attribute type and rule type.
+     * Finds a {@link RuleAttribute} for the given attribute name and rule type.
      *
      * @param attributeName The name of the attribute of the Entity
-     * @param attributeType The java type of the attribute declared in the Entity
      * @param ruleType The rule type
      *
      * @return Returns an Optional
      */
-    Optional<RuleAttribute> findRuleAttribute(String attributeName, String attributeType, String ruleType);
+    Optional<RuleAttribute> findRuleAttribute(String attributeName, String ruleType);
 }
