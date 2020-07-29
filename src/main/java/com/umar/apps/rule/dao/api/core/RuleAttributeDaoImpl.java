@@ -1,15 +1,18 @@
 package com.umar.apps.rule.dao.api.core;
 
 import com.umar.apps.rule.RuleAttribute;
+import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;

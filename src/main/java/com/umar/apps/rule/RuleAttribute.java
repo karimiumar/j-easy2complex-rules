@@ -9,11 +9,9 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "attributes"
-        , uniqueConstraints = {
+@Table(name = "attributes", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"attribute_name", "rule_type"})
-}
-)
+})
 public class RuleAttribute implements WorkflowItem<Long>, Serializable {
 
     public static final String ATTRIB$ID = "attr.id";
@@ -24,22 +22,35 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     public static final String ATTRIB$RULE = "attr.businessRule";
     public static final String ATTRIB$DISPLAY_NAME = "attr.displayName";
 
+    public RuleAttribute(){}
+
+    private Long id;
+    private String attributeName;
+    private String ruleType;
+    private int version;
+    private String displayName;
+    private BusinessRule businessRule;
+    private Set<RuleValue> ruleValues = new HashSet<>();
+    //private Set<RuleAttributeValue> ruleAttributeValues = new HashSet<>(0);
+    //private Set<BusinessRuleAttribute> businessRuleAttributes = new HashSet<>(0);
+
+    public RuleAttribute(Long id, String attributeName, String ruleType, String displayName) {
+        this.id = id;
+        this.attributeName = attributeName;
+        this.ruleType = ruleType;
+        this.displayName = displayName;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long getId() {
+        return id;
+    }
 
-    @Column(name = "attribute_name")
-    private String attributeName;
-
-    @Column(name = "rule_type")
-    private String ruleType;
-
-    @Column(name = "version")
-    private int version;
-
-    @Column(name = "display_name")
-    private String displayName;
+    @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch= FetchType.EAGER, orphanRemoval = true)
+    public Set<RuleValue> getRuleValues() {
+        return ruleValues;
+    }
 
     @ManyToOne
     @JoinTable(
@@ -48,62 +59,28 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
             inverseJoinColumns = @JoinColumn(name = "rule_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"attribute_id","rule_id"})
     )
-    private BusinessRule businessRule;
-
-    @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch= FetchType.EAGER, orphanRemoval = true)
-    private final Set<RuleValue> ruleValues = new HashSet<>();
-
-    public Long getId() {
-        return id;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setBusinessRule(BusinessRule rule) {
-        this.businessRule = rule;
-    }
-
     public BusinessRule getBusinessRule() {
         return businessRule;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    @Column(name = "attribute_name")
     public String getAttributeName() {
         return attributeName;
     }
 
-    public void setAttributeName(String attributeName) {
-        this.attributeName = attributeName;
-    }
-
+    @Column(name = "rule_type")
     public String getRuleType() {
         return ruleType;
     }
 
-    public void setRuleType(String ruleType) {
-        this.ruleType = ruleType;
+    @Column(name = "version")
+    public int getVersion() {
+        return version;
     }
 
-    public Set<RuleValue> getRuleValues() {
-        return ruleValues;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
+    @Column(name = "display_name")
     public String getDisplayName() {
         return displayName;
-    }
-
-    public void removeRuleValue(RuleValue ruleValue) {
-        ruleValues.remove(ruleValue);
-        ruleValue.setRuleAttribute(null);
     }
 
     public void addRuleValue(RuleValue ruleValue) {
@@ -111,11 +88,32 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         ruleValue.setRuleAttribute(this);
     }
 
-    public boolean equalByNameAndType(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RuleAttribute that)) return false;
-        return attributeName.equals(that.attributeName) &&
-                ruleType.equals(that.ruleType);
+    public void setBusinessRule(BusinessRule businessRule) {
+        this.businessRule = businessRule;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setAttributeName(String attributeName) {
+        this.attributeName = attributeName;
+    }
+
+    public void setRuleType(String ruleType) {
+        this.ruleType = ruleType;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public void setRuleValues(Set<RuleValue> ruleValues) {
+        this.ruleValues = ruleValues;
     }
 
     @Override
@@ -123,13 +121,12 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         if (this == o) return true;
         if (!(o instanceof RuleAttribute that)) return false;
         return attributeName.equals(that.attributeName) &&
-                ruleType.equals(that.ruleType) &&
-                ruleValues.equals(that.ruleValues);
+                ruleType.equals(that.ruleType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(attributeName, ruleType, ruleValues);
+        return Objects.hash(attributeName, ruleType);
     }
 
     @Override

@@ -10,11 +10,9 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @Entity
-@Table(name = "rules"
-        , uniqueConstraints = {
+@Table(name = "rules", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"rule_name", "rule_type"})
-}
-)
+})
 public class BusinessRule implements WorkflowItem<Long>, Serializable {
 
     public static final String RULE$ID = "rule.id";
@@ -23,93 +21,97 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     public static final String RULE$RULE_NAME = "rule.ruleName";
     public static final String RULE$RULE_TYPE = "rule.ruleType";
     public static final String RULE$ACTIVE = "rule.active";
-    public static final String RULE$RULE_ATTRIBS = "rule.ruleAttributes";
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "rule_name")
     private String ruleName;
-
-    @Column
     private int priority;
-
-    @Column(name = "rule_type")
     private String ruleType;
-
-    @Column(name = "active")
+    //private String desc;
     private boolean active;
-
-    @OneToMany(mappedBy = "businessRule", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER, orphanRemoval = true)
-    private final Set<RuleAttribute> ruleAttributes = new HashSet<>();
-
-    @Column(name = "version")
     private int version;
-
-    public int getVersion() {
-        return version;
-    }
+    private Set<RuleAttribute> ruleAttributes = new HashSet<>();
+    //private Set<BusinessRuleAttribute> businessRuleAttributes = new HashSet<>(0);
+    //
+    //
 
     public BusinessRule(){}
 
-    private BusinessRule(BusinessRuleBuilder builder) {
-        ruleName = builder.ruleName;
-        ruleType = builder.ruleType;
-        active = builder.active;
-        priority = builder.priority;
-        if(null != builder.ruleAttribute) {
-            addRuleAttribute(builder.ruleAttribute);
-        }
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
+    @Column
     public int getPriority() {
         return priority;
     }
 
+    @Column(name = "rule_name")
     public String getRuleName() {
         return ruleName;
+    }
+
+    @Column(name = "rule_type")
+    public String getRuleType() {
+        return ruleType;
+    }
+
+    //@Column(name = "[desc]")
+    /*public String getDesc() {
+        return desc;
+    }*/
+
+    @OneToMany(mappedBy = "businessRule", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER, orphanRemoval = true)
+    public Set<RuleAttribute> getRuleAttributes() {
+        return ruleAttributes;
+    }
+
+    @Column(name = "active")
+    public boolean isActive() {
+        return active;
+    }
+
+    @Column(name = "version")
+    public int getVersion() {
+        return version;
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long getId() {
+        return id;
+    }
+
+    public void addRuleAttribute(RuleAttribute ruleAttribute) {
+        ruleAttributes.add(ruleAttribute);
+        ruleAttribute.setBusinessRule(this);
     }
 
     public void setRuleName(String ruleName) {
         this.ruleName = ruleName;
     }
 
-    public String getRuleType() {
-        return ruleType;
-    }
-
     public void setRuleType(String ruleType) {
         this.ruleType = ruleType;
     }
 
-    public boolean isActive() {
-        return active;
+    /*public void setDesc(String desc) {
+        this.desc = desc;
+    }*/
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     public void setActive(boolean active) {
         this.active = active;
     }
 
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void addRuleAttribute(RuleAttribute attribute) {
-        ruleAttributes.add(attribute);
-        attribute.setBusinessRule(this);
-    }
-
-    public Set<RuleAttribute> getRuleAttributes() {
-        return ruleAttributes;
+    public void setRuleAttributes(Set<RuleAttribute> ruleAttributes) {
+        this.ruleAttributes = ruleAttributes;
     }
 
     @Override
@@ -119,13 +121,12 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         return priority == that.priority &&
                 active == that.active &&
                 ruleName.equals(that.ruleName) &&
-                ruleType.equals(that.ruleType) &&
-                ruleAttributes.equals(that.ruleAttributes);
+                ruleType.equals(that.ruleType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ruleName, priority, ruleType, active, ruleAttributes);
+        return Objects.hash(ruleName, priority, ruleType, active);
     }
 
     @Override
@@ -139,12 +140,18 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
                 '}';
     }
 
+    private BusinessRule(BusinessRuleBuilder builder) {
+        ruleName = builder.ruleName;
+        ruleType = builder.ruleType;
+        active = builder.active;
+        priority = builder.priority;
+    }
+
     public static class BusinessRuleBuilder {
         private final String ruleName;
         private final String ruleType;
         public boolean active;
         public int priority;
-        public RuleAttribute ruleAttribute;
 
         public BusinessRuleBuilder(String ruleName, String ruleType) {
             this.ruleName = ruleName;

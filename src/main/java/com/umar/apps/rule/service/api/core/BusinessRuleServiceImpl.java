@@ -1,8 +1,7 @@
 package com.umar.apps.rule.service.api.core;
 
-import com.umar.apps.rule.BusinessRule;
-import com.umar.apps.rule.RuleAttribute;
-import com.umar.apps.rule.RuleValue;
+import com.umar.apps.rule.*;
+import com.umar.apps.rule.api.Rule;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
@@ -18,7 +17,13 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static com.umar.apps.rule.RuleAttribute.ATTRIB$ATTRIB;
+import static com.umar.apps.rule.RuleAttribute.ATTRIB$ATTRIB_NAME;
+import static com.umar.apps.rule.RuleValue.RULE_VALUE$OPERAND;
 
 @ApplicationScoped
 @Named
@@ -45,41 +50,47 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     public BusinessRule createRule(String ruleName, String ruleType, int priority, Map<String, List<String>> attributeNameValuesMap) {
         logger.info("createRule() ruleName: {}, ruleType: {}, priority: {}", ruleName, ruleType, priority);
         final BusinessRule businessRule = createFromScratch(ruleName, ruleType, priority, attributeNameValuesMap);
-        BusinessRule persistedRule = findByNameAndType(ruleName, ruleType);
+        BusinessRule persistedRule = findExistingRule(businessRule);
         if(null != persistedRule) {
             if(!persistedRule.equals(businessRule)) {
                 logger.info("Rule exist in database. Firing update for the given set.");
                 fireUpdate(persistedRule, businessRule);
             }
         } else {
-            //TODO:Needs checking for existing attributes and values
-            Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
-            doInJPA(entityManager -> {
-                Session session = entityManager.unwrap(Session.class);
-                for(RuleAttribute ruleAttribute: ruleAttributes) {
-                    Optional<RuleAttribute> optionalDBRuleAttribute = ruleAttributeDao.findRuleAttribute(ruleAttribute.getAttributeName(), ruleType);
-                    if(optionalDBRuleAttribute.isPresent()) {
-                        RuleAttribute dbRuleAttribute = optionalDBRuleAttribute.get();
-                        assignExistingAttribute(businessRule, ruleAttribute, dbRuleAttribute);
-                        fireUpdate(businessRule, entityManager, session, ruleAttribute);
-                    } else {
-                        Set<RuleValue> ruleValues = ruleAttribute.getRuleValues();
-                        for (RuleValue ruleValue: ruleValues) {
-                            Optional<RuleValue> optionalDBRuleValue = ruleValueDao.findByOperand(ruleValue.getOperand());
-                            if(optionalDBRuleValue.isPresent()) {
-                                RuleValue dbRuleValue = optionalDBRuleValue.get();
-                                ruleAttribute.removeRuleValue(dbRuleValue);
-                                ruleAttribute.addRuleValue(dbRuleValue);
-                                //dbRuleValue.setRuleAttribute(ruleAttribute);
-                                fireUpdate(ruleAttribute, dbRuleValue, entityManager, session);
-                                session.find(RuleValue.class, dbRuleValue.getId());
+            Optional<BusinessRule> optionalDBBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
+            if(optionalDBBusinessRule.isPresent()){
+                BusinessRule dbRule = optionalDBBusinessRule.get();
+                logger.info("Rule {} exist in database for ruleName: {}, ruleType: {}, ", dbRule, ruleName, ruleType);
+                fireUpdate(dbRule, businessRule);
+                persistedRule = businessRule;
+            }else{
+                Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
+                doInJPA(entityManager -> {
+                    Session session = entityManager.unwrap(Session.class);
+                    for(RuleAttribute ruleAttribute: ruleAttributes) {
+                        Optional<RuleAttribute> optionalDBRuleAttribute = ruleAttributeDao.findRuleAttribute(ruleAttribute.getAttributeName(), ruleType);
+                        if(optionalDBRuleAttribute.isPresent()) {
+                            RuleAttribute dbRuleAttribute = optionalDBRuleAttribute.get();
+                            assignExistingAttribute(businessRule, ruleAttribute, dbRuleAttribute);
+                            fireUpdate(businessRule, entityManager, session, dbRuleAttribute);
+                        } else {
+                            Set<RuleValue> ruleValues = ruleAttribute.getRuleValues();
+                            for (RuleValue ruleValue: ruleValues) {
+                                Optional<RuleValue> optionalDBRuleValue = ruleValueDao.findByOperand(ruleValue.getOperand());
+                                if(optionalDBRuleValue.isPresent()) {
+                                    RuleValue dbRuleValue = optionalDBRuleValue.get();
+                                    ruleAttribute.addRuleValue(dbRuleValue);
+                                    fireUpdate(ruleAttribute, dbRuleValue, entityManager, session);
+                                    session.find(RuleValue.class, dbRuleValue.getId());
+                                }
                             }
                         }
                     }
-                }
-                entityManager.persist(businessRule);
-            }, ruleDao);
-            return businessRule;
+                    entityManager.persist(businessRule);
+                    entityManager.flush();
+                }, ruleDao);
+                return businessRule;
+            }
         }
         return persistedRule;
     }
@@ -87,49 +98,64 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     private void assignExistingAttribute(BusinessRule businessRule, RuleAttribute ruleAttribute, RuleAttribute dbRuleAttribute) {
         Set<RuleValue> dbRuleValues = dbRuleAttribute.getRuleValues();
         Set<RuleValue> inComingRuleValues = ruleAttribute.getRuleValues();
-        if (!compare(dbRuleValues, inComingRuleValues)) {
-            dbRuleValues.addAll(inComingRuleValues);
-        }
+        dbRuleValues.addAll(inComingRuleValues);
         businessRule.getRuleAttributes().clear();
         businessRule.getRuleAttributes().add(dbRuleAttribute);
     }
 
     private void fireUpdate(BusinessRule persistedRule, BusinessRule businessRule) {
-        Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
-        Set<RuleAttribute> dbRuleAttributes = persistedRule.getRuleAttributes();
-        for (RuleAttribute ruleAttribute : ruleAttributes) {
-            if (attributeExists(dbRuleAttributes, ruleAttribute)) {
-                Set<RuleValue> ruleValues = ruleAttribute.getRuleValues();
-                ruleValues.forEach(ruleValue -> addNewValue(dbRuleAttributes, ruleValue));
-            } else {
-                //New Attributes added. Save with the persisted rule
-                dbRuleAttributes.addAll(ruleAttributes);
+        Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes().stream()
+                .collect(Collectors.toCollection(()-> new TreeSet<>(Comparator.comparing(RuleAttribute::getAttributeName))));
+        Set<RuleAttribute> dbRuleAttributes = persistedRule.getRuleAttributes().stream()
+                .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(RuleAttribute::getAttributeName))));
+        Set<RuleValue> values = new HashSet<>();
+        Set<RuleValue> dbValues = new HashSet<>();
+        /*
+            We only need the attribute and value that are coming for update/insert.
+         */
+        extractValues(ruleAttributes, values);
+        extractValues(dbRuleAttributes, dbValues);
+        retainExistingAndAddNewValues(dbRuleAttributes,ruleAttributes);
+        retainExistingAndAddNewValues(dbValues, values);
+        assignValuesToRuleAttributes(dbRuleAttributes, dbValues);
+        businessRule = persistedRule;
+        businessRule.getRuleAttributes().clear();
+        businessRule.setRuleAttributes(dbRuleAttributes);
+        fireUpdate(businessRule);
+    }
+
+    private void assignValuesToRuleAttributes(Set<RuleAttribute> dbRuleAttributes, Set<RuleValue> dbValues) {
+        for (RuleAttribute ruleAttribute: dbRuleAttributes) {
+            for(RuleValue ruleValue: dbValues) {
+                if(ruleAttribute.equals(ruleValue.getRuleAttribute())) {
+                    ruleAttribute.addRuleValue(ruleValue);
+                }
             }
         }
-        fireUpdate(persistedRule);
     }
 
-    private boolean attributeExists(Set<RuleAttribute> dbRuleAttributes, RuleAttribute ruleAttribute) {
-        boolean exists = dbRuleAttributes.stream().map(dbRuleAttribute -> dbRuleAttribute.equalByNameAndType(ruleAttribute)).findFirst().get();
-        logger.info("Attribute Exists: {}", exists);
-        return exists;
-    }
-
-    private static boolean compare(Set<?> set1, Set<?> set2) {
-        if(null == set1 || null == set2) return false;
-        if(set1.size() != set2.size()) return false;
-        return set1.containsAll(set2);
-    }
-
-    private void addNewValue(Set<RuleAttribute> dbRuleAttributes, RuleValue ruleValue) {
-        dbRuleAttributes.forEach(dbRuleAttribute -> {
-            Set<RuleValue> dbRuleValues = dbRuleAttribute.getRuleValues();
-            Optional<RuleValue> optionalDBRuleValue = ruleValueDao.findByOperand(ruleValue.getOperand());
-            if(optionalDBRuleValue.isEmpty()) {
-                dbRuleValues.add(ruleValue);
-                ruleValue.setRuleAttribute(dbRuleAttribute);
+    private <T> void retainExistingAndAddNewValues(Set<T> dbValues, Set<T> values) {
+        Set<T> existingVals = new HashSet<>(0);
+        for (T dbValue: dbValues) {
+            //RuleValues's equals method compares by operand
+            //id can be safely ignored.
+            for(T value: values) {
+                if(dbValue.equals(value)) {
+                    //always retain existing values
+                    existingVals.add(dbValue);
+                }
             }
-        });
+        }
+        dbValues.clear();
+        dbValues.addAll(existingVals);
+        dbValues.addAll(values);//add all the new values that are not in database
+    }
+
+    private void extractValues(Set<RuleAttribute> businessRuleAttributes, Set<RuleValue> values) {
+        for(RuleAttribute ruleAttribute: businessRuleAttributes) {
+            Set<RuleValue> ruleValues = ruleAttribute.getRuleValues();
+            values.addAll(ruleValues);
+        }
     }
 
     private void fireUpdate(BusinessRule businessRule, EntityManager entityManager, Session session, RuleAttribute ruleAttribute) {
@@ -164,41 +190,32 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             Session session = entityManager.unwrap(Session.class);
             session.find(BusinessRule.class, businessRule.getId());
             session.merge(businessRule);
+            session.flush();
         }, ruleDao);
     }
 
     private void saveOrUpdate(RuleAttribute ruleAttribute, EntityManager entityManager) {
         Session session = entityManager.unwrap(Session.class);
         if(null == ruleAttribute.getId()) {
+            Set<RuleValue> ruleValues = ruleAttribute.getRuleValues();
+            ruleAttribute.getRuleValues().clear();
             session.save(ruleAttribute);
+            for(RuleValue ruleValue: ruleValues) {
+                ruleAttribute.addRuleValue(ruleValue);
+            }
+            for(RuleValue ruleValue: ruleValues) {
+                session.saveOrUpdate(ruleValue);
+            }
         }else{
-            ruleAttribute.getRuleValues().forEach(ruleValue -> {
-                if(null == ruleValue.getId()) {
+            for (RuleValue ruleValue : ruleAttribute.getRuleValues()) {
+                if(ruleValue.getId() != null) {
+                    session.merge(ruleValue);
+                }else{
                     session.saveOrUpdate(ruleValue);
-                }else {
-                    if (!entityManager.contains(ruleValue)) {
-                        logger.info("""
-                                EntityManager doesn't contain RuleValue: {} and is detached. 
-                                Reattaching it by finding from the current context.""", ruleValue);
-                        entityManager.find(RuleValue.class, ruleValue.getId());
-                        session.merge(ruleValue);
-                    }
                 }
-            });
-            if (!entityManager.contains(ruleAttribute)) {
-                logger.info("""
-                            EntityManager doesn't contain RuleAttribute: {} and is detached. 
-                            Reattaching it by finding from the current context.""", ruleAttribute);
-                entityManager.find(RuleAttribute.class, ruleAttribute.getId());
-                session.merge(ruleAttribute);
             }
         }
-    }
-
-
-    private BusinessRule findByNameAndType(String ruleName, String ruleType) {
-        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
-        return optionalBusinessRule.orElse(null);
+        session.merge(ruleAttribute);
     }
 
     private BusinessRule createFromScratch(String ruleName, String ruleType, int priority, Map<String, List<String>> attributeNameValuesMap) {
@@ -223,6 +240,22 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             });
         });
         return businessRule;
+    }
+
+    private BusinessRule findExistingRule(BusinessRule businessRule) {
+        Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
+        Set<String> operands = new HashSet<>();
+        Set<String> attributes = new HashSet<>();
+        for (RuleAttribute ruleAttribute: ruleAttributes) {
+            //this will be needed by the SQL query in order to create a list of attributes to query.
+            attributes.add(ATTRIB$ATTRIB_NAME + "='"+ ruleAttribute.getAttributeName()+"'");
+            Set<RuleValue> ruleValues = ruleAttribute.getRuleValues();
+            for (RuleValue ruleValue: ruleValues) {
+                operands.add(RULE_VALUE$OPERAND + "='" + ruleValue.getOperand() +"'");
+            }
+        }
+        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameTypeAttributesAndOperands(businessRule.getRuleName(), businessRule.getRuleType(), attributes, operands);
+        return optionalBusinessRule.orElse(null);
     }
 
     private void doInJPA(Consumer<EntityManager> consumer, GenericDao<?, Long> dao) {

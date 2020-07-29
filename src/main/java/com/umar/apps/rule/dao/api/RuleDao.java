@@ -5,9 +5,7 @@ import com.umar.apps.rule.RuleAttribute;
 import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.infra.dao.api.GenericDao;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public interface RuleDao extends GenericDao<BusinessRule, Long> {
     /**
@@ -73,4 +71,15 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      * @return Returns an optional
      */
     Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute);
+
+    /**
+     * Finds a {@link BusinessRule} for the given set of params
+     *
+     * @param ruleName The name of the Rule
+     * @param ruleType The type of the rule.
+     * @param attributes The set of name of {@link RuleAttribute}
+     * @param operands The set of operand of {@link RuleValue}
+     * @return Returns an Optional
+     */
+    Optional<BusinessRule> findByNameTypeAttributesAndOperands(String ruleName, String ruleType, Set<String> attributes, Set<String> operands);
 }

@@ -29,7 +29,7 @@ public abstract class AbstractConditionService implements ConditionService {
     public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType) {
         //TODO: Replace with find attributes of WorkflowItem
         Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
-        if(optionalBusinessRule.isPresent()) {
+        /*if(optionalBusinessRule.isPresent()) {
             BusinessRule businessRule = optionalBusinessRule.get();
             Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
             //There will be only one STP attribute for a given rule name
@@ -45,7 +45,7 @@ public abstract class AbstractConditionService implements ConditionService {
                 //eat up
                 logger.info("Exception Thrown: {}", e.getMessage());
             }
-        }
+        }*/
         return Condition.FALSE;
     }
 

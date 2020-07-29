@@ -1,5 +1,6 @@
 package com.umar.apps.rule.dao.api.core;
 
+import com.umar.apps.rule.RuleAttribute;
 import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
@@ -14,6 +15,8 @@ import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.umar.apps.rule.RuleAttribute.ATTRIB$ALIAS;
+import static com.umar.apps.rule.RuleAttribute.ATTRIB$ATTRIB;
 import static com.umar.apps.rule.RuleValue.*;
 
 @ApplicationScoped
@@ -41,6 +44,34 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
         String sql = selectFunction.select()
                 .SELECT().COLUMN(RULE_VALUE)
                 .FROM(RULE_VALUE$ALIAS)
+                .WHERE().COLUMN(RULE_VALUE$OPERAND).EQ(":operand")
+                .getSQL();
+        executeInTransaction(entityManager -> {
+            try {
+                result.set(entityManager.createQuery(sql)
+                        .setParameter("operand", operand)
+                        .getSingleResult());
+            } catch (NoResultException ex) {
+                //Simply ignore it. This is expected when no data exist.
+            }
+        });
+
+        if(null != result.get()) {
+            RuleValue ruleValue = (RuleValue) result.get();
+            return Optional.of(ruleValue);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<RuleValue> findByRuleAttributeAndValue(RuleAttribute ruleAttribute, String operand) {
+        logger.info("findByRuleAttributeAndValue() for params ruleAttribute{}, operand{}", ruleAttribute, operand);
+        AtomicReference<Object> result = new AtomicReference<>();
+        String sql = selectFunction.select()
+                .SELECT().COLUMN(RULE_VALUE)
+                .FROM(RULE_VALUE$ALIAS)
+                .JOIN().TABLE(ATTRIB$ALIAS)
+                .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
                 .WHERE().COLUMN(RULE_VALUE$OPERAND).EQ(":operand")
                 .getSQL();
         executeInTransaction(entityManager -> {

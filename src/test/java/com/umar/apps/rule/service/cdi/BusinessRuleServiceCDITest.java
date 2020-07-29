@@ -119,11 +119,6 @@ public class BusinessRuleServiceCDITest {
         assertEquals("2300000.00", amount.getOperand());
     }
 
-    private BusinessRule createRule(Map<String, List<String>> attributeNameValuesMap) {
-        BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
-        return ruleService.createRule("Counterparty Netting Rule", "NETTING", 1,attributeNameValuesMap);
-    }
-
     private BusinessRule createRule(String ruleName, String ruleType, int priority, Map<String, List<String>> attributeNameValuesMap) {
         BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
         return ruleService.createRule(ruleName,ruleType,priority,attributeNameValuesMap);

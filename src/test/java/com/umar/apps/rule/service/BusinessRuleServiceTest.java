@@ -1,8 +1,10 @@
 package com.umar.apps.rule.service;
 
 import com.umar.apps.rule.BusinessRule;
+import com.umar.apps.rule.BusinessRuleAttribute;
 import com.umar.apps.rule.RuleAttribute;
 import com.umar.apps.rule.RuleValue;
+import com.umar.apps.rule.api.core.RuleBuilder;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
@@ -14,9 +16,11 @@ import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
 import com.umar.simply.jdbc.dml.operations.SelectOp;
 import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
+import org.hibernate.Session;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +41,80 @@ public class BusinessRuleServiceTest {
 
     @BeforeAll
     public static void before() {
+        /*
+        DELETE FROM ATTRIBUTE_VALUES ;
+        DELETE FROM RULE_ATTRIBUTE ;
+        DELETE FROM "VALUES";
+        DELETE FROM ATTRIBUTES ;
+        DELETE FROM RULES ;
+         */
+        createSomeRules();
+        createSomeAttributes();
+    }
 
+    private static void createSomeAttributes() {
+        BusinessRule cptySTPRule = ruleDao.findByNameAndType("Counterparty STP Rule","NON-STP").orElseThrow();
+        RuleAttribute counterPartyAttrib = new RuleAttribute();
+        counterPartyAttrib.setRuleType("NON-STP");
+        counterPartyAttrib.setAttributeName("counterParty");
+        counterPartyAttrib.setDisplayName("Counter Party");
+        cptySTPRule.addRuleAttribute(counterPartyAttrib);
+        ruleDao.doInJPA(entityManager -> {
+            entityManager.find(BusinessRule.class, cptySTPRule.getId());
+            ruleAttributeDao.save(counterPartyAttrib);
+            ruleDao.merge(cptySTPRule);
+        }, ruleDao);
+
+        BusinessRule currencySTPRule = ruleDao.findByNameAndType("Currency STP Rule", "NON-STP").orElseThrow();
+        RuleAttribute currencyAttrib = new RuleAttribute();
+        currencyAttrib.setRuleType("NON-STP");
+        currencyAttrib.setAttributeName("currency");
+        currencyAttrib.setDisplayName("Currency");
+        currencySTPRule.addRuleAttribute(currencyAttrib);
+        ruleDao.doInJPA(entityManager -> {
+            entityManager.find(BusinessRule.class, currencySTPRule.getId());
+            ruleAttributeDao.save(currencyAttrib);
+            ruleDao.merge(currencySTPRule);
+        }, ruleDao);
+
+        BusinessRule settlementDateSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP").orElseThrow();
+        RuleAttribute settlementDateAttrib = new RuleAttribute();
+        settlementDateAttrib.setRuleType("NON-STP");
+        settlementDateAttrib.setAttributeName("settlementDate");
+        settlementDateAttrib.setDisplayName("Settlement Date");
+        settlementDateSTPRule.addRuleAttribute(settlementDateAttrib);
+        ruleDao.doInJPA(entityManager -> {
+            entityManager.find(BusinessRule.class, settlementDateSTPRule.getId());
+            ruleAttributeDao.save(settlementDateAttrib);
+            ruleDao.merge(settlementDateSTPRule);
+        }, ruleDao);
+    }
+
+    private static void createSomeRules() {
+        BusinessRule cptySTPRule = new BusinessRule.BusinessRuleBuilder("Counterparty STP Rule", "NON-STP").with(
+                businessRuleBuilder -> {
+                    businessRuleBuilder.active = true;
+                    businessRuleBuilder.priority = 1;
+                }
+        ).build();
+
+        BusinessRule currencySTPRule = new BusinessRule.BusinessRuleBuilder("Currency STP Rule", "NON-STP").with(
+                businessRuleBuilder -> {
+                    businessRuleBuilder.active = true;
+                    businessRuleBuilder.priority = 1;
+                }
+        ).build();
+
+        BusinessRule settlementDateSTPRule = new BusinessRule.BusinessRuleBuilder("Settlement Date STP Rule", "NON-STP").with(
+                businessRuleBuilder -> {
+                    businessRuleBuilder.active = true;
+                    businessRuleBuilder.priority = 1;
+                }
+        ).build();
+
+        ruleDao.save(cptySTPRule);
+        ruleDao.save(currencySTPRule);
+        ruleDao.save(settlementDateSTPRule);
     }
 
     @Test
@@ -82,11 +159,9 @@ public class BusinessRuleServiceTest {
 
     @Test @Order(4)
     public void whenGivenDataThenCurrencySTPRuleIsAmendedNewOperandsAreAdded() {
-        BusinessRule currencyStpRule2 = createRule("Currency STP Rule", "NON-STP",1, Map.of("currency", List.of("YUAN")));
-        BusinessRule currencyStpRule3 = createRule("Currency STP Rule", "NON-STP",2, Map.of("currency", List.of("YEN")));
+        createRule("Currency STP Rule", "NON-STP",1, Map.of("currency", List.of("YUAN")));
+        createRule("Currency STP Rule", "NON-STP",2, Map.of("currency", List.of("YEN")));
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("currency", "NON-STP").orElseThrow();
-        assertEquals(3, currencyStpRule2.getPriority());//priority is 3 as part of previous insert of currency STP and hence same is used.
-        assertEquals(3, currencyStpRule3.getPriority());
         assertEquals("currency", ruleAttribute.getAttributeName());
         RuleValue yuan = ruleValueDao.findByOperand("YUAN").orElseThrow();
         assertEquals("YUAN", yuan.getOperand());
@@ -96,9 +171,8 @@ public class BusinessRuleServiceTest {
 
     @Test @Order(5)
     public void whenGivenDataThenAmountSTPRuleIsCreated() {
-        BusinessRule amountStpRule = createRule("Amount STP Rule", "NON-STP", 2, Map.of("amount", List.of("2300000.00")));
+        createRule("Amount STP Rule", "NON-STP", 2, Map.of("amount", List.of("2300000.00")));
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("amount", "NON-STP").orElseThrow();
-        assertEquals(2, amountStpRule.getPriority());
         assertEquals("amount", ruleAttribute.getAttributeName());
         RuleValue amount = ruleValueDao.findByOperand("2300000.00").orElseThrow();
         assertEquals("2300000.00", amount.getOperand());
@@ -149,12 +223,12 @@ public class BusinessRuleServiceTest {
         RuleAttribute ruleAttributeSettlementDate = ruleAttributeDao.findRuleAttribute("settlementDate", "NETTING").orElseThrow();
         assertEquals("settlementDate", ruleAttributeSettlementDate.getAttributeName());
         assertThrows(Exception.class, ()-> ruleAttributeDao.findRuleAttribute("amount", "NETTING").orElseThrow());
-        RuleValue currency = ruleValueDao.findByOperand("EUR").orElseThrow();
-        assertEquals("EUR", currency.getOperand());
-        RuleValue settlementDate = ruleValueDao.findByOperand(LocalDate.now().plusDays(15).toString()).orElseThrow();
-        assertEquals(LocalDate.now().plusDays(15), LocalDate.parse(settlementDate.getOperand()));
         RuleValue cpty = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertEquals("Lehman Brothers PLC", cpty.getOperand());
+        RuleValue settlementDate = ruleValueDao.findByOperand(LocalDate.now().plusDays(15).toString()).orElseThrow();
+        assertEquals(LocalDate.now().plusDays(15), LocalDate.parse(settlementDate.getOperand()));
+        RuleValue currency = ruleValueDao.findByOperand("EUR").orElseThrow();
+        assertEquals("EUR", currency.getOperand());
         assertThrows(Exception.class, ()-> ruleValueDao.findByOperand("Throws Exception").orElseThrow());
     }
 

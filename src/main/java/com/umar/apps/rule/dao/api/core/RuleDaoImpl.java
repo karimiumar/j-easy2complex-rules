@@ -6,6 +6,7 @@ import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
+import com.umar.simply.jdbc.dml.operations.SelectOp;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -244,5 +245,44 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             values.addAll(ruleValues);
         });
         return values;
+    }
+
+    @Override
+    public Optional<BusinessRule> findByNameTypeAttributesAndOperands(String ruleName, String ruleType, Set<String> attributes, Set<String> operands) {
+        logger.info("findByNameTypeAttributesAndOperands() with ruleName: {}, ruleType: {}, ruleAttributeList: {}, ruleValuesList: {}", ruleName, ruleType, attributes, operands);
+        AtomicReference<BusinessRule> result = new AtomicReference<>();
+        SelectOp select = selectFunction.select()
+                .SELECT().COLUMN(RULE$RULE).FROM(RULE$ALIAS)
+                .JOIN().TABLE(ATTRIB$ALIAS)
+                .ON().COLUMN(ATTRIB$RULE).EQ(RULE$RULE)
+                .JOIN().TABLE(RULE_VALUE$ALIAS)
+                .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
+                .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
+                .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType");
+                for (String attribute: attributes) {
+                    select.AND().COLUMN(attribute);
+                }
+                for(String operand: operands) {
+                    select.AND().COLUMN(operand);
+                }
+                String sql = select.getSQL();
+                logger.info("Executing query:{} ", sql);
+        executeInTransaction(entityManager -> {
+            Session session = entityManager.unwrap(Session.class);
+            try {
+                BusinessRule row = session.createQuery(sql, BusinessRule.class)
+                        .setParameter("ruleName", ruleName)
+                        .setParameter("ruleType", ruleType)
+                        .getSingleResult();
+                result.set(row);
+            }catch (NoResultException e) {
+                //Simply ignore it. This is expected when no data exist.
+            }
+        });
+        if(null != result.get()){
+            BusinessRule businessRule = result.get();
+            return Optional.of(businessRule);
+        }
+        return Optional.empty();
     }
 }

@@ -1,5 +1,6 @@
 package com.umar.apps.rule.dao.api;
 
+import com.umar.apps.rule.RuleAttribute;
 import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.infra.dao.api.GenericDao;
 
@@ -13,4 +14,12 @@ public interface RuleValueDao extends GenericDao<RuleValue, Long> {
      * @return Returns an Optional.
      */
     Optional<RuleValue> findByOperand(String operand);
+
+    /**
+     * Finds a {@link RuleValue} for the given {@link RuleAttribute} and operand
+     * @param ruleAttribute The RuleAttribute ruleAttribute instance
+     * @param operand The operand
+     * @return Returns an Optional
+     */
+    Optional<RuleValue> findByRuleAttributeAndValue(RuleAttribute ruleAttribute, String operand);
 }
