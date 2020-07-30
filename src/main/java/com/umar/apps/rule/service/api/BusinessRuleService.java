@@ -21,10 +21,24 @@ public interface BusinessRuleService {
      * @param ruleName The name of the Rule
      * @param ruleType The type of the Rule
      * @param priority The priority of the Rule
-     * @param attributeNameValuesMap A map of attributeName and corresponding values
-     * @return Returns a {@link BusinessRule}
      */
-    public BusinessRule createRule(String ruleName, String ruleType, int priority, Map<String, List<String>> attributeNameValuesMap);
+    void createRule(String ruleName, String ruleType, int priority);
+
+    /**
+     * Creates a {@link RuleAttribute} for the given parameters and attaches it to the given {@link BusinessRule}
+     * @param businessRule The {@link BusinessRule} to attach
+     * @param attributeName The name of the {@link com.umar.apps.rule.engine.WorkflowItem} attribute
+     * @param ruleType The type of the {@link BusinessRule}
+     * @param displayName The canonical display name of the attribute
+     */
+    void createAttribute(BusinessRule businessRule, String attributeName, String ruleType, String displayName);
+
+    /**
+     * Creates a {@link com.umar.apps.rule.RuleValue} for the given params and attaches it to {@link RuleAttribute}
+     * @param ruleAttribute The {@link RuleAttribute} to attach
+     * @param operand The name of the operand.
+     */
+    void createValue(RuleAttribute ruleAttribute, String operand);
 
     /**
      * Creates a {@link BusinessRule} for the given ruleName, ruleType. It first searches the db for the given ruleName and ruleType.

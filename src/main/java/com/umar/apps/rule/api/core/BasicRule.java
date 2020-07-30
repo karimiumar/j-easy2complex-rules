@@ -87,8 +87,7 @@ public class BasicRule implements Rule {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BasicRule)) return false;
-        BasicRule basicRule = (BasicRule) o;
+        if (!(o instanceof BasicRule basicRule)) return false;
         return priority == basicRule.priority &&
                 name.equals(basicRule.name);
     }

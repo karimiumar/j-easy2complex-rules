@@ -31,7 +31,7 @@ public class NettingConditionService extends AbstractConditionService implements
             Object value = null;
             Collection<RuleValue> ruleValues = new ArrayList<>(0);
             BusinessRule businessRule = optionalBusinessRule.get();
-            /*Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
+            Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
             for (RuleAttribute ruleAttribute: ruleAttributes) {
                 String attributeName = ruleAttribute.getAttributeName();
                 try {
@@ -43,7 +43,7 @@ public class NettingConditionService extends AbstractConditionService implements
                     //eat up
                     logger.info("Exception Thrown: {}", e.getMessage());
                 }
-            }*/
+            }
             return getCondition(value, ruleValues);
         }
         return Condition.FALSE;

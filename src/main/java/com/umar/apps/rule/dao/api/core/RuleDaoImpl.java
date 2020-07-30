@@ -15,7 +15,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -248,8 +247,8 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     }
 
     @Override
-    public Optional<BusinessRule> findByNameTypeAttributesAndOperands(String ruleName, String ruleType, Set<String> attributes, Set<String> operands) {
-        logger.info("findByNameTypeAttributesAndOperands() with ruleName: {}, ruleType: {}, ruleAttributeList: {}, ruleValuesList: {}", ruleName, ruleType, attributes, operands);
+    public Optional<BusinessRule> findByNameTypeAttributesAndOperands(String ruleName, String ruleType, Set<String> attributesCondition, Set<String> operandsCondition) {
+        logger.info("findByNameTypeAttributesAndOperands() with ruleName: {}, ruleType: {}, ruleAttributeList: {}, ruleValuesList: {}", ruleName, ruleType, attributesCondition, operandsCondition);
         AtomicReference<BusinessRule> result = new AtomicReference<>();
         SelectOp select = selectFunction.select()
                 .SELECT().COLUMN(RULE$RULE).FROM(RULE$ALIAS)
@@ -259,11 +258,11 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
                 .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
                 .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType");
-                for (String attribute: attributes) {
-                    select.AND().COLUMN(attribute);
+                for (String attributeCondition: attributesCondition) {
+                    select.AND().CONDITION(attributeCondition);
                 }
-                for(String operand: operands) {
-                    select.AND().COLUMN(operand);
+                for(String operandCondition: operandsCondition) {
+                    select.AND().CONDITION(operandCondition);
                 }
                 String sql = select.getSQL();
                 logger.info("Executing query:{} ", sql);

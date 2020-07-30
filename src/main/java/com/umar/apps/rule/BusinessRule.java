@@ -30,9 +30,6 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     private boolean active;
     private int version;
     private Set<RuleAttribute> ruleAttributes = new HashSet<>();
-    //private Set<BusinessRuleAttribute> businessRuleAttributes = new HashSet<>(0);
-    //
-    //
 
     public BusinessRule(){}
 

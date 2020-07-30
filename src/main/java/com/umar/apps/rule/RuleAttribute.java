@@ -4,11 +4,9 @@ import com.umar.apps.rule.engine.WorkflowItem;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
-@Entity
+@Entity(name = "RuleAttribute")
 @Table(name = "attributes", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"attribute_name", "rule_type"})
 })
@@ -30,9 +28,8 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     private int version;
     private String displayName;
     private BusinessRule businessRule;
-    private Set<RuleValue> ruleValues = new HashSet<>();
-    //private Set<RuleAttributeValue> ruleAttributeValues = new HashSet<>(0);
-    //private Set<BusinessRuleAttribute> businessRuleAttributes = new HashSet<>(0);
+    //private Set<RuleValue> ruleValues = new HashSet<>();
+    private List<RuleAttributeValue> ruleAttributeValues = new ArrayList<>();
 
     public RuleAttribute(Long id, String attributeName, String ruleType, String displayName) {
         this.id = id;
@@ -47,9 +44,14 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         return id;
     }
 
-    @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch= FetchType.EAGER, orphanRemoval = true)
+    /*@OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.ALL}, orphanRemoval = true)
     public Set<RuleValue> getRuleValues() {
         return ruleValues;
+    }*/
+
+    @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.ALL}, orphanRemoval = true, fetch = FetchType.EAGER)
+    public List<RuleAttributeValue> getRuleAttributeValues() {
+        return ruleAttributeValues;
     }
 
     @ManyToOne
@@ -83,9 +85,8 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         return displayName;
     }
 
-    public void addRuleValue(RuleValue ruleValue) {
-        ruleValues.add(ruleValue);
-        ruleValue.setRuleAttribute(this);
+    public void setRuleAttributeValues(List<RuleAttributeValue> ruleAttributeValues) {
+        this.ruleAttributeValues = ruleAttributeValues;
     }
 
     public void setBusinessRule(BusinessRule businessRule) {
@@ -112,9 +113,9 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         this.version = version;
     }
 
-    public void setRuleValues(Set<RuleValue> ruleValues) {
+    /*public void setRuleValues(Set<RuleValue> ruleValues) {
         this.ruleValues = ruleValues;
-    }
+    }*/
 
     @Override
     public boolean equals(Object o) {

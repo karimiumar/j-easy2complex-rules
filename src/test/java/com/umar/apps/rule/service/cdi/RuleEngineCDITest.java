@@ -65,7 +65,7 @@ public class RuleEngineCDITest {
         }
     }
 
-    @Test @Order(1)
+    /*@Test @Order(1)
     public void whenGivenDataThenCounterPartySTPRuleIsAdded() {
         RuleAttributeDao ruleAttributeDao = container.select(RuleAttributeDaoImpl.class).get();
         RuleValueDao ruleValueDao = container.select(RuleValueDaoImpl.class).get();
@@ -210,9 +210,9 @@ public class RuleEngineCDITest {
 
     }
 
-    private BusinessRule createRule(String ruleName, String ruleType, int priority, Map<String, List<String>> attributeNameValsMap) {
+    private void createRule(String ruleName, String ruleType, int priority) {
         BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
-        return ruleService.createRule(ruleName,ruleType,priority,attributeNameValsMap);
+        ruleService.createRule(ruleName,ruleType,priority);
     }
 
     private static Cashflow createCashFlow(String counterParty, String currency, double amount, LocalDate settlementDate) {
@@ -224,5 +224,5 @@ public class RuleEngineCDITest {
             cashflowBuilder.settlementDate = settlementDate;
             cashflowBuilder.version = 0;
         }).build();
-    }
+    }*/
 }
