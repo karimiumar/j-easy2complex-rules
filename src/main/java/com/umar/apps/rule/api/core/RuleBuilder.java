@@ -78,6 +78,11 @@ public class RuleBuilder {
         return this;
     }
 
+    public RuleBuilder when(Set<Condition> conditions) {
+        this.conditions.addAll(conditions);
+        return this;
+    }
+
     public RuleBuilder and(Condition condition) {
         this.conditions.add(condition);
         return this;

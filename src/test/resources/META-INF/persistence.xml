@@ -9,15 +9,17 @@
         <class>com.umar.apps.rule.BusinessRule</class>
         <class>com.umar.apps.rule.RuleAttribute</class>
         <class>com.umar.apps.rule.RuleValue</class>
+        <class>com.umar.apps.rule.RuleAttributeValue</class>
         <class>com.umar.apps.rule.dao.Trade</class>
-        <class>Name</class>
+        <class>com.umar.apps.rule.service.cdi.Cashflow</class>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:~/rulesdb_test_db;mode=mysql;AUTO_SERVER=true"/>
             <property name="javax.persistence.jdbc.user" value="sa"/>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="javax.persistence.jdbc.password" value="sa"/>
-            <property name="javax.persistence.schema-generation.database.action" value="create-drop"/>
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
         </properties>
+
     </persistence-unit>
 </persistence>

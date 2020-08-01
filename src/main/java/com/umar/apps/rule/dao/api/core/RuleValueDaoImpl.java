@@ -42,10 +42,13 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
         logger.info("findByOperand() with operand {}", operand);
         AtomicReference<Object> result = new AtomicReference<>();
         String sql = selectFunction.select()
-                .SELECT().COLUMN(RULE_VALUE)
-                .FROM(RULE_VALUE$ALIAS)
-                .WHERE().COLUMN(RULE_VALUE$OPERAND).EQ(":operand")
+                .SELECT().COLUMN("ruleVal")
+                .FROM("RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute ra")
+                .WHERE().COLUMN("ruleVal = rav.ruleValue")
+                .AND().COLUMN("rav.ruleAttribute = ra")
+                .AND().COLUMN("ruleVal.operand").EQ(":operand")
                 .getSQL();
+        logger.info("SQL:{}", sql);
         executeInTransaction(entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
@@ -68,15 +71,19 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
         logger.info("findByRuleAttributeAndValue() for params ruleAttribute{}, operand{}", ruleAttribute, operand);
         AtomicReference<Object> result = new AtomicReference<>();
         String sql = selectFunction.select()
-                .SELECT().COLUMN(RULE_VALUE)
-                .FROM(RULE_VALUE$ALIAS)
-                .JOIN().TABLE(ATTRIB$ALIAS)
-                .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
-                .WHERE().COLUMN(RULE_VALUE$OPERAND).EQ(":operand")
+                .SELECT().COLUMN("ruleVal")
+                .FROM("RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute ra")
+                .WHERE().COLUMN("ruleVal = rav.ruleValue")
+                .AND().COLUMN("rav.ruleAttribute = ra")
+                .AND().COLUMN("ra.attributeName").EQ(":attributeName")
+                .AND().COLUMN("ra.ruleType").EQ(":ruleType")
+                .AND().COLUMN("ruleVal.operand").EQ(":operand")
                 .getSQL();
         executeInTransaction(entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
+                        .setParameter("attributeName", ruleAttribute.getAttributeName())
+                        .setParameter("ruleType", ruleAttribute.getRuleType())
                         .setParameter("operand", operand)
                         .getSingleResult());
             } catch (NoResultException ex) {

@@ -82,28 +82,34 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     @Override
     public void createValue(RuleAttribute ruleAttribute, String operand) {
-        //TODO: write logic to check if incoming values same as database values then ignore updates.
         RuleValue ruleValue = new RuleValue();
         ruleValue.setOperand(operand);
-        RuleValue persistedValue = findExistingValue(operand);
-        if(null == persistedValue) {
-            doInJPA(entityManager -> ruleValueDao.save(ruleValue), ruleValueDao);
+        RuleValue existingValue = findExistingValue(operand);
+        RuleAttribute existingAttribute = findExistingAttribute(ruleAttribute);
+        if(null != existingValue && null != existingAttribute
+                && existingValue.getRuleAttributes().contains(new RuleAttributeValue(existingAttribute, existingValue))) {
+            return;
         }
-        RuleAttribute persistedAttribute = findExistingAttribute(ruleAttribute);
-        if(null != persistedAttribute) {
-            //TODO:FIX ME
-            persistedValue = findExistingValue(operand);
-            persistedValue.addRuleAttribute(persistedAttribute);
-            RuleValue finalPersistedValue = persistedValue;
+        if(null == existingValue) {
             doInJPA(entityManager -> {
-                entityManager.find(RuleAttribute.class, persistedAttribute.getId());
-                ruleValueDao.merge(finalPersistedValue);
+                Session session = entityManager.unwrap(Session.class);
+                RuleAttribute attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+                ruleValue.addRuleAttribute(attribute);
+                session.save(ruleValue);
             }, ruleValueDao);
-        }else{
-            persistedValue = findExistingValue(operand);
-            persistedValue.addRuleAttribute(ruleAttribute);
-            RuleValue finalPersistedValue = persistedValue;
-            doInJPA(entityManager -> ruleValueDao.merge(finalPersistedValue), ruleValueDao);
+        }else if(null != existingAttribute && !existingValue.getRuleAttributes().contains(new RuleAttributeValue(existingAttribute, existingValue))){
+            existingValue.addRuleAttribute(existingAttribute);
+            doInJPA(entityManager -> {
+                Session session = entityManager.unwrap(Session.class);
+                session.merge(existingValue);
+            }, ruleValueDao);
+        } else{
+            doInJPA(entityManager -> {
+                Session session = entityManager.unwrap(Session.class);
+                RuleAttribute attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+                existingValue.addRuleAttribute(attribute);
+                session.saveOrUpdate(existingValue);
+            }, ruleValueDao);
         }
     }
 

@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.rule.BusinessRule.*;
 import static com.umar.apps.rule.RuleAttribute.*;
+import static com.umar.apps.rule.RuleAttributeValue.*;
 import static com.umar.apps.rule.RuleValue.*;
 
 @ApplicationScoped
@@ -224,15 +225,17 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         Collection<RuleValue> values = new ArrayList<>(0);
         String sql = selectFunction.select()
                 .SELECT()
-                .COLUMN(RULE_VALUE)
-                .FROM(RULE$ALIAS)
-                .JOIN().TABLE(ATTRIB$ALIAS)
-                .ON().COLUMN(ATTRIB$RULE_TYPE).EQ(RULE$RULE_TYPE)
-                .JOIN().TABLE(RULE_VALUE$ALIAS)
-                .ON().COLUMN(RULE_VALUE$ATTRIB).EQ(ATTRIB$ATTRIB)
-                .WHERE().COLUMN(RULE$RULE_NAME).EQ(":ruleName")
-                .AND().COLUMN(RULE$RULE_TYPE).EQ(":ruleType")
-                .AND().COLUMN(ATTRIB$ATTRIB_NAME).EQ(":attributeName")
+                .COLUMN("ruleVal")
+                .FROM("RuleValue ruleVal")
+                .JOIN().TABLE("RuleAttributeValue rav")
+                .ON().COLUMN("rav.ruleValue").EQ("ruleVal")
+                .JOIN().TABLE("RuleAttribute attr")
+                .ON().COLUMN("attr").EQ("rav.ruleAttribute")
+                .JOIN().TABLE("BusinessRule rule")
+                .ON().COLUMN("rule.ruleType").EQ("attr.ruleType")
+                .WHERE().COLUMN("rule.ruleName").EQ(":ruleName")
+                .AND().COLUMN("rule.ruleType").EQ(":ruleType")
+                .AND().COLUMN("attr.attributeName").EQ(":attributeName")
                 .getSQL();
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);

@@ -7,14 +7,17 @@ import com.umar.apps.rule.api.*;
 import com.umar.apps.rule.api.core.InferenceRuleEngine;
 import com.umar.apps.rule.api.core.RuleBuilder;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
+import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.dao.api.core.RuleAttributeDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
 import com.umar.apps.rule.infra.dao.api.core.DeleteFunction;
 import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
+import com.umar.apps.rule.service.BusinessRulesTestProvider;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.ConditionService;
+import com.umar.apps.rule.service.api.NettingService;
 import com.umar.apps.rule.service.api.core.*;
 import org.junit.jupiter.api.*;
 
@@ -50,6 +53,9 @@ public class RuleEngineCDITest {
                         , NettingConditionService.class
                 )
                 .initialize();
+        RuleDao ruleDao = container.select(RuleDaoImpl.class).get();
+        BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
+        BusinessRulesTestProvider.createSomeRulesAndAttributes(ruleDao, ruleService);
     }
 
     @AfterEach
@@ -65,16 +71,10 @@ public class RuleEngineCDITest {
         }
     }
 
-    /*@Test @Order(1)
-    public void whenGivenDataThenCounterPartySTPRuleIsAdded() {
+    @Test @Order(1)
+    public void whenGivenDataThenCounterPartySTPRule() {
         RuleAttributeDao ruleAttributeDao = container.select(RuleAttributeDaoImpl.class).get();
         RuleValueDao ruleValueDao = container.select(RuleValueDaoImpl.class).get();
-        BusinessRule cptyStpRule2 = createRule("Counterparty STP Rule", "NON-STP",1, Map.of("counterParty", List.of("Lehman Brothers PLC")));
-        BusinessRule settlementDateSTPRule = createRule("Settlement Date STP Rule", "NON-STP", 1, Map.of("settlementDate", List.of(LocalDate.now().plusDays(10).toString())));
-        assertNotEquals(-1L, cptyStpRule2.getId());
-        assertEquals("Counterparty STP Rule", cptyStpRule2.getRuleName());
-        assertEquals("NON-STP", cptyStpRule2.getRuleType());
-        assertEquals(1, cptyStpRule2.getPriority());
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         assertEquals("counterParty", ruleAttribute.getAttributeName());
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
@@ -127,10 +127,17 @@ public class RuleEngineCDITest {
 
     @Test @Order(3)
     public void givenCashFlows_WhenCptyLehman_Brothers_PLC_And_SettlementDateNONSTPThenCashflowIsNotSTPAllowed() {
+        BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
+        RuleDao ruleDao = container.select(RuleDaoImpl.class).get();
+        RuleAttributeDao ruleAttributeDao = container.select(RuleAttributeDaoImpl.class).get();
+        BusinessRulesTestProvider.createRule("Settlement Date Stp Rule", "NON-STP", 1, ruleService);
+        BusinessRule stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date Stp Rule", "NON-STP").orElseThrow();
+        BusinessRulesTestProvider.createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date",ruleService);
+        RuleAttribute stmtDtAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
+        createValue(stmtDtAttrib, LocalDate.now().plusDays(10).toString(), ruleService);
         CashflowDao cashflowDao = container.select(CashflowDao.class).get();
         ConditionService counterPartyCondition = container.select(CounterPartyConditionService.class).get();
         ConditionService settlementDateConditon = container.select(SettlementDateConditionService.class).get();
-        createRule("Counterparty STP Rule", "NON-STP",1, Map.of("counterParty", List.of("Lehman Brothers PLC")));
         Cashflow cf4 = createCashFlow("Lehman Brothers PLC", "YUAN", 210000.00, LocalDate.now().plusDays(10));
         cashflowDao.save(cf4);
         RulesEngine rulesEngine = new InferenceRuleEngine();
@@ -160,16 +167,15 @@ public class RuleEngineCDITest {
 
     @Test @Order(3)
     public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenNettCashflows() {
+        BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
+        RuleAttributeDao ruleAttributeDao = container.select(RuleAttributeDaoImpl.class).get();
         CashflowDao cashflowDao = container.select(CashflowDao.class).get();
-        ConditionService counterPartyCondition = container.select(NettingConditionService.class).get();
-        createRule("Counterparty Netting Rule", "NETTING" ,1
-                , Map.of("counterParty", List.of("Lehman Brothers PLC")
-                        ,"currency",List.of("USD"))
-        );
-        createRule("Counterparty Netting Rule", "NETTING" ,1
-                , Map.of("counterParty", List.of("Meryl Lynch PLC")
-                        ,"currency",List.of("USD"))
-        );
+        NettingService nettingConditionService = container.select(NettingConditionService.class).get();
+
+        RuleAttribute stmtDateAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NETTING").orElseThrow();
+        RuleAttribute cptyAttrib = ruleAttributeDao.findRuleAttribute("counterParty", "NETTING").orElseThrow();
+        RuleAttribute currencyAttrib = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
+        createValue(cptyAttrib, "Meryl Lynch PLC", ruleService);
         Cashflow cf3 = createCashFlow("Meryl Lynch PLC", "USD", 220000.00, LocalDate.now().plusDays(10));
         Cashflow cf6 = createCashFlow("Meryl Lynch PLC", "USD", 10000.00, LocalDate.now().plusDays(10));
         Cashflow cf7 = createCashFlow("Meryl Lynch PLC", "USD", 20000.00, LocalDate.now().plusDays(10));
@@ -183,36 +189,47 @@ public class RuleEngineCDITest {
         cashflowDao.save(cf9);
         cashflowDao.save(cf10);
 
-        Collection<Cashflow> cashflows = cashflowDao.findBySettlementDate(LocalDate.now().plusDays(10));
+        List<Cashflow> cashflows = new LinkedList<>(cashflowDao.findByCounterPartyCurrencyAndSettlementDate("Meryl Lynch PLC", "USD", LocalDate.now().plusDays(10)));
+        Map<String, Set<Cashflow>> cashflowMap = new ConcurrentHashMap<>();
+        cashflowMap.put("Meryl Lynch PLC-USD", netTogether(cashflows, nettingConditionService));
+        cashflows.clear();
+        cashflows.addAll(cashflowDao.findByCounterPartyCurrencyAndSettlementDate("Lehman Brothers PLC", "EUR", LocalDate.now().plusDays(10)));
+        cashflowMap.put("Lehman Brothers PLC-EUR", netTogether(cashflows, nettingConditionService));
+        cashflows.clear();
+        cashflows.addAll(cashflowDao.findByCounterPartyCurrencyAndSettlementDate("Lehman Brothers PLC", "YUAN", LocalDate.now().plusDays(10)));
+        cashflowMap.put("Lehman Brothers PLC-YUAN", netTogether(cashflows, nettingConditionService));
+        assertEquals(3, cashflowMap.size());
+        assertEquals(1, cashflowMap.get("Lehman Brothers PLC-YUAN").size());
+        assertEquals(2, cashflowMap.get("Lehman Brothers PLC-EUR").size());
+        assertEquals(3, cashflowMap.get("Meryl Lynch PLC-USD").size());
+    }
 
+    Set<Cashflow> netTogether(List<Cashflow> cashflows, NettingService nettingConditionService) {
+        Set<Cashflow> cashflowSet = new HashSet<>();
         RulesEngine rulesEngine = new InferenceRuleEngine();
         Facts facts = new Facts();
         Rules rules = new Rules();
-        Map<String, Set<Cashflow>> cashflowMap = new ConcurrentHashMap<>();
-        Set<Cashflow> cashflowSet = new HashSet<>();
         int cnt = 1;
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            Condition counterPartyNettingRule = counterPartyCondition.getCondition(cashflow, "Counterparty Netting Rule", "NETTING");
+            Set<Condition> nettingRules = nettingConditionService.getNettingConditions(cashflow, "Counterparty Netting Rule", "NETTING");
             //Hack the comparator logic of DefaultRule/BasicRule in order to override their internal logic as below.
             //Otherwise the first cashflow in the collection will be the only Rule in registered Rules.
             Rule stpRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
-                    .when(counterPartyNettingRule)
+                    .when(nettingRules)
                     .then(action -> {
                         cashflowSet.add(cashflow);
-                        cashflowMap.put(cashflow.getCounterParty(), cashflowSet);
                     })
                     .build();
             rules.register(stpRules);
         }
         rulesEngine.fire(rules, facts);
-
+        return cashflowSet;
     }
 
-    private void createRule(String ruleName, String ruleType, int priority) {
-        BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
-        ruleService.createRule(ruleName,ruleType,priority);
+    private void createValue(RuleAttribute ruleAttribute, String operand, BusinessRuleService ruleService) {
+        ruleService.createValue(ruleAttribute, operand);
     }
 
     private static Cashflow createCashFlow(String counterParty, String currency, double amount, LocalDate settlementDate) {
@@ -224,5 +241,5 @@ public class RuleEngineCDITest {
             cashflowBuilder.settlementDate = settlementDate;
             cashflowBuilder.version = 0;
         }).build();
-    }*/
+    }
 }

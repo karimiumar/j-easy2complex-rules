@@ -8,14 +8,20 @@ import java.util.Objects;
 @Table(name = "attribute_values")
 public class RuleAttributeValue {
 
+    public static final String RULEATTRIBVALUE = "rav";
+    public static final String RULEATTRIBVALUE$ALIAS = "RuleAttributeValue rav";
+    public static final String RULEATTRIBVALUE$ID = "rav.id";
+    public static final String RULEATTRIBVALUE$RULE_ATTRIBUTE = "rav.ruleAttribute";
+    public static final String RULEATTRIBVALUE$RULE_VALUE = "rav.ruleValue";
+
     @EmbeddedId
     private RuleAttributeValueId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("attributeId")
     private RuleAttribute ruleAttribute;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("valueId")
     private RuleValue ruleValue;
 
@@ -64,7 +70,6 @@ public class RuleAttributeValue {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (!(o instanceof RuleAttributeValue that)) return false;
         return Objects.equals(ruleAttribute, that.ruleAttribute) &&
                 Objects.equals(ruleValue, that.ruleValue);
@@ -73,5 +78,15 @@ public class RuleAttributeValue {
     @Override
     public int hashCode() {
         return Objects.hash(ruleAttribute, ruleValue);
+    }
+
+    @Override
+    public String toString() {
+        return "RuleAttributeValue{" +
+                "id=" + id +
+                ", ruleAttribute=" + ruleAttribute.getAttributeName() +
+                ", ruleValue=" + ruleValue.getOperand() +
+                ", created=" + created +
+                '}';
     }
 }

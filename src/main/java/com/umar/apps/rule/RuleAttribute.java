@@ -44,11 +44,6 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         return id;
     }
 
-    /*@OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.ALL}, orphanRemoval = true)
-    public Set<RuleValue> getRuleValues() {
-        return ruleValues;
-    }*/
-
     @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.ALL}, orphanRemoval = true, fetch = FetchType.EAGER)
     public List<RuleAttributeValue> getRuleAttributeValues() {
         return ruleAttributeValues;
@@ -65,12 +60,12 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         return businessRule;
     }
 
-    @Column(name = "attribute_name")
+    @Column(name = "attribute_name", length = 30)
     public String getAttributeName() {
         return attributeName;
     }
 
-    @Column(name = "rule_type")
+    @Column(name = "rule_type", length = 30)
     public String getRuleType() {
         return ruleType;
     }
@@ -80,7 +75,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         return version;
     }
 
-    @Column(name = "display_name")
+    @Column(name = "display_name", length = 60)
     public String getDisplayName() {
         return displayName;
     }
@@ -113,13 +108,8 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         this.version = version;
     }
 
-    /*public void setRuleValues(Set<RuleValue> ruleValues) {
-        this.ruleValues = ruleValues;
-    }*/
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (!(o instanceof RuleAttribute that)) return false;
         return attributeName.equals(that.attributeName) &&
                 ruleType.equals(that.ruleType);

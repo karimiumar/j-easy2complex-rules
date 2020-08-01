@@ -28,8 +28,11 @@ public class SettlementDateConditionService extends AbstractConditionService imp
     protected Condition getCondition(Object value, Collection<RuleValue> ruleValues) {
         List<Condition> conditions = new ArrayList<>(0);
         for(RuleValue ruleValue: ruleValues) {
-            logger.info("`{}`.equals(`{}`)", value, ruleValue.getOperand());
-            conditions.add(condition -> value.equals(LocalDate.parse(ruleValue.getOperand())));
+            //The value type is LocalDate and should be converted to String before comparison.
+            if(value.toString().equals(ruleValue.getOperand())) {
+                logger.info("`{}`.equals(`{}`)", value, ruleValue.getOperand());
+                conditions.add(condition -> value.equals(LocalDate.parse(ruleValue.getOperand())));
+            }
         }
         logger.info("Conditions.size():{}", conditions.size());
         return conditions.size() == 0? Condition.FALSE: conditions.get(0);

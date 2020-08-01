@@ -26,7 +26,7 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
     private String ruleName;
     private int priority;
     private String ruleType;
-    //private String desc;
+    private String desc;
     private boolean active;
     private int version;
     private Set<RuleAttribute> ruleAttributes = new HashSet<>();
@@ -38,20 +38,20 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         return priority;
     }
 
-    @Column(name = "rule_name")
+    @Column(name = "rule_name", length = 100)
     public String getRuleName() {
         return ruleName;
     }
 
-    @Column(name = "rule_type")
+    @Column(name = "rule_type", length = 30)
     public String getRuleType() {
         return ruleType;
     }
 
-    //@Column(name = "[desc]")
-    /*public String getDesc() {
+    @Column(name = "[desc]", length = 100)
+    public String getDesc() {
         return desc;
-    }*/
+    }
 
     @OneToMany(mappedBy = "businessRule", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER, orphanRemoval = true)
     public Set<RuleAttribute> getRuleAttributes() {
@@ -87,9 +87,9 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         this.ruleType = ruleType;
     }
 
-    /*public void setDesc(String desc) {
+    public void setDesc(String desc) {
         this.desc = desc;
-    }*/
+    }
 
     public void setVersion(int version) {
         this.version = version;
@@ -142,6 +142,7 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         ruleType = builder.ruleType;
         active = builder.active;
         priority = builder.priority;
+        desc = builder.desc;
     }
 
     public static class BusinessRuleBuilder {
@@ -149,6 +150,7 @@ public class BusinessRule implements WorkflowItem<Long>, Serializable {
         private final String ruleType;
         public boolean active;
         public int priority;
+        public String desc;
 
         public BusinessRuleBuilder(String ruleName, String ruleType) {
             this.ruleName = ruleName;

@@ -35,7 +35,7 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
         return id;
     }
 
-    @Column(name="operand", unique = true)
+    @Column(name="operand", unique = true, length = 150)
     public String getOperand() {
         return operand;
     }
@@ -69,22 +69,6 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
         }
     }
 
-    /*@ManyToOne()
-    //@JoinColumn(name = "rule_id")
-    @JoinTable(
-            name = "attribute_values",
-            joinColumns = @JoinColumn(name = "value_id"),
-            inverseJoinColumns = @JoinColumn(name = "attribute_id"),
-            uniqueConstraints = @UniqueConstraint(columnNames = {"value_id","attribute_id"})
-    )
-    public RuleAttribute getRuleAttribute() {
-        return ruleAttribute;
-    }
-
-    public void setRuleAttribute(RuleAttribute ruleAttribute) {
-        this.ruleAttribute = ruleAttribute;
-    }*/
-
     public void setRuleAttributes(List<RuleAttributeValue> ruleAttributes) {
         this.ruleAttributes = ruleAttributes;
     }
@@ -103,7 +87,6 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (!(o instanceof RuleValue value)) return false;
         return Objects.equals(operand, value.operand);
     }
