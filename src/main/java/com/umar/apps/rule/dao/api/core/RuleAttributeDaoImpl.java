@@ -1,52 +1,39 @@
 package com.umar.apps.rule.dao.api.core;
 
 import com.umar.apps.rule.RuleAttribute;
-import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Session;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static com.umar.apps.rule.RuleAttribute.*;
 
 @ApplicationScoped
 @Named
 public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> implements RuleAttributeDao {
 
     private static final Logger logger = LogManager.getLogger(RuleAttributeDaoImpl.class);
-    @Inject private final SelectFunction selectFunction;
 
     //Constructor needed for CDI. Do not remove
-    protected RuleAttributeDaoImpl() {
-        this(null, null);
+    RuleAttributeDaoImpl() {
+        this(null);
     }
 
-    public RuleAttributeDaoImpl(String persistenceUnit, final SelectFunction selectFunction) {
+    public RuleAttributeDaoImpl(String persistenceUnit) {
         super(RuleAttribute.class, persistenceUnit);
-        this.selectFunction = selectFunction;
     }
 
     @Override
     public Collection<RuleAttribute> findAll() {
         logger.info("findAll()");
         Collection<RuleAttribute> ruleValues = new ArrayList<>(Collections.emptyList());
-        String sql = selectFunction.select()
-                .SELECT()
-                .COLUMN(ATTRIB$ATTRIB)
-                .FROM(ATTRIB$ALIAS)
-                .getSQL();
         executeInTransaction(entityManager -> {
-            List<?> result = entityManager.createQuery(sql).getResultList();
+            List<?> result = entityManager.createQuery("SELECT ra FROM RuleAttribute ra").getResultList();
             result.forEach(row -> {
                 ruleValues.add((RuleAttribute) row);
             });
@@ -58,14 +45,11 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
     public Optional<RuleAttribute> findRuleAttribute(String attributeName, String ruleType) {
         logger.info("findRuleAttribute() with attributeName: {}, ruleType: {}", attributeName, ruleType);
         AtomicReference<Object> result = new AtomicReference<>();
-        String sql = selectFunction.select()
-                .SELECT().COLUMN(ATTRIB$ATTRIB)
-                .FROM(ATTRIB$ALIAS)
-                .WHERE()
-                .COLUMN(ATTRIB$ATTRIB_NAME).EQ(":attributeName")
-                .AND()
-                .COLUMN(ATTRIB$RULE_TYPE).EQ(":ruleType")
-                .getSQL();
+        String sql = """
+                SELECT ra FROM RuleAttribute ra
+                WHERE ra.attributeName = : attributeName
+                AND ra.ruleType = :ruleType
+                """;
         executeInTransaction(entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)

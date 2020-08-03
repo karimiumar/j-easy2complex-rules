@@ -12,7 +12,7 @@ public class RuleAttributeValueId implements Serializable {
     private Long valueId;
 
 
-    private RuleAttributeValueId(){}
+    RuleAttributeValueId(){}
 
     public RuleAttributeValueId(Long attributeId, Long valueId) {
         this.attributeId = attributeId;

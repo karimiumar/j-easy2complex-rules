@@ -12,15 +12,6 @@ import java.util.function.Consumer;
 @Table(name = "cashflows")
 public class Cashflow implements WorkflowItem<Long> {
 
-    public static final String CASHFLOW = "cf";
-    public static final String CASHFLOW_ALIAS = "Cashflow cf";
-    public static final String CASHFLOW_CPTY = "cf.counterParty";
-    public static final String CASHFLOW_CURR = "cf.currency";
-    public static final String CASHFLOW_AMT = "cf.amount";
-    public static final String CASHFLOW_SETT_DATE = "cf.settlementDate";
-    public static final String CASHFLOW_STP = "cf.stpAllowed";
-    public static final String CASHFLOW_NOTE = "cf.note";
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

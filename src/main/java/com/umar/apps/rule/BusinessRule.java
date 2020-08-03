@@ -15,13 +15,6 @@ import java.util.function.Consumer;
 })
 public class BusinessRule implements WorkflowItem<Long>, Serializable {
 
-    public static final String RULE$ID = "rule.id";
-    public static final String RULE$ALIAS = "BusinessRule rule";
-    public static final String RULE$RULE = "rule";
-    public static final String RULE$RULE_NAME = "rule.ruleName";
-    public static final String RULE$RULE_TYPE = "rule.ruleType";
-    public static final String RULE$ACTIVE = "rule.active";
-
     private Long id;
     private String ruleName;
     private int priority;

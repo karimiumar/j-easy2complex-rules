@@ -1,42 +1,28 @@
 package com.umar.apps.rule.service.cdi;
 
-import com.umar.apps.rule.engine.WorkflowItem;
-import com.umar.apps.rule.infra.dao.api.core.DeleteFunction;
 import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
 import org.hibernate.Session;
 
-import javax.inject.Inject;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
-
-import static com.umar.apps.rule.service.cdi.Cashflow.*;
 
 public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
 
-    @Inject private final SelectFunction selectFunction;
-    @Inject private final DeleteFunction deleteFunction;
-
     protected CashflowDao() {
-        this(null, null, null);
+        this(null);
     }
 
-    public CashflowDao(String persistenceUnit, SelectFunction selectFunction, DeleteFunction deleteFunction) {
+    public CashflowDao(String persistenceUnit) {
         super(Cashflow.class, persistenceUnit);
-        this.selectFunction = selectFunction;
-        this.deleteFunction = deleteFunction;
     }
 
     @Override
     public Collection<Cashflow> findAll() {
         Collection<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = selectFunction.select()
-                .SELECT().COLUMN(CASHFLOW).FROM(CASHFLOW_ALIAS).getSQL();
         executeInTransaction(entityManager -> {
-            List<?> result = entityManager.createQuery(sql).getResultList();
+            List<?> result = entityManager.createQuery("SELECT c FROM Cashflow c").getResultList();
             result.forEach(row -> cashflows.add((Cashflow) row));
         });
         return cashflows;
@@ -44,9 +30,10 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
 
     public List<Cashflow> findByCounterParty(String counterParty) {
         ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = selectFunction.select()
-                .SELECT().COLUMN(CASHFLOW).FROM(CASHFLOW_ALIAS)
-                .WHERE().COLUMN(CASHFLOW_CPTY).EQ(":counterParty").getSQL();
+        String sql = """
+                SELECT c FROM Cashflow c
+                WHERE c.counterParty = :counterParty
+                """;
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             List<Cashflow> result = session.createQuery(sql, Cashflow.class).setParameter("counterParty", counterParty).getResultList();
@@ -57,11 +44,11 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
 
     public List<Cashflow> findByCounterPartyAndSettlementDate(String counterParty, LocalDate settlementDate) {
         ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = selectFunction.select()
-                .SELECT().COLUMN(CASHFLOW).FROM(CASHFLOW_ALIAS)
-                .WHERE().COLUMN(CASHFLOW_CPTY).EQ(":counterParty")
-                .AND().COLUMN(CASHFLOW_SETT_DATE).EQ(":settlementDate")
-                .getSQL();
+        String sql = """
+                SELECT c FROM Cashflow c
+                WHERE c.settlementDate = :settlementDate
+                AND c.counterParty = :counterParty
+                """;
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             List<Cashflow> result = session.createQuery(sql, Cashflow.class)
@@ -75,12 +62,12 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
 
     public List<Cashflow> findByCounterPartyCurrencyAndSettlementDate(String counterParty,String currency, LocalDate settlementDate) {
         ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = selectFunction.select()
-                .SELECT().COLUMN(CASHFLOW).FROM(CASHFLOW_ALIAS)
-                .WHERE().COLUMN(CASHFLOW_CPTY).EQ(":counterParty")
-                .AND().COLUMN(CASHFLOW_CURR).EQ(":currency")
-                .AND().COLUMN(CASHFLOW_SETT_DATE).EQ(":settlementDate")
-                .getSQL();
+        String sql = """
+                SELECT c FROM Cashflow c
+                WHERE c.settlementDate = :settlementDate
+                AND c.counterParty = :counterParty
+                AND c.currency = :currency
+                """;
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             List<Cashflow> result = session.createQuery(sql, Cashflow.class)
@@ -94,8 +81,7 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
     }
 
     public void delete() {
-        String sql = deleteFunction.delete().DELETE_FROM(CASHFLOW_ALIAS).getSQL();
-        executeInTransaction(entityManager -> entityManager.createQuery(sql).executeUpdate());
+        executeInTransaction(entityManager -> entityManager.createQuery("DELETE FROM Cashflow c").executeUpdate());
     }
 
     public void applySTPRule(Cashflow workflowItem, String note) {
@@ -111,12 +97,30 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
         });
     }
 
+    public Collection<Cashflow> findBySettlementDateBetween(LocalDate startDate, LocalDate endDate) {
+        ArrayList<Cashflow> cashflows = new ArrayList<>(0);
+        String sql = """
+                SELECT c FROM Cashflow c
+                WHERE c.settlementDate 
+                BETWEEN :startDate AND :endDate
+                """;
+        executeInTransaction(entityManager -> {
+            Session session = entityManager.unwrap(Session.class);
+            List<Cashflow> result = session.createQuery(sql, Cashflow.class)
+                    .setParameter("startDate", startDate)
+                    .setParameter("endDate", endDate)
+                    .getResultList();
+            cashflows.addAll(result);
+        });
+        return cashflows;
+    }
+
     public Collection<Cashflow> findBySettlementDate(LocalDate settlementDate) {
         ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = selectFunction.select()
-                .SELECT().COLUMN(CASHFLOW).FROM(CASHFLOW_ALIAS)
-                .WHERE().COLUMN(CASHFLOW_SETT_DATE).EQ(":settlementDate")
-                .getSQL();
+        String sql = """
+                SELECT c FROM Cashflow c
+                WHERE c.settlementDate = :settlementDate
+                """;
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             List<Cashflow> result = session.createQuery(sql, Cashflow.class)

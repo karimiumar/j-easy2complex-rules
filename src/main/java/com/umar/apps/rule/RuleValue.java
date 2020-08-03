@@ -16,17 +16,10 @@ import java.util.Objects;
 @NaturalIdCache
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class RuleValue implements WorkflowItem<Long>, Serializable {
-    public static final String RULE_VALUE$ID = "ruleval.id";
-    public static final String RULE_VALUE$ALIAS = "RuleValue ruleval";
-    public static final String RULE_VALUE = "ruleval";
-    public static final String RULE_VALUE$OPERAND ="ruleval.operand";
-    public static final String RULE_VALUE$ATTRIB = "ruleval.ruleAttribute";
-
 
     private Long id;
     private String operand;
     private int version;
-    //private RuleAttribute ruleAttribute;
     private List<RuleAttributeValue> ruleAttributes = new ArrayList<>();
 
     @Id

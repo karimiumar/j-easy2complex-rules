@@ -4,6 +4,7 @@ import com.umar.apps.rule.RuleAttribute;
 import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.infra.dao.api.GenericDao;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RuleValueDao extends GenericDao<RuleValue, Long> {
@@ -22,4 +23,11 @@ public interface RuleValueDao extends GenericDao<RuleValue, Long> {
      * @return Returns an Optional
      */
     Optional<RuleValue> findByRuleAttributeAndValue(RuleAttribute ruleAttribute, String operand);
+
+    /**
+     * Finds a {@link RuleValue} for the given {@link RuleAttribute} and operand
+     * @param ruleAttribute The RuleAttribute ruleAttribute instance
+     * @return Returns an Optional
+     */
+    List<RuleValue> findByRuleAttribute(RuleAttribute ruleAttribute);
 }

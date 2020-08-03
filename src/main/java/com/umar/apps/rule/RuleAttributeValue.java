@@ -8,12 +8,6 @@ import java.util.Objects;
 @Table(name = "attribute_values")
 public class RuleAttributeValue {
 
-    public static final String RULEATTRIBVALUE = "rav";
-    public static final String RULEATTRIBVALUE$ALIAS = "RuleAttributeValue rav";
-    public static final String RULEATTRIBVALUE$ID = "rav.id";
-    public static final String RULEATTRIBVALUE$RULE_ATTRIBUTE = "rav.ruleAttribute";
-    public static final String RULEATTRIBVALUE$RULE_VALUE = "rav.ruleValue";
-
     @EmbeddedId
     private RuleAttributeValueId id;
 

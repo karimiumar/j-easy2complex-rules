@@ -12,14 +12,6 @@ import java.util.*;
 })
 public class RuleAttribute implements WorkflowItem<Long>, Serializable {
 
-    public static final String ATTRIB$ID = "attr.id";
-    public static final String ATTRIB$ALIAS = "RuleAttribute attr";
-    public static final String ATTRIB$ATTRIB = "attr";
-    public static final String ATTRIB$ATTRIB_NAME ="attr.attributeName";
-    public static final String ATTRIB$RULE_TYPE ="attr.ruleType";
-    public static final String ATTRIB$RULE = "attr.businessRule";
-    public static final String ATTRIB$DISPLAY_NAME = "attr.displayName";
-
     public RuleAttribute(){}
 
     private Long id;
@@ -28,7 +20,6 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     private int version;
     private String displayName;
     private BusinessRule businessRule;
-    //private Set<RuleValue> ruleValues = new HashSet<>();
     private List<RuleAttributeValue> ruleAttributeValues = new ArrayList<>();
 
     public RuleAttribute(Long id, String attributeName, String ruleType, String displayName) {

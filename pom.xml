@@ -70,11 +70,6 @@
             <version>${h2.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.umar</groupId>
-            <artifactId>simply-jdbc</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.13.2</version>

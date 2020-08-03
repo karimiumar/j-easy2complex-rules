@@ -8,9 +8,6 @@ import javax.persistence.*;
 @Table(name = "trades")
 public class Trade implements WorkflowItem<Long> {
 
-    static final String TRADE = "trade";
-    static final String TRADE_ALIAS = "Trade trade";
-
     @Id
     @SequenceGenerator(name = "trades_seq", sequenceName = "TRADES_SEQ")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "trades_seq")

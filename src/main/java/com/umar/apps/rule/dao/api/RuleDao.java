@@ -41,28 +41,6 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
     Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType);
 
     /**
-     * Finds a {@link BusinessRule} for the given name, type and {@link RuleValue} operand
-     *
-     * @param ruleName The name of the Rule
-     * @param ruleType The type of the Rule
-     * @param operand The operand
-     *
-     * @return Returns an optional
-     */
-    Optional<BusinessRule> findByNameTypeAndOperand(String ruleName, String ruleType, String operand);
-
-    /**
-     * Finds a {@link BusinessRule} for the given name, type and {@link RuleValue} operand
-     *
-     * @param ruleName The name of the Rule
-     * @param ruleType The type of the Rule
-     * @param operands The list of operands
-     *
-     * @return Returns an optional
-     */
-    Optional<BusinessRule> findByNameTypeAndOperands(String ruleName, String ruleType, List<String> operands);
-
-    /**
      * Finds a {@link RuleValue} for the given set of params
      *
      * @param ruleName The rule name
@@ -71,15 +49,4 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      * @return Returns an optional
      */
     Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute);
-
-    /**
-     * Finds a {@link BusinessRule} for the given set of params
-     *
-     * @param ruleName The name of the Rule
-     * @param ruleType The type of the rule.
-     * @param attributesCondition The set attribute conditions of {@link RuleAttribute}
-     * @param operandsCondition The set of operand conditions of {@link RuleValue}
-     * @return Returns an Optional
-     */
-    Optional<BusinessRule> findByNameTypeAttributesAndOperands(String ruleName, String ruleType, Set<String> attributesCondition, Set<String> operandsCondition);
 }
