@@ -8,7 +8,6 @@ import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.dao.api.core.RuleAttributeDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
-import com.umar.apps.rule.infra.dao.api.core.SelectFunction;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
 import org.junit.jupiter.api.*;
@@ -20,10 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BusinessRuleServiceTest {
-    final static SelectFunction sqlFunctions = new SelectFunction();
-    final static RuleDao ruleDao = new RuleDaoImpl("test_rulesPU", sqlFunctions);
-    final static RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl("test_rulesPU", sqlFunctions);
-    final static RuleValueDao ruleValueDao = new RuleValueDaoImpl("test_rulesPU", sqlFunctions);
+    final static RuleDao ruleDao = new RuleDaoImpl("test_rulesPU");
+    final static RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl("test_rulesPU");
+    final static RuleValueDao ruleValueDao = new RuleValueDaoImpl("test_rulesPU");
     final static BusinessRuleService ruleService = new BusinessRuleServiceImpl(ruleDao, ruleAttributeDao, ruleValueDao);
 
     @AfterAll

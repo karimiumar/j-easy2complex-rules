@@ -1,13 +1,9 @@
-import com.umar.simply.jdbc.dml.operations.InsertOp;
-import com.umar.simply.jdbc.dml.operations.SelectOp;
-import com.umar.simply.jdbc.dml.operations.api.SqlFunctions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
 import javax.inject.Inject;
@@ -31,7 +27,7 @@ public class OpenWebbeansTest {
         container = SeContainerInitializer.newInstance()
                 .disableDiscovery()
                 .addPackages(OpenWebbeansTest.class)
-                .addBeanClasses(DefaultItemDao.class, ItemProcessor.class, AnotherItemDao.class, SqlFunctionProducer.class)
+                .addBeanClasses(DefaultItemDao.class, ItemProcessor.class, AnotherItemDao.class)
                 .initialize();
     }
 
@@ -67,21 +63,18 @@ interface ItemDao {
 @Named
 class ItemProcessor {
     private ItemDao itemDao;
-    private SqlFunctionProducer sqlFunctionProducer;
 
     //Required for CDI.
     protected ItemProcessor(){}
 
     @Inject
-    ItemProcessor(ItemDao itemDao, SqlFunctionProducer sqlFunctionProducer) {
+    ItemProcessor(ItemDao itemDao) {
         this.itemDao = itemDao;
-        this.sqlFunctionProducer = sqlFunctionProducer;
     }
 
     public void execute() {
         List<Item> items = itemDao.fetchItems();
         items.forEach(System.out::println);
-        sqlFunctionProducer.select();
     }
 }
 
@@ -98,17 +91,5 @@ class AnotherItemDao implements ItemDao {
     @Override
     public List<Item> fetchItems() {
         return List.of(new Item(67,8), new Item(34,5));
-    }
-}
-
-class SqlFunctionProducer {
-    @Produces
-    public SqlFunctions<SelectOp> select() {
-        return SelectOp.create();
-    }
-
-    @Produces
-    public SqlFunctions<InsertOp> insert() {
-        return InsertOp.create();
     }
 }

@@ -1,6 +1,9 @@
 package com.umar.apps.rule.service.api.core;
 
-import com.umar.apps.rule.*;
+import com.umar.apps.rule.BusinessRule;
+import com.umar.apps.rule.RuleAttribute;
+import com.umar.apps.rule.RuleAttributeValue;
+import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
@@ -8,7 +11,6 @@ import com.umar.apps.rule.infra.dao.api.GenericDao;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dom4j.rule.Rule;
 import org.hibernate.Session;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -16,12 +18,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import static com.umar.apps.rule.RuleAttribute.ATTRIB$ATTRIB_NAME;
-import static com.umar.apps.rule.RuleValue.RULE_VALUE$OPERAND;
 
 @ApplicationScoped
 @Named
@@ -34,7 +34,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     private static final Logger logger = LogManager.getLogger(BusinessRuleServiceImpl.class);
 
     //Constructor needed for CDI. Do not remove
-    protected BusinessRuleServiceImpl() {
+    BusinessRuleServiceImpl() {
     }
 
     @Inject

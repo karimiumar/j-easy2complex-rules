@@ -13,26 +13,24 @@ import javax.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.*;
 
-public abstract class AbstractConditionService implements ConditionService {
+public class CommonConditionService implements ConditionService {
 
-    private static final Logger logger = LogManager.getLogger(AbstractConditionService.class);
+    private static final Logger logger = LogManager.getLogger(CommonConditionService.class);
 
     protected RuleDao ruleDao;
 
-    protected AbstractConditionService(){}
+    CommonConditionService(){}
 
     @Inject
-    public AbstractConditionService(final RuleDao ruleDao) {
+    public CommonConditionService(final RuleDao ruleDao) {
         this.ruleDao = ruleDao;
     }
 
     public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType) {
-        //TODO: Replace with find attributes of WorkflowItem
         Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
         if(optionalBusinessRule.isPresent()) {
             BusinessRule businessRule = optionalBusinessRule.get();
             Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
-            //There will be only one STP attribute for a given rule name
             RuleAttribute ruleAttribute = ruleAttributes.iterator().next();
             String attributeName = ruleAttribute.getAttributeName();
             try {
@@ -49,5 +47,7 @@ public abstract class AbstractConditionService implements ConditionService {
         return Condition.FALSE;
     }
 
-    protected abstract Condition getCondition(Object value, Collection<RuleValue> ruleValues);
+    private Condition getCondition(Object value, Collection<RuleValue> ruleValues){
+        return condition -> ruleValues.stream().anyMatch(rv -> rv.getOperand().equals(value.toString()));
+    }
 }

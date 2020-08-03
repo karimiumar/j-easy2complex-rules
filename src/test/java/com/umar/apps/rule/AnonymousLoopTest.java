@@ -20,7 +20,9 @@ public class AnonymousLoopTest {
             facts.put("name-" + countRef.get(), personName);
             countRef.set(countRef.get()+1);
             Condition condition = fact -> !personName.name().isEmpty();
-            //Hack the comparator logic of DefaultRule/BasicRule in order to override their internal logic as below.
+            //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
+            //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
+            //with the comparator logic written in BasicRule.
             Rule nameRule = new RuleBuilder((o1, o2) -> personName.name().compareTo(o1.getName()))
                     .when(condition).then(action -> System.out.println("In Action:" + personName)).build();
             rules.register(nameRule);
