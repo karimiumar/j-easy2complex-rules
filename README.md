@@ -35,7 +35,7 @@ Example
 ---
 **Group together a given set of cashflows when a matching rule exist in the database for counter party, currency and settlement date.**
 
-Given rules exist in database
+
 ![](src/main/resources/images/Rules.png)
 
 ```java
