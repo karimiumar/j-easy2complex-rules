@@ -6,7 +6,7 @@ Some core features have been taken from Easy Rules.
 Why a new Rule Engine?
 ===
 I worked on a custom rule engine while working on a credit derivatives settlement system. 
-That rule engine was tightly coupled with the product. But we always wanted to create a standalone version of it.
+That rule engine was tightly coupled with the product. We always wanted to create a standalone version of it.
 I never found time to write a standalone version of it during my work years. Then I came across Easy Rules. In my spare time
 I started experimenting with Easy Rules and thought _"Why not combine features of Easy Rules with the rule engine that I worked upon and
 create a database backed standalone Rules Engine?"_. It's this idea that took me to write a new Rule Engine that's backed by 
@@ -225,9 +225,105 @@ public class Cashflow implements WorkflowItem<Long> {
 }
 ```
 
+Apply Rules Explicitly
+---
+Allows explicit application of rules. See example below where explicit conditions are fetched from db:
+
+![Explicit Netting Rules](src/main/resources/images/Netting%20Rules.png)
+
+```java
+Condition cptyNettingCondition = conditionService.getCondition(cashflow, "Counterparty Netting Rule", "NETTING");
+Condition currencyCondition = conditionService.getCondition(cashflow, "Currency Netting Rule", "NETTING");
+Condition stmtDateCondition = conditionService.getCondition(cashflow, "Settlement Date Netting Rule", "NETTING");
+```
+
+**and** `and` logic is applied as:
+```java
+RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
+    .when(cptyNettingCondition.and(currencyCondition).and(stmtDateCondition))
+    .then(action -> {
+ ...
+}
+```
+
+```java
+@Test @Order(3)
+    public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenNettCashflows() {
+        BusinessRuleService ruleService = container.select(BusinessRuleServiceImpl.class).get();
+        RuleAttributeDao ruleAttributeDao = container.select(RuleAttributeDaoImpl.class).get();
+        CashflowDao cashflowDao = container.select(CashflowDao.class).get();
+
+        RuleAttribute stmtDateAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NETTING").orElseThrow();
+        RuleAttribute cptyAttrib = ruleAttributeDao.findRuleAttribute("counterParty", "NETTING").orElseThrow();
+        RuleAttribute currencyAttrib = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
+        createValue(cptyAttrib, "Meryl Lynch PLC", ruleService);
+        createValue(cptyAttrib, "Lehman Brothers PLC", ruleService);
+        createValue(stmtDateAttrib, LocalDate.now().plusDays(10).toString(), ruleService);
+        createValue(currencyAttrib, "USD", ruleService);
+        createValue(currencyAttrib, "EUR", ruleService);
+        createValue(currencyAttrib, "YUAN", ruleService);
+
+        Cashflow cf3 = createCashFlow("Meryl Lynch PLC", "USD", 220000.00, LocalDate.now().plusDays(10));
+        Cashflow cf6 = createCashFlow("Meryl Lynch PLC", "USD", 10000.00, LocalDate.now().plusDays(10));
+        Cashflow cf7 = createCashFlow("Meryl Lynch PLC", "USD", 20000.00, LocalDate.now().plusDays(10));
+        Cashflow cf8 = createCashFlow("Lehman Brothers PLC", "EUR", 90000.00, LocalDate.now().plusDays(10));
+        Cashflow cf9 = createCashFlow("Lehman Brothers PLC", "EUR", 30500.00, LocalDate.now().plusDays(10));
+        Cashflow cf10 = createCashFlow("Lehman Brothers PLC", "YUAN", 20900.00, LocalDate.now().plusDays(10));
+        cashflowDao.save(cf3);
+        cashflowDao.save(cf6);
+        cashflowDao.save(cf7);
+        cashflowDao.save(cf8);
+        cashflowDao.save(cf9);
+        cashflowDao.save(cf10);
+
+        List<Cashflow> cashflows = new LinkedList<>(cashflowDao.findBySettlementDate(LocalDate.now().plusDays(10)));
+        Map<String, Set<Cashflow>> cashflowMap = netTogether(cashflows);
+        assertEquals(3, cashflowMap.size());
+        assertEquals(1, cashflowMap.get("Lehman Brothers PLC-YUAN").size());
+        assertEquals(2, cashflowMap.get("Lehman Brothers PLC-EUR").size());
+        assertEquals(3, cashflowMap.get("Meryl Lynch PLC-USD").size());
+    }
+
+    Map<String, Set<Cashflow>> netTogether(List<Cashflow> cashflows) {
+        var conditionService = container.select(CommonConditionService.class).get();
+        Map<String, Set<Cashflow>> cashflowMap = new ConcurrentHashMap<>();
+        var rulesEngine = new InferenceRuleEngine();
+        var facts = new Facts();
+        var rules = new Rules();
+        var cnt = 1;
+        for(Cashflow cashflow: cashflows) {
+            facts.put("cashflow-" + cnt, cashflow);
+            cnt++;
+            Condition cptyNettingCondition = conditionService.getCondition(cashflow, "Counterparty Netting Rule", "NETTING");
+            Condition currencyCondition = conditionService.getCondition(cashflow, "Currency Netting Rule", "NETTING");
+            Condition stmtDateCondition = conditionService.getCondition(cashflow, "Settlement Date Netting Rule", "NETTING");
+            Set<Cashflow> cashflowSet = new HashSet<>();
+            //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
+            //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
+            //with the comparator logic written in BasicRule.
+            //Otherwise the first cashflow in the collection will be the only Rule in registered Rules.
+            var andRules = new RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
+                    .when(cptyNettingCondition.and(currencyCondition).and(stmtDateCondition))
+                    .then(action -> {
+                        String key = cashflow.getCounterParty() +"-"+ cashflow.getCurrency();
+                        if(cashflowMap.containsKey(key)){
+                            cashflowMap.get(key).add(cashflow);
+                        }else{
+                            cashflowSet.add(cashflow);
+                            cashflowMap.put(cashflow.getCounterParty() +"-"+ cashflow.getCurrency(),cashflowSet);
+                        }
+                    })
+                    .build();
+            rules.register(andRules);
+        }
+        rulesEngine.fire(rules, facts);
+        return cashflowMap;
+    }
+```
+
 Requirements
 ---
-Apache OpenWebBeans for CDI, JDK 14 with JDK 15 preview features enabled.
+Apache OpenWebBeans for DI, JDK 14 with JDK 15 preview features enabled.
 
 Limitations
 ---
