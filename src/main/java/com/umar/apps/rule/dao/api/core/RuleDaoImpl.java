@@ -115,12 +115,14 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 SELECT rule FROM BusinessRule rule
                 WHERE rule.ruleName = :ruleName
                 AND rule.ruleType = :ruleType
+                AND rule.active = :active
                 """;
         executeInTransaction(entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
                         .setParameter("ruleName", ruleName)
                         .setParameter("ruleType", ruleType)
+                        .setParameter("active", true)
                         .getSingleResult());
             }catch (NoResultException e) {
                 //Simply ignore it. This is expected when no data exist.
@@ -145,6 +147,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 AND rav.ruleValue = ruleVal
                 AND rav.ruleAttribute = attr
                 AND rule.ruleType = attr.ruleType
+                AND rule.active = :active
                 """;
         executeInTransaction(entityManager -> {
             Session session = entityManager.unwrap(Session.class);
@@ -152,6 +155,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                     .setParameter("ruleName", ruleName)
                     .setParameter("ruleType", ruleType)
                     .setParameter("attributeName", ruleAttribute.getAttributeName())
+                    .setParameter("active", true)
                     .getResultList();
             values.addAll(ruleValues);
         });
