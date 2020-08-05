@@ -229,5 +229,9 @@ Requirements
 ---
 Apache OpenWebBeans for CDI, JDK 14 with JDK 15 preview features enabled.
 
+Limitations
+---
+**Rules' priority** is not considered during rules evaluation.
+
 #### Contact
 karimiumar@gmail.com 
