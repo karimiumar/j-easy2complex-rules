@@ -11,10 +11,6 @@ I never found time to write a standalone version of it during my work years. The
 I started experimenting with Easy Rules and thought _"Why not combine features of Easy Rules with the rule engine that I worked upon and
 create a database backed standalone Rules Engine?"_. It's this idea that took me to write a new Rule Engine that's backed by 
 a database and can run independently of the actual product. 
-
-Architecture
----
-![Architecture](src/main/resources/images/Architecture.png)
  
 E-R Diagram
 ---
