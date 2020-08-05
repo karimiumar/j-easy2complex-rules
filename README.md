@@ -18,7 +18,7 @@ Architecture
  
 E-R Diagram
 ---
-![](src/main/resources/images/MariaDB%20-%20rules_test_db@localhost.png)
+![](src/main/resources/images/E-R%20Diagram.png)
 
 WorkflowItem Interface
 ---
