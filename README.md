@@ -81,7 +81,7 @@ Example
         cashflowDao.save(cf9);
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
-        var andingConditionService = container.select(AndConditionService.class).get();
+        var andComposer = container.select(AndComposer.class).get();
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, andingConditionService);
         assertEquals(2, cashflowMap.size());
@@ -174,7 +174,7 @@ Similarly, if we want to group cashflows even if one of the attributes are prese
         cashflowDao.save(cf9);
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
-        var conditionService = container.select(OrConditionService.class).get();
+        var conditionService = container.select(OrComposer.class).get();
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, conditionService);
         assertEquals(4, cashflowMap.size());
@@ -281,7 +281,7 @@ RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
     }
 
     Map<String, Set<Cashflow>> netTogether(List<Cashflow> cashflows) {
-        var conditionService = container.select(CommonConditionService.class).get();
+        var conditionService = container.select(DefaultCondition.class).get();
         Map<String, Set<Cashflow>> cashflowMap = new ConcurrentHashMap<>();
         var rulesEngine = new InferenceRuleEngine();
         var facts = new Facts();

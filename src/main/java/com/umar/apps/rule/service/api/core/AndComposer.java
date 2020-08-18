@@ -9,18 +9,18 @@ import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Set;
 
-public class AndConditionService implements ConditionService {
+public class AndComposer implements ConditionService {
 
     private final RuleValueDao ruleValueDao;
     private final RuleDao ruleDao;
 
-    AndConditionService(){
+    AndComposer(){
         ruleValueDao = null;
         ruleDao = null;
     }
 
     @Inject
-    public AndConditionService(RuleDao ruleDao, RuleValueDao ruleValueDao) {
+    public AndComposer(RuleDao ruleDao, RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;
         this.ruleValueDao = ruleValueDao;
     }

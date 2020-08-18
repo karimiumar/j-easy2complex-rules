@@ -13,16 +13,16 @@ import javax.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class CommonConditionService implements ConditionService {
+public class DefaultCondition implements ConditionService {
 
-    private static final Logger logger = LogManager.getLogger(CommonConditionService.class);
+    private static final Logger logger = LogManager.getLogger(DefaultCondition.class);
 
     protected RuleDao ruleDao;
 
-    CommonConditionService(){}
+    DefaultCondition(){}
 
     @Inject
-    public CommonConditionService(final RuleDao ruleDao) {
+    public DefaultCondition(final RuleDao ruleDao) {
         this.ruleDao = ruleDao;
     }
 

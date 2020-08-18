@@ -9,18 +9,18 @@ import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Set;
 
-public class OrConditionService implements ConditionService {
+public class OrComposer implements ConditionService {
 
     private final RuleDao ruleDao;
     private final RuleValueDao ruleValueDao;
 
-    OrConditionService(){
+    OrComposer(){
         ruleValueDao = null;
         ruleDao = null;
     }
 
     @Inject
-    public OrConditionService(final RuleDao ruleDao, final RuleValueDao ruleValueDao) {
+    public OrComposer(final RuleDao ruleDao, final RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;
         this.ruleValueDao = ruleValueDao;
     }

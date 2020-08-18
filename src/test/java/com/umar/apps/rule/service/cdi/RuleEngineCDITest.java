@@ -41,9 +41,9 @@ public class RuleEngineCDITest {
                         , RuleValueDaoImpl.class
                         , BusinessRuleServiceImpl.class
                         , CashflowDao.class
-                        , CommonConditionService.class
-                        , AndConditionService.class
-                        , OrConditionService.class
+                        , DefaultCondition.class
+                        , AndComposer.class
+                        , OrComposer.class
                 )
                 .initialize();
         RuleDao ruleDao = container.select(RuleDaoImpl.class).get();
@@ -85,8 +85,8 @@ public class RuleEngineCDITest {
         cashflowDao.save(cf1);
         cashflowDao.save(cf2);
         cashflowDao.save(cf3);
-        ConditionService counterPartyCondition = container.select(CommonConditionService.class).get();
-        ConditionService currencyCondition = container.select(CommonConditionService.class).get();
+        ConditionService counterPartyCondition = container.select(DefaultCondition.class).get();
+        ConditionService currencyCondition = container.select(DefaultCondition.class).get();
         RulesEngine rulesEngine = new InferenceRuleEngine();
         Collection<Cashflow> cashflows = cashflowDao.findAll();
         Facts facts = new Facts();
@@ -135,7 +135,7 @@ public class RuleEngineCDITest {
         createValue(stmtDtAttrib, LocalDate.now().plusDays(10).toString(), ruleService);
 
         CashflowDao cashflowDao = container.select(CashflowDao.class).get();
-        ConditionService conditionService = container.select(CommonConditionService.class).get();
+        ConditionService conditionService = container.select(DefaultCondition.class).get();
         Cashflow cf4 = createCashFlow("Lehman Brothers PLC", "YUAN", 210000.00, LocalDate.now().plusDays(10));
         cashflowDao.save(cf4);
         RulesEngine rulesEngine = new InferenceRuleEngine();
@@ -203,7 +203,7 @@ public class RuleEngineCDITest {
     }
 
     Map<String, Set<Cashflow>> netTogether(List<Cashflow> cashflows) {
-        var conditionService = container.select(CommonConditionService.class).get();
+        var conditionService = container.select(DefaultCondition.class).get();
         Map<String, Set<Cashflow>> cashflowMap = new ConcurrentHashMap<>();
         var rulesEngine = new InferenceRuleEngine();
         var facts = new Facts();
@@ -284,7 +284,7 @@ public class RuleEngineCDITest {
         cashflowDao.save(cf9);
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
-        var andingConditionService = container.select(AndConditionService.class).get();
+        var andingConditionService = container.select(AndComposer.class).get();
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, andingConditionService);
         assertEquals(2, cashflowMap.size());
@@ -338,7 +338,7 @@ public class RuleEngineCDITest {
         cashflowDao.save(cf9);
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
-        var conditionService = container.select(OrConditionService.class).get();
+        var conditionService = container.select(OrComposer.class).get();
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, conditionService);
         assertEquals(4, cashflowMap.size());
