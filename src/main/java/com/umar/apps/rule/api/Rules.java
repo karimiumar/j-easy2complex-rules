@@ -29,7 +29,7 @@ import com.umar.apps.rule.api.core.RuleProxy;
 
 import java.util.*;
 
-public class Rules implements Iterable<Rule>{
+public class Rules {
 
     final private Set<Rule> rules = new TreeSet<>();
 
@@ -89,12 +89,15 @@ public class Rules implements Iterable<Rule>{
         return rules.size();
     }
 
-    @Override
     public Iterator<Rule> iterator() {
         return rules.iterator();
     }
 
     private Rule findByName(String ruleName){
         return rules.stream().filter(rule -> rule.getName().equalsIgnoreCase(ruleName)).findFirst().orElse(null);
+    }
+
+    public Set<Rule> getRules() {
+        return rules;
     }
 }

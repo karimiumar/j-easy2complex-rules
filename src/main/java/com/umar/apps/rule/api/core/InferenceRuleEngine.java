@@ -50,7 +50,7 @@ public class InferenceRuleEngine implements RulesEngine {
 
     private Set<Rule> selectCandidates(Rules rules, Facts facts) {
         final Set<Rule> candidates = new TreeSet<>();
-        for (Rule rule: rules) {
+        for (Rule rule: rules.getRules()) {
             if(rule.evaluate(facts)){
                 candidates.add(rule);
             }

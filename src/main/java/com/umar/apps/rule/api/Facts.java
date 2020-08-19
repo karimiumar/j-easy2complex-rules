@@ -32,7 +32,7 @@ import java.util.*;
  *  This class encapsulates a set of facts and represents a facts namespace.
  *  Facts have unique names within a <code>Facts</code> object.
  */
-public class Facts implements Iterable<Fact<?>> {
+public class Facts {
 
     private final Set<Fact<?>> facts = new HashSet<>();
 
@@ -57,7 +57,7 @@ public class Facts implements Iterable<Fact<?>> {
      *
      * @param fact to add, must not be null
      */
-    public <T> void add(Fact<T> fact) {
+    private <T> void add(Fact<T> fact) {
         Objects.requireNonNull(fact, "Fact cannot be null");
         Fact<?> retrievedFact = getFact(fact.getName());
         if(null != retrievedFact) {
@@ -71,7 +71,7 @@ public class Facts implements Iterable<Fact<?>> {
      *
      * @param fact to remove, must not be null
      */
-    public <T> void remove(Fact<T> fact) {
+    private <T> void remove(Fact<T> fact) {
         Objects.requireNonNull(fact, "Fact cannot be null");
         facts.remove(fact);
     }
@@ -81,31 +81,12 @@ public class Facts implements Iterable<Fact<?>> {
      *
      * @param factName name of the fact to remove, must not be null
      */
-    public void remove(String factName){
+    private void remove(String factName){
         Objects.requireNonNull(factName, "Fact name cannot be null");
         Fact<?> factToRemove = getFact(factName);
         if(null != factToRemove){
             facts.remove(factToRemove);
         }
-    }
-
-    /**
-     * Get the value of a fact by its name. This is a convenience method provided
-     * as a short version of {@code getFact(factName).getValue()}.
-     *
-     * @param factName name of the fact, must not be null
-     * @param <T> type of the fact's value
-     * @return the value of the fact having the given name, or null if there is
-     * no fact with the given name
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T getValue(String factName) {
-        Objects.requireNonNull(factName, "Fact name cannot be null");
-        Fact<?> fact = getFact(factName);
-        if(null != fact) {
-            return (T) fact.getValue();
-        }
-        return null;
     }
 
     /**
@@ -124,20 +105,6 @@ public class Facts implements Iterable<Fact<?>> {
         return (Fact<?>) objects[index];
     }
 
-    /**
-     * Return a copy of the facts as a map. It is not intended to manipulate
-     * facts outside of the rules engine (aka other than manipulating them through rules).
-     *
-     * @return a copy of the current facts as a {@link HashMap}
-     */
-    public Map<String, Object> asMap() {
-        Map<String, Object> map = new HashMap<>();
-        for(Fact<?> fact: facts) {
-            map.put(fact.getName(), fact.getValue());
-        }
-        return map;
-    }
-
     public int size() {
         return facts.size();
     }
@@ -148,7 +115,6 @@ public class Facts implements Iterable<Fact<?>> {
      *
      * @return an iterator on the set of facts
      */
-    @Override
     public Iterator<Fact<?>> iterator() {
         return facts.iterator();
     }

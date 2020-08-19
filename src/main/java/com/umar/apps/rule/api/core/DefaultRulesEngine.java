@@ -43,7 +43,7 @@ public final class DefaultRulesEngine implements RulesEngine {
     void doFire(Rules rules, Facts facts) {
         if(rules.isEmpty()) return;
 
-        for(Rule rule: rules) {
+        for(Rule rule: rules.getRules()) {
             final String name = rule.getName();
             final int priority = rule.getPriority();
             if(!shouldBeEvaluated(rule, facts)) continue;
@@ -70,7 +70,7 @@ public final class DefaultRulesEngine implements RulesEngine {
 
     private Map<Rule, Boolean> doCheck(Rules rules, Facts facts) {
         Map<Rule, Boolean> result = new HashMap<>();
-        for (Rule rule: rules) {
+        for (Rule rule: rules.getRules()) {
             if(shouldBeEvaluated(rule, facts)){
                 result.put(rule, rule.evaluate(facts));
             }
