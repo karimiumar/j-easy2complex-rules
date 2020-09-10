@@ -33,4 +33,30 @@ public class ConditionTest {
         var result = a.and(b).evaluate(new Fact<>("fact", str));
         assertFalse(result);
     }
+
+    @Test
+    public void whenEitherThenTrue() {
+        String str = "A Ring";
+        Condition a = fact -> null != fact.getValue();
+        Condition b = ConditionTest::evaluate;
+        var result = a.or(b).evaluate(new Fact<>("fact", str));
+        assertTrue(result);
+    }
+
+    @Test
+    public void whenNeitherThenFalse() {
+        String str = null;
+        Condition a = fact -> null != fact.getValue();
+        Condition b = ConditionTest::evaluate;
+        var result = a.or(b).evaluate(new Fact<>("fact", str));
+        assertFalse(result);
+    }
+
+    @Test
+    public void whenNotThenComplement() {
+        String str = null;
+        Condition a = fact -> null != fact.getValue();
+        var result = a.not().evaluate(new Fact<>("fact", str));
+        assertTrue(result);
+    }
 }
