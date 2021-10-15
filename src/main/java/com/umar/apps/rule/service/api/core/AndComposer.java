@@ -5,10 +5,14 @@ import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.service.api.ConditionService;
 
-import javax.inject.Inject;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Objects;
 
+/**
+ * Composes Logical AND objects
+ * 
+ * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
+ */
 public class AndComposer implements ConditionService {
 
     private final RuleValueDao ruleValueDao;
@@ -19,17 +23,22 @@ public class AndComposer implements ConditionService {
         ruleDao = null;
     }
 
-    @Inject
-    public AndComposer(RuleDao ruleDao, RuleValueDao ruleValueDao) {
+    //@Inject
+    public AndComposer(RuleDao ruleDao,
+                       RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;
         this.ruleValueDao = ruleValueDao;
     }
 
     @Override
     public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType) {
-        assert ruleDao != null;
-        Set<Condition> conditions = AndOrUtil.createConditions(workflowItem, ruleDao, ruleValueDao, ruleName, ruleType);
-        Condition actualCondition = Condition.FALSE;
+        Objects.requireNonNull(workflowItem, "WorkflowItem is required");
+        Objects.requireNonNull(ruleDao, "RuleDao is required");
+        Objects.requireNonNull(ruleValueDao, "RuleValueDao is required");
+        Objects.requireNonNull(ruleName, "RuleName is required");
+        Objects.requireNonNull(ruleType, "RuleType is required");
+        var conditions = AndOrUtil.createConditions(workflowItem, ruleDao, ruleValueDao, ruleName, ruleType);
+        var actualCondition = Condition.FALSE;
         int count = 0;
         int size = conditions.size(); //"5" == 5 , "Age" == "Age", "xyz" == "abc"
         if(size > 0) {

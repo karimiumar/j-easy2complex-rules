@@ -1,47 +1,80 @@
 package com.umar.apps.rule.api;
 
-import java.util.Objects;
+import java.util.function.Predicate;
 
+import static com.umar.apps.rule.api.Result.*;
 /**
- * An interface representing a Rule Condition
+ * An interface representing a Condition
+ * 
+ * A {@link Condition} can be defined as given, which will then be used to evaluate a Fact.
  *
- * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
+ * {@code
+ *  var condition1 = holds(fact -> !((String) fact.value()).isBlank(), "Incoming string is blank");
+ *  var condition2 = holds(fact -> fact.value().equals("A String"), "Incoming string is not `A String`");
+ *  var result = c1.and(c2).apply(new Fact<>("Test", "A String"));
+ *  assertThat(result.isValid()).isTrue();
+ *  assertThat(result.getReason()).isEmpty();
+ * }
+ * 
+ * Original @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ *
+ * Modified by @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
  */
 public interface Condition {
 
-    Condition FALSE = facts->false;
+    Condition FALSE = facts -> invalid("FALSE");
 
-    Boolean evaluate(Fact<?> fact);
+    Result evaluate(Fact<?> fact);
+
     /**
-     * The AND operation applied on facts. Rule will only be applicable
-     * when both facts are met.
+     * Comes handy to create {@code Condition} of {@code Predicate<Fact>} from caller. For example,
      *
-     * @param other The other fact to compare to
-     * @return Returns an && {@link Condition}
+     * {@code
+     *   var stringNotBlankCondition = holds(fact -> !((String) fact.value()).isBlank(), "Incoming String is blank");
+     * }
+     * @param predicate A {@code Predicate} of {@code Fact}
+     * @param message A message held by {@code Result} when the {@code Fact} fails validation
+     * @return Returns a {@code Condition}
+     */
+    static Condition holds(Predicate<Fact<?>> predicate, String message) {
+        return fact -> predicate.test(fact) ? valid() : invalid(message);
+    }
+
+    /**
+     * Represents the Logical AND
+     *
+     * @param other The other Condition to apply to Logical AND
+     * @return Returns a {@code Condition}
      */
     default Condition and(Condition other) {
-        Objects.requireNonNull(other, "Condition to be compared to is null");
-        return fact-> this.evaluate(fact) && other.evaluate(fact);
+        return fact -> {
+            var result = this.evaluate(fact);
+            return result.isValid() ? other.evaluate(fact) : result;
+        };
+
     }
 
     /**
-     * The OR operation applied on facts. Rule will be applied if any of the
-     * facts is met.
-     *
-     * @param other The other fact to compare to
-     * @return Returns an || {@link Condition}
+     * Represents Logical OR
+     * @param other The other Condition to apply to Logical OR
+     * @return Returns a {@code Condition}
      */
     default Condition or(Condition other) {
-        Objects.requireNonNull(other, "Condition to be compared to is null");
-        return fact-> this.evaluate(fact) || other.evaluate(fact);
+        return fact -> {
+            var result = this.evaluate(fact);
+            return result.isValid() ? result : other.evaluate(fact);
+        };
     }
 
     /**
-     * The NOT operation applied on a fact. Reverses the result of the fact.
-     *
-     * @return Returns a ! {@link Condition}
+     * The logical NOT. It complements the result.
+     * And stores `Complemented the result` message for {@code Result.Invalid } results
+     * @return Returns a {@code Condition}.
      */
     default Condition not() {
-        return fact -> !this.evaluate(fact);
+        return fact -> {
+            var result = this.evaluate(fact);
+            return result.isValid() ? invalid("Complemented the result"): valid() ;
+        };
     }
 }

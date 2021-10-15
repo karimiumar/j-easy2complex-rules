@@ -29,9 +29,14 @@ import com.umar.apps.rule.api.core.RuleProxy;
 
 import java.util.*;
 
+/**
+ * Registers a set of {@link Rule} through {@link RuleProxy}
+ * 
+ * @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ */
 public class Rules {
 
-    final private Set<Rule> rules = new TreeSet<>();
+    private final Set<Rule> rules = new TreeSet<>();
 
     /**
      * Creates a new {@link Rules} object.
@@ -48,7 +53,7 @@ public class Rules {
      * @param rules Rules to register
      */
     public Rules(Object ... rules) {
-       this.register(rules);
+        this.register(rules);
     }
 
     /**
@@ -93,11 +98,18 @@ public class Rules {
         return rules.iterator();
     }
 
-    private Rule findByName(String ruleName){
-        return rules.stream().filter(rule -> rule.getName().equalsIgnoreCase(ruleName)).findFirst().orElse(null);
+    private Optional<Rule> findByName(String ruleName){
+        return rules.stream().filter(rule -> rule.getName().equalsIgnoreCase(ruleName)).findFirst();
     }
 
     public Set<Rule> getRules() {
         return rules;
+    }
+
+    @Override
+    public String toString() {
+        return "Rules{" +
+                "rules=" + rules +
+                '}';
     }
 }

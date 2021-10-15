@@ -1,26 +1,28 @@
 package com.umar.apps.rule.dao.api.core;
 
-import com.umar.apps.rule.BusinessRule;
-import com.umar.apps.rule.RuleAttribute;
-import com.umar.apps.rule.RuleValue;
+import com.umar.apps.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.dao.api.RuleDao;
-import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.umar.apps.rule.domain.BusinessRule;
+import com.umar.apps.rule.domain.RuleAttribute;
+import com.umar.apps.rule.domain.RuleValue;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-@ApplicationScoped
-@Named
+import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
+
+/**
+ * A default implementation of {@link RuleDao} interface.
+ * 
+ * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
+ */
 public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements RuleDao {
 
-    private static final Logger logger = LogManager.getLogger(RuleDaoImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(RuleDaoImpl.class);
 
 
     //Constructor needed for CDI. Do not remove
@@ -36,13 +38,13 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Collection<BusinessRule> findAll() {
         logger.info("findAll()");
         Collection<BusinessRule> rules = new ArrayList<>(Collections.emptyList());
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery("SELECT br FROM BusinessRule br")
                     .getResultList();
             result.forEach(row -> {
                 rules.add((BusinessRule) row);
             });
-        });
+        }, null);
         return rules;
     }
 
@@ -55,15 +57,13 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 WHERE rule.ruleName = :ruleName
                 AND rule.active = :active
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery(sql)
                     .setParameter("ruleName", ruleName)
                     .setParameter("active", true)
                     .getResultList();
-            result.forEach(row -> {
-                businessRules.add((BusinessRule) row);
-            });
-        });
+            result.forEach(row -> businessRules.add((BusinessRule) row));
+        }, null);
         return businessRules;
     }
 
@@ -76,7 +76,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 WHERE rule.ruleType = :type
                 AND rule.active = :active
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery(sql)
                     .setParameter("type", type)
                     .setParameter("active", true)
@@ -84,7 +84,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             result.forEach(row -> {
                 businessRules.add((BusinessRule) row);
             });
-        });
+        }, null);
         return businessRules;
     }
 
@@ -96,14 +96,14 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 SELECT rule FROM BusinessRule rule
                 WHERE rule.active = :active
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery(sql)
                     .setParameter("active", isActive)
                     .getResultList();
             result.forEach(row -> {
                 businessRules.add((BusinessRule) row);
             });
-        });
+        }, null);
         return businessRules;
     }
 
@@ -117,7 +117,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 AND rule.ruleType = :ruleType
                 AND rule.active = :active
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
                         .setParameter("ruleName", ruleName)
@@ -127,7 +127,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             }catch (NoResultException e) {
                 //Simply ignore it. This is expected when no data exist.
             }
-        });
+        }, null);
         if(null != result.get()) {
             BusinessRule rule = (BusinessRule) result.get();
             return Optional.of(rule);
@@ -149,7 +149,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 AND rule.ruleType = attr.ruleType
                 AND rule.active = :active
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             Session session = entityManager.unwrap(Session.class);
             List<RuleValue> ruleValues = session.createQuery(sql, RuleValue.class)
                     .setParameter("ruleName", ruleName)
@@ -158,7 +158,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                     .setParameter("active", true)
                     .getResultList();
             values.addAll(ruleValues);
-        });
+        }, null);
         return values;
     }
 }

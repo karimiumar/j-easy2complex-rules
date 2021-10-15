@@ -13,3 +13,4 @@ public interface ConditionService {
      */
     <T> Condition getCondition(T workflowItem, String ruleName, String ruleType);
 }
+

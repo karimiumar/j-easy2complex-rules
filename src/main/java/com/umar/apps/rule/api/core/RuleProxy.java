@@ -33,7 +33,9 @@ import java.lang.reflect.Proxy;
 
 public class RuleProxy implements InvocationHandler {
 
+    private Long ruleId;
     private String name;
+    private String description;
     private Integer priority;
     private Method [] methods;
     private Method compareToMethod;
@@ -41,8 +43,8 @@ public class RuleProxy implements InvocationHandler {
 
     public static Rule asRule(final Object rule) {
         Rule result;
-        if(rule instanceof Rule){
-            result = (Rule) rule;
+        if(rule instanceof Rule rule1){
+            result = rule1;
         } else {
             result = (Rule) Proxy.newProxyInstance(Rule.class.getClassLoader()
                     , new Class[] {Rule.class, Comparable.class}
@@ -60,8 +62,10 @@ public class RuleProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         return switch (methodName) {
+            case "getId" -> getRuleId();
             case "getName" -> getRuleName();
             case "getPriority" -> getRulePriority();
+            case "getDescription" -> getRuleDescription();
             case "compareTo" -> compareToMethod(args);
             default -> null;
         };
@@ -72,14 +76,14 @@ public class RuleProxy implements InvocationHandler {
     }
 
     private Object compareToMethod(final Object[] args) throws Exception {
-        Method compareToMethod = getCompareToMethod();
+        Method compareTo = getCompareToMethod();
         Object otherRule = args[0]; // validated upfront
-        if (compareToMethod != null && Proxy.isProxyClass(otherRule.getClass())) {
-            if (compareToMethod.getParameters().length != 1) {
+        if (compareTo != null && Proxy.isProxyClass(otherRule.getClass())) {
+            if (compareTo.getParameters().length != 1) {
                 throw new IllegalArgumentException("compareTo method must have a single argument");
             }
             RuleProxy ruleProxy = (RuleProxy) Proxy.getInvocationHandler(otherRule);
-            return compareToMethod.invoke(target, ruleProxy.getTarget());
+            return compareTo.invoke(target, ruleProxy.getTarget());
         } else {
             return compareTo((Rule) otherRule);
         }
@@ -87,8 +91,8 @@ public class RuleProxy implements InvocationHandler {
 
     private Method getCompareToMethod() {
         if (this.compareToMethod == null) {
-            Method[] methods = getMethods();
-            for (Method method : methods) {
+            Method[] methodsArr = getMethods();
+            for (Method method : methodsArr) {
                 if (method.getName().equals("compareTo")) {
                     this.compareToMethod = method;
                     return this.compareToMethod;
@@ -111,15 +115,15 @@ public class RuleProxy implements InvocationHandler {
 
     private int compareTo(final Rule otherRule) {
         int otherPriority = otherRule.getPriority();
-        int priority = getRulePriority();
-        if (priority < otherPriority) {
+        int prty = getRulePriority();
+        if (prty < otherPriority) {
             return -1;
-        } else if (priority > otherPriority) {
+        } else if (prty > otherPriority) {
             return 1;
         } else {
             String otherName = otherRule.getName();
-            String name = getRuleName();
-            return name.compareTo(otherName);
+            String ruleName = getRuleName();
+            return ruleName.compareTo(otherName);
         }
     }
 
@@ -128,6 +132,20 @@ public class RuleProxy implements InvocationHandler {
             this.name = Rule.DEFAULT_NAME;
         }
         return this.name;
+    }
+
+    private String getRuleDescription() {
+        if(this.description == null) {
+            this.description = Rule.DEFAULT_DESC;
+        }
+        return this.description;
+    }
+
+    private Long getRuleId() {
+        if(null == this.ruleId) {
+            this.ruleId = 0L;
+        }
+        return ruleId;
     }
 
     private int getRulePriority() {

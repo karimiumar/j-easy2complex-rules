@@ -27,6 +27,8 @@ package com.umar.apps.rule.api;
 
 /**
  * An interface representing Rule's Action
+ *
+ * @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
  */
 public interface Action {
 
@@ -34,7 +36,6 @@ public interface Action {
      * Execute the action when the rule's condition evaluates to true.
      *
      * @param facts known at the time of execution of the action
-     * @throws Exception when unable to execute the action
      */
-    void execute(Facts facts) throws Exception;
+    void execute(Facts facts);
 }

@@ -26,36 +26,59 @@
 package com.umar.apps.rule.api.core;
 
 import com.umar.apps.rule.api.Facts;
+import com.umar.apps.rule.api.Result;
 import com.umar.apps.rule.api.Rule;
 
 import java.util.Objects;
 
+/**
+ * @author: Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ */
 public class BasicRule implements Rule {
 
+    protected Long id = 0L;
     protected String name;
-
+    protected String description;
     protected int priority;
 
+
     public BasicRule() {
-        this(Rule.DEFAULT_NAME, Rule.DEFAULT_PRIORITY);
+        this(Rule.DEFAULT_NAME, Rule.DEFAULT_DESC, Rule.DEFAULT_PRIORITY);
     }
 
-    public BasicRule(String name) {
-        this(name, Rule.DEFAULT_PRIORITY);
-    }
-
-    public BasicRule(String defaultName, int defaultPriority) {
-        name = defaultName;
-        priority = defaultPriority;
+    public BasicRule(String name, String description, int priority) {
+        this.name = name;
+        this.description = description;
+        this.priority = priority;
     }
 
     @Override
-    public boolean evaluate(Facts facts) {
-        return false;
+    public Long getId() {
+        return id;
     }
 
     @Override
-    public void execute(Facts facts) throws Exception {
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public int getPriority() {
+        return priority;
+    }
+
+    @Override
+    public Result evaluate(Facts facts) {
+        return Result.invalid("FALSE");
+    }
+
+    @Override
+    public void execute(Facts facts) {
 
     }
 
@@ -66,30 +89,15 @@ public class BasicRule implements Rule {
         return getName().compareTo(rule.getName());
     }
 
-    @Override
-    public Long getId() {
-        return 0L;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public int getPriority() {
-        return priority;
-    }
-
     /*
      * Rules are unique according to their names within a rules engine registry.
      */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BasicRule basicRule)) return false;
-        return priority == basicRule.priority &&
-                name.equals(basicRule.name);
+        if (o == null || getClass() != o.getClass()) return false;
+        BasicRule basicRule = (BasicRule) o;
+        return priority == basicRule.priority && Objects.equals(name, basicRule.name);
     }
 
     @Override

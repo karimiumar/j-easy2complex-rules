@@ -319,11 +319,7 @@ RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
 
 Requirements
 ---
-Apache OpenWebBeans for DI, JDK 14 with JDK 15 preview features enabled.
+Springboot  JDK 17 with preview features enabled.
 
-Limitations
----
-**Rules' priority** is not considered during rules evaluation.
 
-#### Contact
-karimiumar@gmail.com 
+

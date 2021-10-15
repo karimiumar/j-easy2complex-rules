@@ -33,9 +33,15 @@ import java.util.*;
 
 /**
  * Builder to create {@link com.umar.apps.rule.api.Rule} instances.
+ *
+ * Original @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ * 
+ * Modified By @author Mohammad Umar Ali Karimi(karimiumar@gmail.com)
  */
 public class RuleBuilder {
+
     private String name = Rule.DEFAULT_NAME;
+    private String description = Rule.DEFAULT_DESC;
     private int priority = Rule.DEFAULT_PRIORITY;
     private final Set<Condition> conditions = new LinkedHashSet<>();
     private final List<Action> actions = new ArrayList<>();
@@ -53,6 +59,11 @@ public class RuleBuilder {
      */
     public RuleBuilder name(String name) {
         this.name = name;
+        return this;
+    }
+
+    public RuleBuilder description(String description) {
+        this.description = description;
         return this;
     }
 
@@ -100,11 +111,11 @@ public class RuleBuilder {
     }
 
     /**
-     * Create a new {@link Rule}
+     * Create a new {@link com.umar.apps.rule.api.Rule}
      *
      * @return Returns an instance of Rule
      */
     public Rule build() {
-        return new DefaultRule(name, priority, comparator, conditions, actions);
+        return new DefaultRule(name, description, priority, comparator, conditions, actions);
     }
 }

@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
-             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
-             version="2.2">
-    <persistence-unit name="test_rulesPU" transaction-type="RESOURCE_LOCAL">
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+             https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+    <persistence-unit name="testPU" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <class>com.umar.apps.rule.BusinessRule</class>
-        <class>com.umar.apps.rule.RuleAttribute</class>
-        <class>com.umar.apps.rule.RuleValue</class>
-        <class>com.umar.apps.rule.RuleAttributeValue</class>
-        <class>com.umar.apps.rule.dao.Trade</class>
-        <class>com.umar.apps.rule.service.cdi.Cashflow</class>
+        <mapping-file>jpa/stock-orm-inverse.xml</mapping-file>
+        <class>com.umar.apps.rule.domain.BusinessRule</class>
+        <class>com.umar.apps.rule.domain.RuleAttribute</class>
+        <class>com.umar.apps.rule.domain.RuleAttributeValue</class>
+        <class>com.umar.apps.rule.domain.RuleValue</class>
+        <class>com.umar.apps.rule.dao.api.Cashflow</class>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
-            <property name="javax.persistence.jdbc.url" value="jdbc:h2:~/rulesdb_test_db;mode=mysql;AUTO_SERVER=true"/>
-            <property name="javax.persistence.jdbc.user" value="sa"/>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
-            <property name="javax.persistence.jdbc.password" value="sa"/>
-            <property name="javax.persistence.schema-generation.database.action" value="create"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:java-tuts"/>
+            <!--<property name="javax.persistence.jdbc.url" value="jdbc:h2:~/rulesdb_test_db;mode=mysql;AUTO_SERVER=true"/>-->
+            <property name="javax.persistence.jdbc.user" value="sa"/>
+            <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
         </properties>
-
     </persistence-unit>
 </persistence>

@@ -32,28 +32,16 @@ import java.util.Objects;
  * A Fact will be created from a Workflow entity.
  *
  * @param <T> Requires a Java Type Boolean, Integer, String, Character, Double, Float, Long, Byte, BigDecimal
+ * 
+ * @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
  */
-public class Fact<T> {
-    final private String name;
-    final private T value;
-
-    public Fact(final String name, final T value) {
-        this.name = name;
-        this.value = value;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public T getValue() {
-        return value;
-    }
+public record Fact<T>(String name, T value) {
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Fact<?> fact)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
+        Fact<?> fact = (Fact<?>) o;
         return name.equals(fact.name);
     }
 

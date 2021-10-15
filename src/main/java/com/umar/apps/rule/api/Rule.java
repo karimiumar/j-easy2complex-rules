@@ -21,57 +21,38 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  *
- *  Original @author:Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ *  Original @author: Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
  */
 package com.umar.apps.rule.api;
 
 /**
  * Abstraction for a rule that can be fired by a rules engine.
  *
- * Rules are registered in a namespace of rule of type {@link Rules}
+ * Rules are registered in a namespace of a rule of type {@link Rules}
  * in which they must have a <strong>unique</strong> name.
+ *
+ * @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
  */
-public interface Rule extends Comparable<Rule> {
+public interface Rule extends Comparable<Rule>{
+    String DEFAULT_NAME = "rule";
+    String DEFAULT_DESC = "A Rule";
+    Integer DEFAULT_PRIORITY = Integer.MAX_VALUE - 1;
 
     Long getId();
-    /**
-     * Default rule name.
-     */
-    String DEFAULT_NAME = "rule";
-
-    /**
-     * Default rule priority.
-     */
-    int DEFAULT_PRIORITY = Integer.MAX_VALUE - 1;
-
-    /**
-     * Getter for rule name.
-     * @return the rule name
-     */
-    default String getName() {
-        return DEFAULT_NAME;
-    }
-
-    /**
-     * Getter for rule priority.
-     * @return rule priority
-     */
-    default int getPriority() {
-        return DEFAULT_PRIORITY;
-    }
+    String getName();
+    String getDescription();
+    int getPriority();
 
     /**
      * This method implements the rule's condition(s).
-     * <strong>Implementations should handle any runtime exception and return true/false accordingly</strong>
+     * <strong>Implementations should handle any runtime exception and return {@code Result.valid()} or {@code Result.invalid()}  accordingly</strong>
      *
-     * @return true if the rule should be applied given the provided facts, false otherwise
+     * @return {@code Result.valid()} if the rule should be applied given the provided facts, {@code Result.invalid()} otherwise
      */
-    boolean evaluate(Facts facts);
+    Result evaluate(Facts facts);
 
     /**
      * This method implements the rule's action(s).
-     * @throws Exception thrown if an exception occurs when performing action(s)
      */
-    void execute(Facts facts) throws Exception;
-
+    void execute(Facts facts);
 }

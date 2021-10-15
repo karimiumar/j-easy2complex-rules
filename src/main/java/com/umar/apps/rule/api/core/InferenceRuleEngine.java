@@ -21,20 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  *
- * Original @author: Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ *  Original @author: Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
  */
 package com.umar.apps.rule.api.core;
 
-import com.umar.apps.rule.api.Facts;
-import com.umar.apps.rule.api.Rule;
-import com.umar.apps.rule.api.Rules;
-import com.umar.apps.rule.api.RulesEngine;
+import com.umar.apps.rule.api.*;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class InferenceRuleEngine implements RulesEngine {
+/**
+ * A {@link RulesEngine} implementation. It evaluates {@link Facts}
+ * for a given {@link Rule} and delegates the selected rules to 
+ * {@link DefaultRulesEngine} for evaluating a {@link Rule}
+ * 
+ * @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ */
+public class InferenceRuleEngine extends AbstractRulesEngine {
 
     private final DefaultRulesEngine delegate;
 
@@ -51,14 +55,14 @@ public class InferenceRuleEngine implements RulesEngine {
     private Set<Rule> selectCandidates(Rules rules, Facts facts) {
         final Set<Rule> candidates = new TreeSet<>();
         for (Rule rule: rules.getRules()) {
-            if(rule.evaluate(facts)){
+            if(rule.evaluate(facts).isValid()){
                 candidates.add(rule);
             }
         }
         return candidates;
     }
     @Override
-    public Map<Rule, Boolean> check(Rules rules, Facts facts) {
+    public Map<Rule, Result> check(Rules rules, Facts facts) {
         return delegate.check(rules, facts);
     }
 }

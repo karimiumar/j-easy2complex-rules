@@ -1,25 +1,27 @@
 package com.umar.apps.rule.dao.api.core;
 
-import com.umar.apps.rule.RuleAttribute;
-import com.umar.apps.rule.RuleValue;
+import com.umar.apps.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
-import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.umar.apps.rule.domain.RuleAttribute;
+import com.umar.apps.rule.domain.RuleValue;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-@ApplicationScoped
-@Named
+import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
+
+/**
+ * A default implementation of {@link RuleValueDao} interface.
+ * 
+ * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
+ */
 public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements RuleValueDao {
 
-    private static final Logger logger = LogManager.getLogger(RuleValueDaoImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(RuleValueDaoImpl.class);
 
     //Constructor needed for CDI. Do not remove
     RuleValueDaoImpl() {
@@ -40,7 +42,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
                 AND rav.ruleAttribute = ra
                 AND ruleVal.operand = :operand
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
                         .setParameter("operand", operand)
@@ -48,7 +50,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
             } catch (NoResultException ex) {
                 //Simply ignore it. This is expected when no data exist.
             }
-        });
+        }, null);
 
         if(null != result.get()) {
             RuleValue ruleValue = (RuleValue) result.get();
@@ -69,7 +71,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
                 AND ra.ruleType = :ruleType
                 AND ruleVal.operand = :operand
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
                         .setParameter("attributeName", ruleAttribute.getAttributeName())
@@ -79,7 +81,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
             } catch (NoResultException ex) {
                 //Simply ignore it. This is expected when no data exist.
             }
-        });
+        }, null);
 
         if(null != result.get()) {
             RuleValue ruleValue = (RuleValue) result.get();
@@ -99,7 +101,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
                 AND ra.attributeName = :attributeName
                 AND ra.ruleType = :ruleType
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             try {
                 Session session = entityManager.unwrap(Session.class);
                 ruleValues.addAll(session.createQuery(sql, RuleValue.class)
@@ -108,7 +110,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
             } catch (NoResultException ex) {
                 //Simply ignore it. This is expected when no data exist.
             }
-        });
+        }, null);
         return ruleValues;
     }
 
@@ -116,12 +118,12 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
     public Collection<RuleValue> findAll() {
         logger.info("findAll()");
         Collection<RuleValue> ruleValues = new ArrayList<>(Collections.emptyList());
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery("SELECT rv FROM RuleValue rv").getResultList();
             result.forEach(row -> {
                 ruleValues.add((RuleValue) row);
             });
-        });
+        }, null);
         return ruleValues;
     }
 }

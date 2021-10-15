@@ -1,43 +1,48 @@
 package com.umar.apps.rule.service.api.core;
 
-import com.umar.apps.rule.BusinessRule;
-import com.umar.apps.rule.RuleAttribute;
-import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.api.Condition;
 import com.umar.apps.rule.dao.api.RuleDao;
+import com.umar.apps.rule.domain.BusinessRule;
+import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.ConditionService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
 
+import static com.umar.apps.rule.api.Condition.holds;
+
+/**
+ * A default implementation of {@link ConditionService}
+ * 
+ * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
+ */
 public class DefaultCondition implements ConditionService {
 
-    private static final Logger logger = LogManager.getLogger(DefaultCondition.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultCondition.class);
 
     protected RuleDao ruleDao;
 
     DefaultCondition(){}
 
-    @Inject
     public DefaultCondition(final RuleDao ruleDao) {
         this.ruleDao = ruleDao;
     }
 
+    @Override
     public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType) {
         Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
         if(optionalBusinessRule.isPresent()) {
-            BusinessRule businessRule = optionalBusinessRule.get();
-            Set<RuleAttribute> ruleAttributes = businessRule.getRuleAttributes();
-            RuleAttribute ruleAttribute = ruleAttributes.iterator().next();
-            String attributeName = ruleAttribute.getAttributeName();
+            var businessRule = optionalBusinessRule.get();
+            var ruleAttributes = businessRule.getRuleAttributes();
+            var ruleAttribute = ruleAttributes.iterator().next();
+            var attributeName = ruleAttribute.getAttributeName();
             try {
-                Field field = workflowItem.getClass().getDeclaredField(attributeName);
+                var field = workflowItem.getClass().getDeclaredField(attributeName);
                 field.setAccessible(true);
-                Object value = field.get(workflowItem);
-                Collection<RuleValue> ruleValues = ruleDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute);
+                var value = field.get(workflowItem);
+                var ruleValues = ruleDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute);
                 return getCondition(value, ruleValues);
             }catch (NoSuchFieldException | IllegalAccessException e) {
                 //eat up
@@ -48,6 +53,6 @@ public class DefaultCondition implements ConditionService {
     }
 
     private Condition getCondition(Object value, Collection<RuleValue> ruleValues){
-        return condition -> ruleValues.stream().anyMatch(rv -> rv.getOperand().equals(value.toString()));
+        return holds(fact -> ruleValues.stream().anyMatch(rv -> rv.getOperand().equals(value.toString())), "Operand is not equal to: " + value.toString());
     }
 }

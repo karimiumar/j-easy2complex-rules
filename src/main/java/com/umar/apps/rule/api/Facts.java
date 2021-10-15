@@ -28,102 +28,93 @@ package com.umar.apps.rule.api;
 import java.util.*;
 
 /**
- *
- *  This class encapsulates a set of facts and represents a facts namespace.
- *  Facts have unique names within a <code>Facts</code> object.
+ * 
+ * Original @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ * 
+ * Modified By: @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
  */
 public class Facts {
 
     private final Set<Fact<?>> facts = new HashSet<>();
 
     /**
-     * Add a fact, replacing any fact with the same name.
-     *
-     * @param factName of the fact to add, must not be null
-     * @param value of the fact to add, must not be null
+     * Registers a new {@link Fact}. If a {@link Fact} with the provided factName 
+     * is already registered then it is first replaced with the incoming fact.
+     * 
+     * @param <T> The type of value of the {@link Fact}
+     * @param factName The name of the fact. It cannot be null.
+     * @param value The value of the fact. It cannot be null.
      */
     public <T> void put(String factName, T value) {
         Objects.requireNonNull(factName, "Fact name cannot be null");
         Objects.requireNonNull(value, "Fact value cannot be null");
-        Fact<?> retrievedFact = getFact(factName);
-        if(null != retrievedFact) {
-            remove(factName);
-        }
-        add(new Fact<>(factName, value));
+        var optionalFact = getFact(factName);
+        optionalFact.ifPresent(facts::remove);//remove the fact from facts set
+        add(factName, value);
     }
 
     /**
-     * Add a fact, replacing any fact with the same name.
-     *
-     * @param fact to add, must not be null
+     * Retrieves a {@link Fact} from the provided index. The method will
+     * throw an {@link ArrayIndexOutOfBoundsException} for an invalid index.
+     * 
+     * @param index An integer value of the index position
+     * @return Returns a {@link Fact}
      */
-    private <T> void add(Fact<T> fact) {
-        Objects.requireNonNull(fact, "Fact cannot be null");
-        Fact<?> retrievedFact = getFact(fact.getName());
-        if(null != retrievedFact) {
-            remove(retrievedFact);
-        }
-        facts.add(fact);
-    }
-
-    /**
-     * Remove a fact.
-     *
-     * @param fact to remove, must not be null
-     */
-    private <T> void remove(Fact<T> fact) {
-        Objects.requireNonNull(fact, "Fact cannot be null");
-        facts.remove(fact);
-    }
-
-    /**
-     * Remove a fact by name.
-     *
-     * @param factName name of the fact to remove, must not be null
-     */
-    private void remove(String factName){
-        Objects.requireNonNull(factName, "Fact name cannot be null");
-        Fact<?> factToRemove = getFact(factName);
-        if(null != factToRemove){
-            facts.remove(factToRemove);
-        }
-    }
-
-    /**
-     * Get a fact by name.
-     *
-     * @param factName name of the fact, must not be null
-     * @return the fact having the given name, or null if there is no fact with the given name
-     */
-    public Fact<?> getFact(String factName) {
-        Objects.requireNonNull(factName, "Fact name cannot be null");
-        return facts.stream().filter(fact -> fact.getName().equalsIgnoreCase(factName)).findFirst().orElse(null);
-    }
-
     public Fact<?> getFact(int index) {
-        Object[] objects = facts.toArray();
+        Object [] objects = facts.toArray();
         return (Fact<?>) objects[index];
     }
-
-    public int size() {
-        return facts.size();
+    
+    /**
+     * Gets a {@link Set} of {@link Fact} registered or an empty {@link Set}
+     * 
+     * @return Returns registered {@link Fact}
+     */
+    public Set<Fact<?>> getFacts() {
+        return facts;
     }
 
     /**
-     * Return an iterator on the set of facts. It is not intended to remove
-     * facts using this iterator outside of the rules engine (aka other than doing it through rules)
-     *
-     * @return an iterator on the set of facts
+     * Returns an instance of {@link Iterator}
+     * 
+     * @return Returns an instance of {@link Iterator}
      */
     public Iterator<Fact<?>> iterator() {
         return facts.iterator();
     }
 
     /**
-     * Clear the facts
+     * Clears all the registered {@link Fact}
      */
-    public void clear(){
+    public void clear() {
         facts.clear();
+    }
+
+    /**
+     * Checks whether the registered {@link Fact} is empty or not.
+     * 
+     * @return Returns whether registered {@link Fact} is empty.
+     */
+    public boolean isEmpty() {
+        return facts.isEmpty();
+    }
+
+    /**
+     * Provides the size of the registered {@link Fact}
+     * 
+     * @return Returns the size of the registered {@link Fact}
+     */
+    public int size() {
+        return facts.size();
+    }
+
+    private <T> void add(String factName, T value) {
+        var fact = new Fact<>(factName, value);
+        facts.add(fact);
+    }
+
+    private Optional<Fact<?>> getFact(String factName) {
+        return facts.stream().filter(fact -> fact.name().equals(factName)).findFirst();
     }
 
     @Override

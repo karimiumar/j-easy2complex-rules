@@ -1,23 +1,25 @@
 package com.umar.apps.rule.dao.api.core;
 
-import com.umar.apps.rule.RuleAttribute;
+import com.umar.apps.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
-import com.umar.apps.rule.infra.dao.api.core.GenericJpaDao;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.umar.apps.rule.domain.RuleAttribute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-@ApplicationScoped
-@Named
+import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
+
+/**
+ * A default implementation of {@link RuleAttributeDao} interface
+ * 
+ * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
+ */
 public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> implements RuleAttributeDao {
 
-    private static final Logger logger = LogManager.getLogger(RuleAttributeDaoImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(RuleAttributeDaoImpl.class);
 
     //Constructor needed for CDI. Do not remove
     RuleAttributeDaoImpl() {
@@ -32,12 +34,12 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
     public Collection<RuleAttribute> findAll() {
         logger.info("findAll()");
         Collection<RuleAttribute> ruleValues = new ArrayList<>(Collections.emptyList());
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery("SELECT ra FROM RuleAttribute ra").getResultList();
             result.forEach(row -> {
                 ruleValues.add((RuleAttribute) row);
             });
-        });
+        }, null);
         return ruleValues;
     }
 
@@ -50,7 +52,7 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
                 WHERE ra.attributeName = : attributeName
                 AND ra.ruleType = :ruleType
                 """;
-        executeInTransaction(entityManager -> {
+        doInJPA(() -> emf, entityManager -> {
             try {
                 result.set(entityManager.createQuery(sql)
                         .setParameter("attributeName", attributeName)
@@ -60,7 +62,7 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
             }catch (NoResultException ex) {
                 //Simply ignore it. This is expected when no data exist.
             }
-        });
+        }, null);
         if(null != result.get()) {
             RuleAttribute ruleAttribute = (RuleAttribute) result.get();
             return Optional.of(ruleAttribute);

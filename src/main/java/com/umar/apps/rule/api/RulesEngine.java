@@ -26,9 +26,40 @@
 package com.umar.apps.rule.api;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+/**
+ * A RulesEngine interface
+ * 
+ * @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ */
 public interface RulesEngine {
+
+    /**
+     * Return the rules engine parameters.
+     *
+     * @return The rules engine parameters
+     */
+    RulesEngineParameters getParameters();
+
+    /**
+     * Return the list of registered rule listeners.
+     *
+     * @return the list of registered rule listeners
+     */
+    default List<RuleListener> getRuleListeners() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Return the list of registered rule engine listeners.
+     *
+     * @return the list of registered rule engine listeners
+     */
+    default List<RuleEngineListener> getRuleEngineListeners() {
+        return Collections.emptyList();
+    }
 
     /**
      * Fire all registered rules on given facts
@@ -44,7 +75,7 @@ public interface RulesEngine {
      * @param facts The facts
      * @return a map with the result of evaluation of each result
      */
-    default Map<Rule, Boolean> check(Rules rules, Facts facts) {
-        return Collections.emptyMap();
+    default Map<Rule, Result> check(Rules rules, Facts facts) {
+       return Collections.emptyMap();
     }
 }

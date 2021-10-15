@@ -1,43 +1,34 @@
 package com.umar.apps.rule.service.api.core;
 
-import com.umar.apps.rule.BusinessRule;
-import com.umar.apps.rule.RuleAttribute;
-import com.umar.apps.rule.RuleAttributeValue;
-import com.umar.apps.rule.RuleValue;
 import com.umar.apps.rule.dao.api.RuleAttributeDao;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
-import com.umar.apps.rule.infra.dao.api.GenericDao;
+import com.umar.apps.rule.domain.BusinessRule;
+import com.umar.apps.rule.domain.RuleAttribute;
+import com.umar.apps.rule.domain.RuleAttributeValue;
+import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.BusinessRuleService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.umar.apps.util.GenericBuilder;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
 
-@ApplicationScoped
-@Named
+import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.*;
+
 public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     private RuleDao ruleDao;
     private RuleAttributeDao ruleAttributeDao;
     private RuleValueDao ruleValueDao;
 
-    private static final Logger logger = LogManager.getLogger(BusinessRuleServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(BusinessRuleServiceImpl.class);
 
     //Constructor needed for CDI. Do not remove
     BusinessRuleServiceImpl() {
     }
 
-    @Inject
     public BusinessRuleServiceImpl(final RuleDao ruleDao, final RuleAttributeDao ruleAttributeDao, final RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;
         this.ruleAttributeDao = ruleAttributeDao;
@@ -48,121 +39,96 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     public void createRule(String ruleName, String ruleType, int priority) {
         logger.info("createRule() ruleName: {}, ruleType: {}, priority: {}", ruleName, ruleType, priority);
         final BusinessRule businessRule = createFromScratch(ruleName, ruleType, priority);
-        BusinessRule persistedRule = findExistingRule(businessRule);
-        if(null == persistedRule) {
-            doInJPA(entityManager -> ruleDao.save(businessRule), ruleDao);
-        }
+        var persistedRule = findExistingRule(businessRule);
+        persistedRule.ifPresentOrElse(rule -> logger.debug("Found Rule : {}", rule),
+                /*Otherwise persist the new business Rule*/
+                () -> doInJPA(()-> ruleDao.getEMF(), entityManager -> { entityManager.persist(businessRule); }, null));
     }
 
     @Override
     public void createAttribute(BusinessRule businessRule, String attributeName, String ruleType, String displayName) {
-        RuleAttribute ruleAttribute = new RuleAttribute();
+        var ruleAttribute = new RuleAttribute();
         ruleAttribute.setAttributeName(attributeName);
         ruleAttribute.setDisplayName(displayName);
         ruleAttribute.setRuleType(ruleType);
-        RuleAttribute persistedAttribute = findExistingAttribute(ruleAttribute);
-        if(null == persistedAttribute) {
+        var persistedAttribute = findExistingAttribute(ruleAttribute);
+        persistedAttribute.ifPresentOrElse(attribute -> {
+            logger.debug("Found attribute {}", attribute);
+            attribute.setBusinessRule(businessRule);
+            businessRule.addRuleAttribute(attribute);
+            doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {entityManager.merge(attribute);}, null);
+        }, () -> {
             logger.info("No Rule Attribute found in database. Saving RuleAttribute");
-            doInJPA(entityManager -> ruleAttributeDao.save(ruleAttribute), ruleAttributeDao);
-            logger.info("No Rule Attribute found in database. Saved RuleAttribute {}:", ruleAttribute);
-        }else {
-            persistedAttribute.setBusinessRule(businessRule);
-            RuleAttribute finalPersistedAttribute = persistedAttribute;
-            doInJPA(entityManager -> ruleAttributeDao.merge(finalPersistedAttribute), ruleAttributeDao);
-        }
-        persistedAttribute = findExistingAttribute(ruleAttribute);
-        RuleAttribute finalPersistedAttribute = persistedAttribute;
-        doInJPA(entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            entityManager.find(RuleAttribute.class, finalPersistedAttribute.getId());
-            businessRule.addRuleAttribute(finalPersistedAttribute);
-            session.merge(businessRule);
-        }, ruleAttributeDao);
+            doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+                var session = entityManager.unwrap(Session.class);
+                session.save(ruleAttribute);
+                businessRule.addRuleAttribute(ruleAttribute);
+                session.merge(businessRule);
+                }, null
+            );
+            logger.info("Saved RuleAttribute {}:", ruleAttribute);
+        });
     }
 
     @Override
     public void createValue(RuleAttribute ruleAttribute, String operand) {
-        RuleValue ruleValue = new RuleValue();
+        var ruleValue = new RuleValue();
         ruleValue.setOperand(operand);
-        RuleValue existingValue = findExistingValue(operand);
-        RuleAttribute existingAttribute = findExistingAttribute(ruleAttribute);
-        if(null != existingValue && null != existingAttribute
-                && existingValue.getRuleAttributes().contains(new RuleAttributeValue(existingAttribute, existingValue))) {
-            return;
-        }
-        if(null == existingValue) {
-            doInJPA(entityManager -> {
-                Session session = entityManager.unwrap(Session.class);
-                RuleAttribute attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+        var optionalValue = findExistingValue(operand);
+        var optionalAttribute = findExistingAttribute(ruleAttribute);
+        optionalValue.ifPresent(savedValue -> {
+            optionalAttribute.ifPresent(savedAttribute -> {
+                if(!savedValue.getRuleAttributeValues().contains(new RuleAttributeValue(savedAttribute, savedValue))){
+                    savedValue.addRuleAttribute(savedAttribute);
+                    doInJPA(()-> ruleValueDao.getEMF(), entityManager -> {
+                        var session = entityManager.unwrap(Session.class);
+                        session.merge(savedValue);
+                    }, null);
+                } else {
+                    logger.debug("RuleAttribute {} with given operand {} exists.", ruleAttribute, operand);
+                }
+            });
+        });
+        if(optionalValue.isEmpty()) {
+            doInJPA(()-> ruleValueDao.getEMF() ,entityManager -> {
+                var session = entityManager.unwrap(Session.class);
+                var attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+                session.save(ruleValue);
                 ruleValue.addRuleAttribute(attribute);
                 session.save(ruleValue);
-            }, ruleValueDao);
-        }else if(null != existingAttribute && !existingValue.getRuleAttributes().contains(new RuleAttributeValue(existingAttribute, existingValue))){
-            existingValue.addRuleAttribute(existingAttribute);
-            doInJPA(entityManager -> {
+            }, null);
+        }
+        else {
+            doInJPA(()-> ruleValueDao.getEMF(), entityManager -> {
                 Session session = entityManager.unwrap(Session.class);
-                session.merge(existingValue);
-            }, ruleValueDao);
-        } else{
-            doInJPA(entityManager -> {
-                Session session = entityManager.unwrap(Session.class);
-                RuleAttribute attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+                var attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+                var existingValue = optionalValue.get();
                 existingValue.addRuleAttribute(attribute);
                 session.saveOrUpdate(existingValue);
-            }, ruleValueDao);
+            }, null);
         }
     }
 
-    private <T> void retainExistingAndAddNewValues(Set<T> dbValues, Set<T> values) {
-        Set<T> existingVals = new HashSet<>(0);
-        for (T dbValue: dbValues) {
-            //RuleValues's equals method compares by operand
-            //id can be safely ignored.
-            for(T value: values) {
-                if(dbValue.equals(value)) {
-                    //always retain existing values
-                    existingVals.add(dbValue);
-                }
-            }
-        }
-        dbValues.clear();
-        dbValues.addAll(existingVals);
-        dbValues.addAll(values);//add all the new values that are not in database
-    }
 
     private BusinessRule createFromScratch(String ruleName, String ruleType, int priority) {
-        return new BusinessRule
-                .BusinessRuleBuilder(ruleName, ruleType)
-                .with(businessRuleBuilder -> {
-                    businessRuleBuilder.active = true;
-                    businessRuleBuilder.priority = priority;
-                })
+        return GenericBuilder.of(BusinessRule::new)
+                .with(BusinessRule::setRuleName, ruleName)
+                .with(BusinessRule::setRuleType, ruleType)
+                .with(BusinessRule::setActive, true)
+                .with(BusinessRule::setPriority, priority)
                 .build();
     }
 
-    private BusinessRule findExistingRule(BusinessRule businessRule) {
-        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(businessRule.getRuleName(), businessRule.getRuleType());
-        return optionalBusinessRule.orElse(null);
+    private Optional<BusinessRule> findExistingRule(BusinessRule businessRule) {
+        return ruleDao.findByNameAndType(businessRule.getRuleName(), businessRule.getRuleType());
     }
 
-    private RuleAttribute findExistingAttribute(RuleAttribute ruleAttribute) {
-        Optional<RuleAttribute> optionalRuleAttribute = ruleAttributeDao.findRuleAttribute(ruleAttribute.getAttributeName(), ruleAttribute.getRuleType());
-        return optionalRuleAttribute.orElse(null);
+    private Optional<RuleAttribute> findExistingAttribute(RuleAttribute ruleAttribute) {
+        return ruleAttributeDao.findRuleAttribute(ruleAttribute.getAttributeName(), ruleAttribute.getRuleType());
     }
 
-    private RuleValue findExistingValue(String operand) {
-        Optional<RuleValue> optionalRuleValue = ruleValueDao.findByOperand(operand);
-        return optionalRuleValue.orElse(null);
+    private Optional<RuleValue>  findExistingValue(String operand) {
+        return ruleValueDao.findByOperand(operand);
     }
 
-    private void doInJPA(Consumer<EntityManager> consumer, GenericDao<?, Long> dao) {
-        EntityManager entityManager = dao.getEMF().createEntityManager();
-        EntityTransaction transaction = entityManager.getTransaction();
-        if (!transaction.isActive()) {
-            transaction.begin();
-        }
-        consumer.accept(entityManager);
-        transaction.commit();
-        entityManager.close();
-    }
 }

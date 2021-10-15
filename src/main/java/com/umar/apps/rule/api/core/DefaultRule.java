@@ -23,53 +23,74 @@
  *
  * Original @author: Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
  */
-
 package com.umar.apps.rule.api.core;
 
-import com.umar.apps.rule.api.Action;
-import com.umar.apps.rule.api.Condition;
-import com.umar.apps.rule.api.Facts;
-import com.umar.apps.rule.api.Rule;
+import com.umar.apps.rule.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * An implementation of {@link Rule}
+ *
+ * Original @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ * 
+ * Modified By @author: Mohammad Umar Ali Karimi(karimiumar@gmail.com)
+ */
 public class DefaultRule extends BasicRule {
 
     private final Set<Condition> conditions;
     private final List<Action> actions;
     private final Comparator<Rule> comparator;
 
-    DefaultRule(String name, int priority, Comparator<Rule> comparator, Set<Condition> conditions, List<Action> actions) {
-        super(name, priority);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRule.class.getName());
+
+    DefaultRule(String name, String description, int priority, Comparator<Rule> comparator, Set<Condition> conditions, List<Action> actions) {
+        super(name, description, priority);
         this.actions = actions;
         this.conditions = conditions;
         this.comparator = comparator;
     }
 
     @Override
-    public boolean evaluate(Facts facts) {
-        int index = 0;
-        int size = facts.size();
-        boolean result = false;
+    public Result evaluate(Facts facts) {
+        var result = Result.invalid("FALSE");
         for (Condition condition: conditions) {
-            if(index >= size) break;
-            result = condition.evaluate(facts.getFact(index++));
-            if(!result) break;
+            for(var fact: facts.getFacts()) {
+                result = evaluate(condition, fact);
+            }
+            if(!result.isValid()) {
+                break;
+            }
         }
         return result;
     }
 
+    private Result evaluate(Condition condition, Fact<?> fact) {
+        var result = condition.evaluate(fact);
+        LOGGER.debug("Evaluation Result isValid = {}, reason='{}' for Fact '{}'", result.isValid(), result.getReason(), fact);
+        return result;
+    }
+
     @Override
-    public void execute(Facts facts) throws Exception {
-        for(Action action: actions) {
-            action.execute(facts);
-        }
+    public void execute(Facts facts) {
+        actions.forEach(action -> action.execute(facts));
     }
 
     @Override
     public int compareTo(Rule rule) {
         return comparator.compare(this, rule);
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultRule{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", priority=" + priority +
+                '}';
     }
 }
