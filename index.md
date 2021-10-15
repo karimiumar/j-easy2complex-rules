@@ -6,15 +6,19 @@ Some core features have been taken from Easy Rules.
 Why a new Rule Engine?
 ===
 I worked on a custom rule engine while working on a credit derivatives settlement system. 
-That rule engine was tightly coupled with the product. We always wanted to create a standalone version of it.
+That rule engine was tightly coupled with the product. But we always wanted to create a standalone version of it.
 I never found time to write a standalone version of it during my work years. Then I came across Easy Rules. In my spare time
 I started experimenting with Easy Rules and thought _"Why not combine features of Easy Rules with the rule engine that I worked upon and
 create a database backed standalone Rules Engine?"_. It's this idea that took me to write a new Rule Engine that's backed by 
 a database and can run independently of the actual product. 
+
+Architecture
+---
+![Architecture](https://github.com/karimiumar/j-easy2complex-rules/blob/master/src/main/resources/images/Architecture.png)
  
 E-R Diagram
 ---
-![](src/main/resources/images/E-R%20Diagram.png)
+![E-R Diagram](https://github.com/karimiumar/j-easy2complex-rules/blob/master/src/main/resources/images/E-R%20Diagram.png)
 
 WorkflowItem Interface
 ---
@@ -32,7 +36,7 @@ Example
 **Group together a given set of cashflows when a matching rule exist in the database for counter party, currency and settlement date.**
 
 
-![](src/main/resources/images/Rules.png)
+![Rules](https://github.com/karimiumar/j-easy2complex-rules/blob/master/src/main/resources/images/Rules.png)
 
 ```java
 @Test @Order(5)
@@ -81,7 +85,7 @@ Example
         cashflowDao.save(cf9);
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
-        var andComposer = container.select(AndComposer.class).get();
+        var andingConditionService = container.select(AndConditionService.class).get();
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, andingConditionService);
         assertEquals(2, cashflowMap.size());
@@ -174,7 +178,7 @@ Similarly, if we want to group cashflows even if one of the attributes are prese
         cashflowDao.save(cf9);
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
-        var conditionService = container.select(OrComposer.class).get();
+        var conditionService = container.select(OrConditionService.class).get();
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, conditionService);
         assertEquals(4, cashflowMap.size());
@@ -220,12 +224,11 @@ public class Cashflow implements WorkflowItem<Long> {
     private String note;
 }
 ```
-
 Apply Rules Explicitly
 ---
 Allows explicit application of rules. See example below where explicit conditions are fetched from db:
 
-![Explicit Netting Rules](src/main/resources/images/Netting%20Rules.png)
+![Explicit Netting Rules](https://github.com/karimiumar/j-easy2complex-rules/blob/master/src/main/resources/images/Netting%20Rules.png)
 
 ```java
 Condition cptyNettingCondition = conditionService.getCondition(cashflow, "Counterparty Netting Rule", "NETTING");
@@ -281,7 +284,7 @@ RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
     }
 
     Map<String, Set<Cashflow>> netTogether(List<Cashflow> cashflows) {
-        var conditionService = container.select(DefaultCondition.class).get();
+        var conditionService = container.select(CommonConditionService.class).get();
         Map<String, Set<Cashflow>> cashflowMap = new ConcurrentHashMap<>();
         var rulesEngine = new InferenceRuleEngine();
         var facts = new Facts();
@@ -319,7 +322,5 @@ RuleBuilder((o1, o2) -> o1.getId().compareTo(cashflow.getId()))
 
 Requirements
 ---
-Springboot  JDK 17 with preview features enabled.
-
-
+Springboot and JDK 17 with preview features enabled.
 
