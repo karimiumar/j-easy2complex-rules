@@ -11,37 +11,28 @@ import com.umar.apps.rule.service.api.core.AndComposer;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
 import com.umar.apps.rule.service.api.core.DefaultCondition;
 import com.umar.apps.rule.service.api.core.OrComposer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CashflowRuleServiceTest {
+    private final static EntityManagerFactory emf = Persistence.createEntityManagerFactory("testPU");
+    private final RuleDao ruleDao = new RuleDaoImpl(emf);
+    private final RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl(emf);
+    private final RuleValueDao ruleValueDao = new RuleValueDaoImpl(emf);
+    private final BusinessRuleService ruleService = new BusinessRuleServiceImpl(ruleDao, ruleAttributeDao, ruleValueDao);
 
-    final static RuleDao ruleDao = new RuleDaoImpl("testPU");
-    final static RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl("testPU");
-    final static RuleValueDao ruleValueDao = new RuleValueDaoImpl("testPU");
-    final static BusinessRuleService ruleService = new BusinessRuleServiceImpl(ruleDao, ruleAttributeDao, ruleValueDao);
-    final static ConditionService orCondition = new OrComposer(ruleDao, ruleValueDao);
-    final static ConditionService andingCondition = new AndComposer(ruleDao, ruleValueDao);
-    final static ConditionService conditionService = new DefaultCondition(ruleDao);
-
-    @BeforeAll
-    public static void before() {
+    @BeforeEach
+    public void before() {
         createSomeRules();
     }
 
-    @AfterAll
-    public static void after() {
-        ruleDao.closeEntityManagerFactory();
-    }
-
-    static void createSomeRules() {
+    void createSomeRules() {
         CashflowRulesTestProvider.createSomeRulesAndAttributes(ruleDao, ruleService);
     }
 
@@ -95,7 +86,6 @@ public class CashflowRuleServiceTest {
 
     @Test @Order(7)
     public void whenGivenDataThenNettingRuleIsCreated() {
-        createSomeRules();
         RuleAttribute cptyAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NETTING").orElseThrow();
         RuleAttribute currencyAttribute = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
         RuleAttribute settlementDtAttribute = ruleAttributeDao.findRuleAttribute("settlementDate", "NETTING").orElseThrow();

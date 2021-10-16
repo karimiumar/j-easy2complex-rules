@@ -3,6 +3,8 @@ package com.umar.apps.rule.service.api;
 import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
 
+import java.util.List;
+
 public interface BusinessRuleService {
     /**
      * Creates a {@link com.umar.apps.rule.domain.BusinessRule} for the given ruleName, ruleType. It first searches the db for the given ruleName and ruleType.
@@ -36,4 +38,18 @@ public interface BusinessRuleService {
      * @param operand The name of the operand.
      */
     void createValue(RuleAttribute ruleAttribute, String operand);
+
+    /**
+     * Provides a {@link List} of persistent {@link BusinessRule}
+     *
+     * @return Returns a {@link List} of {@link BusinessRule}
+     */
+    List<BusinessRule> findAll();
+
+    /**
+     * Finds a {@link BusinessRule} for the given id
+     * @param id The id to lookup
+     * @return Returns a {@link BusinessRule}
+     */
+    BusinessRule findRuleById(long id);
 }

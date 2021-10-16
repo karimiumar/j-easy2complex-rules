@@ -63,4 +63,11 @@ public interface GenericDao <T, ID extends Serializable> {
      */
     EntityManagerFactory getEMF();
 
+    /**
+     * Deletes a given persistent entity
+     *
+     * @param entity The entity to delete
+     */
+    void delete(T entity);
+
 }

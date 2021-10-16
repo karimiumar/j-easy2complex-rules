@@ -7,8 +7,12 @@ import com.umar.apps.rule.domain.RuleValue;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -19,6 +23,7 @@ import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
  * 
  * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
  */
+@Repository
 public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements RuleValueDao {
 
     private static final Logger logger = LoggerFactory.getLogger(RuleValueDaoImpl.class);
@@ -28,8 +33,9 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
         this(null);
     }
 
-    public RuleValueDaoImpl(String persistenceUnit) {
-        super(RuleValue.class, persistenceUnit);
+    @Autowired
+    public RuleValueDaoImpl(EntityManagerFactory entityManagerFactory) {
+        super(RuleValue.class, entityManagerFactory);
     }
 
     @Override

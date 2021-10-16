@@ -4,9 +4,11 @@ import com.umar.apps.infra.dao.api.GenericDao;
 import com.umar.apps.infra.dao.api.WorkflowItem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -22,12 +24,14 @@ public abstract class GenericJpaDao<MODEL extends WorkflowItem<ID>, ID
         extends Serializable> implements GenericDao<MODEL, ID> {
 
     private static final Logger log = LogManager.getLogger(GenericJpaDao.class);
-    private final Class<MODEL> persistentClass;
-    protected final EntityManagerFactory emf;
 
-    public GenericJpaDao(final Class<MODEL> persistentClass, final String persistenceUnit) {
+    private final Class<MODEL> persistentClass;
+
+    protected EntityManagerFactory emf;
+
+    public GenericJpaDao(final Class<MODEL> persistentClass, final EntityManagerFactory emf) {
         this.persistentClass = persistentClass;
-        this.emf = Persistence.createEntityManagerFactory(persistenceUnit);
+        this.emf = emf;
     }
 
     @Override
@@ -65,6 +69,17 @@ public abstract class GenericJpaDao<MODEL extends WorkflowItem<ID>, ID
         log.debug("Making Transient {} ", entity.getClass());
         doInJPA(() -> emf, entityManager -> {
             entityManager.detach(entity);
+        }, null);
+    }
+
+    @Override
+    public void delete(MODEL entity) {
+        log.debug("Deleting entity {} ", entity.getClass());
+        doInJPA(() -> emf, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var dbEntity = session.find(persistentClass, entity.getId());
+            session.delete(dbEntity);
+            session.flush();
         }, null);
     }
 

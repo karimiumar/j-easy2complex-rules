@@ -5,15 +5,23 @@ import com.umar.apps.rule.api.Rule;
 import com.umar.apps.rule.api.Rules;
 import com.umar.apps.rule.api.core.InferenceRuleEngine;
 import com.umar.apps.rule.api.core.RuleBuilder;
+import com.umar.apps.rule.dao.api.core.RuleAttributeDaoImpl;
+import com.umar.apps.rule.dao.api.core.RuleDaoImpl;
+import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
 import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.domain.RuleValue;
+import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.ConditionService;
+import com.umar.apps.rule.service.api.core.AndComposer;
+import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
 import com.umar.apps.rule.service.api.core.DefaultCondition;
+import com.umar.apps.rule.service.api.core.OrComposer;
 import com.umar.apps.util.GenericBuilder;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.aspectj.lang.annotation.Before;
+import org.junit.jupiter.api.*;
 
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,24 +29,42 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.umar.apps.rule.dao.api.CashflowRuleServiceTest.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-/*@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CashflowBusinessRuleTest {
+    final static EntityManagerFactory emf = Persistence.createEntityManagerFactory("testPU");
+    final RuleDao ruleDao = new RuleDaoImpl(emf);
+    final RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl(emf);
+    final RuleValueDao ruleValueDao = new RuleValueDaoImpl(emf);
+    final BusinessRuleService ruleService = new BusinessRuleServiceImpl(ruleDao, ruleAttributeDao, ruleValueDao);
+    final ConditionService orCondition = new OrComposer(ruleDao, ruleValueDao);
+    final ConditionService andingCondition = new AndComposer(ruleDao, ruleValueDao);
+    final ConditionService conditionService = new DefaultCondition(ruleDao);
+    private static final CashflowDao cashflowDao = new CashflowDao(emf);
 
-    private final CashflowDao cashflowDao = new CashflowDao("testPU");
+    @BeforeEach
+    void setup() {
+        new CashflowRuleServiceTest().createSomeRules();
+    }
 
-    @Test
-    public void whenGivenDataThenCounterPartySTPRule() {
-        CashflowRuleServiceTest.createSomeRules();
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
-        createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
+    @AfterEach
+    void after() {
+        cashflowDao.delete();
+        deleteAllRulesAndValues();
+    }
+
+    @AfterAll
+    static void teardown() {
+        cashflowDao.closeEntityManagerFactory();
+    }
+
+    private void deleteAllRulesAndValues() {
+        ruleValueDao.findAll().forEach(ruleValueDao::delete);
+        ruleAttributeDao.findAll().forEach(ruleAttributeDao::delete);
+        //ruleDao.findAll().forEach(ruleDao::delete);
     }
 
     @Test
     public void givenCashFlows_WhenEitherFact_Then_ApplyRules() {
-        CashflowRuleServiceTest.createSomeRules();
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertEquals("counterParty", ruleAttribute.getAttributeName());
@@ -88,7 +114,7 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlows_When_Mutiple_STP_Rules_Then_Highest_Priority_RuleApplied_CashflowIsNotSTPAllowed() {
-        CashflowRuleServiceTest.createSomeRules();
+
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertEquals("counterParty", ruleAttribute.getAttributeName());
@@ -141,7 +167,6 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlows_WhenCptyLehman_Brothers_PLC_And_SettlementDateNONSTPThenCashflowIsNotSTPAllowed() {
-        CashflowRuleServiceTest.createSomeRules();
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertEquals("counterParty", ruleAttribute.getAttributeName());
@@ -187,7 +212,6 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenNettCashflows() {
-        CashflowRuleServiceTest.createSomeRules();
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertEquals("counterParty", ruleAttribute.getAttributeName());
@@ -262,7 +286,6 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenGroupCashflows() {
-        CashflowRuleServiceTest.createSomeRules();
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertEquals("counterParty", ruleAttribute.getAttributeName());
@@ -317,7 +340,6 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlowsWhenOrService_ThenGroupCashflows() {
-        CashflowRuleServiceTest.createSomeRules();
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertEquals("counterParty", ruleAttribute.getAttributeName());
@@ -422,4 +444,4 @@ public class CashflowBusinessRuleTest {
                 .build();
     }
 
-}*/
+}

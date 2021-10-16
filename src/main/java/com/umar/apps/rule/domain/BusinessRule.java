@@ -4,6 +4,7 @@ import com.umar.apps.infra.dao.api.WorkflowItem;
 import com.umar.apps.rule.api.core.BasicRule;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
@@ -36,16 +37,19 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
         return priority;
     }
 
+    @NotBlank(message = "Rule name is required.")
     @Column(name = "rule_name", length = 100)
     public String getRuleName() {
         return name;
     }
 
+    @NotBlank(message = "Rule type is required.")
     @Column(name = "rule_type", length = 30)
     public String getRuleType() {
         return ruleType;
     }
 
+    //@NotBlank(message = "Describe this rule.")
     @Column(name = "[desc]", length = 100)
     @Override
     public String getDescription() {

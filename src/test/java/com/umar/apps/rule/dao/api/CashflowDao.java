@@ -3,6 +3,7 @@ package com.umar.apps.rule.dao.api;
 import com.umar.apps.infra.dao.api.core.GenericJpaDao;
 import org.hibernate.Session;
 
+import javax.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,8 +17,8 @@ public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
         this(null);
     }
 
-    public CashflowDao(String persistenceUnit) {
-        super(Cashflow.class, persistenceUnit);
+    public CashflowDao(EntityManagerFactory emf) {
+        super(Cashflow.class, emf);
     }
 
     @Override
