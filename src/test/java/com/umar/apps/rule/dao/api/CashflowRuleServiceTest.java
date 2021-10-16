@@ -29,7 +29,11 @@ public class CashflowRuleServiceTest {
 
     @BeforeEach
     public void before() {
-        createSomeRules();
+        try {
+            createSomeRules();
+        }catch (Exception ex) {
+            //eat ElementAlreadyExistException
+        }
     }
 
     void createSomeRules() {

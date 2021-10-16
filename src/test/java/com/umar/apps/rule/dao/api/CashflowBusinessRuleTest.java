@@ -43,7 +43,11 @@ public class CashflowBusinessRuleTest {
 
     @BeforeEach
     void setup() {
-        new CashflowRuleServiceTest().createSomeRules();
+        try {
+            new CashflowRuleServiceTest().createSomeRules();
+        }catch (Exception ex) {
+            //eat ElementAlreadyExistException
+        }
     }
 
     @AfterEach
@@ -120,8 +124,11 @@ public class CashflowBusinessRuleTest {
         assertEquals("counterParty", ruleAttribute.getAttributeName());
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
-
-        CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 2, ruleService);
+        try {
+            CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 2, ruleService);
+        }catch (Exception ex) {
+            //eat ElementAlreadyExistException
+        }
         var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP").orElseThrow();
         CashflowRulesTestProvider.createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date",ruleService);
         var stmtDtAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
@@ -292,7 +299,11 @@ public class CashflowBusinessRuleTest {
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
 
-        CashflowRulesTestProvider.createRule("Cashflows Anding Rule","ANDER", 1, ruleService);
+        try {
+            CashflowRulesTestProvider.createRule("Cashflows Anding Rule", "ANDER", 1, ruleService);
+        }catch (Exception ex) {
+            //eat ElementAlreadyExistException
+        }
         var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER").orElseThrow();
         CashflowRulesTestProvider.createAttribute(businessRule, "counterParty", "ANDER", "Counter Party", ruleService);
         CashflowRulesTestProvider.createAttribute(businessRule, "settlementDate", "ANDER", "Settlement Date", ruleService);
