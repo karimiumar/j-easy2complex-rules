@@ -92,6 +92,10 @@ public class Cashflow implements WorkflowItem<Long> {
         return stpAllowed;
     }
 
+    public boolean isNotStpAllowed() {
+        return !stpAllowed;
+    }
+
     public void setStpAllowed(boolean stpAllowed) {
         this.stpAllowed = stpAllowed;
     }
