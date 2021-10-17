@@ -6,11 +6,10 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.umar.apps.jpa.txn.AbstractTxExecutor.doInJPA;
+import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static com.umar.apps.jpa.txn.AbstractTxExecutor.doInJPA;
+import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
 public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
 
