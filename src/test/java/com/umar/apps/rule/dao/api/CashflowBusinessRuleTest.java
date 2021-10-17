@@ -17,7 +17,6 @@ import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
 import com.umar.apps.rule.service.api.core.DefaultCondition;
 import com.umar.apps.rule.service.api.core.OrComposer;
 import com.umar.apps.util.GenericBuilder;
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.*;
 
 import javax.persistence.EntityManagerFactory;
@@ -26,8 +25,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.umar.apps.rule.dao.api.CashflowRuleServiceTest.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CashflowBusinessRuleTest {
@@ -71,9 +69,9 @@ public class CashflowBusinessRuleTest {
     public void givenCashFlows_WhenEitherFact_Then_ApplyRules() {
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
+        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         Cashflow cf1 = createCashFlow("Lehman Brothers PLC", "USD", 210000.00, LocalDate.now().plusDays(10));
         Cashflow cf2 = createCashFlow("Lehman Brothers PLC", "USD", 10000.00, LocalDate.now().plusDays(10));
         Cashflow cf3 = createCashFlow("Meryl Lynch PLC", "EUR", 220000.00, LocalDate.now().plusDays(10));
@@ -104,16 +102,16 @@ public class CashflowBusinessRuleTest {
         }
         rulesEngine.fire(rules, facts);
         var lehmanCashflows = cashflowDao.findByCounterPartyCurrencyAndSettlementDate("Lehman Brothers PLC", "USD", LocalDate.now().plusDays(10));
-        assertEquals(2, lehmanCashflows.size());
-        lehmanCashflows.forEach(cashflow -> assertFalse(cashflow.isStpAllowed()));
-        lehmanCashflows.forEach(cashflow -> assertEquals("Cashflow Marked as NON-STP. Either Counterparty or Currency is NON STP.", cashflow.getNote()));
-        lehmanCashflows.forEach(cashflow -> assertEquals(1, cashflow.getVersion()));
+        assertThat(lehmanCashflows).hasSize(2);
+        assertThat(lehmanCashflows).allMatch(Cashflow::isNotStpAllowed);
+        assertThat(lehmanCashflows).allMatch(cashflow -> cashflow.getNote().equals("Cashflow Marked as NON-STP. Either Counterparty or Currency is NON STP."));
+        assertThat(lehmanCashflows).allMatch(cashflow -> cashflow.getVersion() == 1);
 
         var merylLynchCashflows = cashflowDao.findByCounterParty("Meryl Lynch PLC");
-        assertEquals(1, merylLynchCashflows.size());
-        merylLynchCashflows.forEach(cashflow -> assertTrue(cashflow.isStpAllowed()));
-        merylLynchCashflows.forEach(cashflow -> assertNull(cashflow.getNote()));
-        merylLynchCashflows.forEach(cashflow -> assertEquals(0, cashflow.getVersion()));
+        assertThat(merylLynchCashflows).hasSize(1);
+        assertThat(merylLynchCashflows).allMatch(Cashflow::isStpAllowed);
+        assertThat(merylLynchCashflows).allMatch(cashflow -> cashflow.getNote() == null);
+        assertThat(merylLynchCashflows).allMatch(cashflow -> cashflow.getVersion() == 0);
     }
 
     @Test
@@ -121,9 +119,9 @@ public class CashflowBusinessRuleTest {
 
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
+        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         try {
             CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 2, ruleService);
         }catch (Exception ex) {
@@ -159,27 +157,24 @@ public class CashflowBusinessRuleTest {
                     .when(settlementDateSTPRule)
                             .then(action -> cashflowDao.applySTPRule(cashflow, "Cashflow Marked as NON-STP. Settlement Date is NON STP."))
                                     .build();
+            //Register both rules
             rules.register(cptySTPRule);
-
             rules.register(stmtDateSTPRule);
         }
         rulesEngine.fire(rules, facts);
         var lehmanCashflows = cashflowDao.findByCounterPartyCurrencyAndSettlementDate("Lehman Brothers PLC", "YUAN", LocalDate.now().plusDays(10));
-        var cashFlow = cashflowDao.findById(1L);
-        cashFlow.ifPresent(System.out::println);
-        lehmanCashflows.forEach(cashflow -> assertFalse(cashflow.isStpAllowed()));
-        lehmanCashflows.forEach(cashflow -> assertEquals("Cashflow Marked as NON-STP. Counterparty is NON STP.", cashflow.getNote()));
-        lehmanCashflows.forEach(cashflow -> assertEquals(1, cashflow.getVersion()));
+        assertThat(lehmanCashflows).allMatch(Cashflow::isNotStpAllowed);
+        assertThat(lehmanCashflows).allMatch(cashflow -> cashflow.getNote().equals("Cashflow Marked as NON-STP. Counterparty is NON STP."));
+        assertThat(lehmanCashflows).allMatch(cashflow -> cashflow.getVersion() == 1);
     }
 
     @Test
     public void givenCashFlows_WhenCptyLehman_Brothers_PLC_And_SettlementDateNONSTPThenCashflowIsNotSTPAllowed() {
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
-
+        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 1, ruleService);
         var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP").orElseThrow();
         CashflowRulesTestProvider.createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date",ruleService);
@@ -210,21 +205,18 @@ public class CashflowBusinessRuleTest {
         }
         rulesEngine.fire(rules, facts);
         var lehmanCashflows = cashflowDao.findByCounterPartyCurrencyAndSettlementDate("Lehman Brothers PLC", "YUAN", LocalDate.now().plusDays(10));
-        var cashFlow = cashflowDao.findById(1L);
-        cashFlow.ifPresent(System.out::println);
-        lehmanCashflows.forEach(cashflow -> assertFalse(cashflow.isStpAllowed()));
-        lehmanCashflows.forEach(cashflow -> assertEquals("Cashflow Marked as NON-STP. Both Counterparty and Settlement Date is NON STP.", cashflow.getNote()));
-        lehmanCashflows.forEach(cashflow -> assertEquals(1, cashflow.getVersion()));
+        assertThat(lehmanCashflows).allMatch(Cashflow::isNotStpAllowed);
+        assertThat(lehmanCashflows).allMatch(cashflow -> cashflow.getNote().equals("Cashflow Marked as NON-STP. Both Counterparty and Settlement Date is NON STP."));
+        assertThat(lehmanCashflows).allMatch(cashflow -> cashflow.getVersion() == 1);
     }
 
     @Test
     public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenNettCashflows() {
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
-
+        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         var stmtDateAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NETTING").orElseThrow();
         var cptyAttrib = ruleAttributeDao.findRuleAttribute("counterParty", "NETTING").orElseThrow();
         var currencyAttrib = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
@@ -250,10 +242,11 @@ public class CashflowBusinessRuleTest {
 
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDate(LocalDate.now().plusDays(10)));
         var cashflowMap = netTogether(cashflows);
-        assertEquals(3, cashflowMap.size());
-        assertEquals(1, cashflowMap.get("Lehman Brothers PLC-YUAN").size());
-        assertEquals(2, cashflowMap.get("Lehman Brothers PLC-EUR").size());
-        assertEquals(3, cashflowMap.get("Meryl Lynch PLC-USD").size());
+        assertThat(cashflowMap).hasSize(3);
+        assertThat(cashflowMap).containsOnlyKeys("Lehman Brothers PLC-YUAN", "Lehman Brothers PLC-EUR", "Meryl Lynch PLC-USD");
+        assertThat(cashflowMap.get("Lehman Brothers PLC-YUAN")).hasSize(1);
+        assertThat(cashflowMap.get("Lehman Brothers PLC-EUR")).hasSize(2);
+        assertThat(cashflowMap.get("Meryl Lynch PLC-USD")).hasSize(3);
     }
 
     Map<String, Set<Cashflow>> netTogether(List<Cashflow> cashflows) {
@@ -295,10 +288,9 @@ public class CashflowBusinessRuleTest {
     public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenGroupCashflows() {
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
-
+        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         try {
             CashflowRulesTestProvider.createRule("Cashflows Anding Rule", "ANDER", 1, ruleService);
         }catch (Exception ex) {
@@ -327,7 +319,6 @@ public class CashflowBusinessRuleTest {
         createValue(currencyAttrib, "USD");
         createValue(currencyAttrib, "EUR");
         createValue(currencyAttrib, "YUAN");
-
         var cf3 = createCashFlow("Meryl Lynch PLC", "USD", 220000.00, LocalDate.now().plusDays(15));
         var cf6 = createCashFlow("Meryl Lynch PLC", "USD", 10000.00, LocalDate.now().plusDays(15));
         var cf7 = createCashFlow("Meryl Lynch PLC", "USD", 20000.00, LocalDate.now().plusDays(15));
@@ -344,19 +335,19 @@ public class CashflowBusinessRuleTest {
         cashflowDao.save(cf11);
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, andingCondition);
-        assertEquals(2, cashflowMap.size());
-        assertEquals(2, cashflowMap.get("Lehman Brothers PLC-EUR").size());
-        assertEquals(3, cashflowMap.get("Meryl Lynch PLC-USD").size());
+        assertThat(cashflowMap).hasSize(2);
+        assertThat(cashflowMap).containsOnlyKeys("Lehman Brothers PLC-EUR", "Meryl Lynch PLC-USD");
+        assertThat(cashflowMap.get("Lehman Brothers PLC-EUR")).hasSize(2);
+        assertThat(cashflowMap.get("Meryl Lynch PLC-USD")).hasSize(3);
     }
 
     @Test
     public void givenCashFlowsWhenOrService_ThenGroupCashflows() {
         RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
-
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
+        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         CashflowRulesTestProvider.createRule("Cashflows Anding Rule","ANDER", 1, ruleService);
         var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER").orElseThrow();
         CashflowRulesTestProvider.createAttribute(businessRule, "counterParty", "ANDER", "Counter Party", ruleService);
@@ -398,11 +389,12 @@ public class CashflowBusinessRuleTest {
         cashflowDao.save(cf11);
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
         var cashflowMap = groupCashflows(cashflows, orCondition);
-        assertEquals(4, cashflowMap.size());
-        assertEquals(2, cashflowMap.get("Lehman Brothers PLC-EUR").size());
-        assertEquals(3, cashflowMap.get("Meryl Lynch PLC-USD").size());
-        assertEquals(1, cashflowMap.get("HSBC-INR").size());
-        assertEquals(1, cashflowMap.get("Lehman Brothers PLC-YUAN").size());
+        assertThat(cashflowMap).hasSize(4);
+        assertThat(cashflowMap).containsOnlyKeys("Lehman Brothers PLC-EUR","Meryl Lynch PLC-USD", "HSBC-INR", "Lehman Brothers PLC-YUAN");
+        assertThat(cashflowMap.get("Lehman Brothers PLC-EUR")).hasSize(2);
+        assertThat(cashflowMap.get("Meryl Lynch PLC-USD")).hasSize(3);
+        assertThat(cashflowMap.get("HSBC-INR")).hasSize(1);
+        assertThat(cashflowMap.get("Lehman Brothers PLC-YUAN")).hasSize(1);
     }
 
     Map<String, Set<Cashflow>> groupCashflows(List<Cashflow> cashflows, ConditionService conditionService) {

@@ -1,9 +1,9 @@
 package com.umar.apps.rule.api;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class FactsTest {
 
@@ -51,6 +51,9 @@ public class FactsTest {
     @Test
     void when_invalid_index_is_passed_to_getFact_then_throws_exception() {
         var facts = new Facts();
-        Assertions.assertThrows(ArrayIndexOutOfBoundsException.class, () -> facts.getFact(1));
+        assertThatThrownBy(() -> facts.getFact(1))
+                .isInstanceOf(ArrayIndexOutOfBoundsException.class)
+                .hasMessageContaining("1")
+                .hasMessageEndingWith("Index 1 out of bounds for length 0");
     }
 }

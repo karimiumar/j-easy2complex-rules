@@ -69,7 +69,7 @@ record Name(Integer id, String name){}
 
 class NamesFactory{
     static List<Name> fetchNames(){
-        return new ArrayList() {{
+        return new ArrayList<>() {{
             add(new Name(10, "Sara"));
             add(new Name(20, "Zara"));
             add(new Name(30, "Lara"));

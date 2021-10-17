@@ -4,21 +4,17 @@ import com.umar.apps.rule.dao.api.core.RuleAttributeDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleDaoImpl;
 import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
 import com.umar.apps.rule.domain.RuleAttribute;
-import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.BusinessRuleService;
-import com.umar.apps.rule.service.api.ConditionService;
-import com.umar.apps.rule.service.api.core.AndComposer;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
-import com.umar.apps.rule.service.api.core.DefaultCondition;
-import com.umar.apps.rule.service.api.core.OrComposer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CashflowRuleServiceTest {
     private final static EntityManagerFactory emf = Persistence.createEntityManagerFactory("testPU");
@@ -43,82 +39,89 @@ public class CashflowRuleServiceTest {
     @Test
     @Order(1)
     public void whenGivenDataThenCounterPartySTPRuleIsCreated() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
+        var ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Historic Defaulter Party X");
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
-        RuleValue ruleValue = ruleValueDao.findByOperand("Historic Defaulter Party X").orElseThrow();
-        assertEquals("Historic Defaulter Party X", ruleValue.getOperand());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
+        var ruleValue = ruleValueDao.findByOperand("Historic Defaulter Party X").orElseThrow();
+        assertThat(ruleValue.getOperand()).isEqualTo("Historic Defaulter Party X");
     }
 
     @Test @Order(2)
     public void whenGivenDataThenCounterPartySTPRuleIsAmendedAndNewOperandIsAdded() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
-        assertEquals("counterParty", ruleAttribute.getAttributeName());
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", ruleValue.getOperand());
+        var ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
+        var ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
+        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
     }
 
     @Test @Order(3)
     public void whenGivenDataThenCurrencySTPRuleIsCreated() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("currency", "NON-STP").orElseThrow();
+        var ruleAttribute = ruleAttributeDao.findRuleAttribute("currency", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "KOD");
-        assertEquals("currency", ruleAttribute.getAttributeName());
-        RuleValue ruleValue = ruleValueDao.findByOperand("KOD").orElseThrow();
-        assertEquals("KOD", ruleValue.getOperand());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("currency");
+        var ruleValue = ruleValueDao.findByOperand("KOD").orElseThrow();
+        assertThat(ruleValue.getOperand()).isEqualTo("KOD");
     }
 
     @Test @Order(4)
     public void whenGivenDataThenCurrencySTPRuleIsAmendedNewOperandsAreAdded() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("currency", "NON-STP").orElseThrow();
+        var ruleAttribute = ruleAttributeDao.findRuleAttribute("currency", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "YUAN");
         createValue(ruleAttribute, "YEN");
-        assertEquals("currency", ruleAttribute.getAttributeName());
-        RuleValue yuan = ruleValueDao.findByOperand("YUAN").orElseThrow();
-        assertEquals("YUAN", yuan.getOperand());
-        RuleValue yen = ruleValueDao.findByOperand("YEN").orElseThrow();
-        assertEquals("YEN", yen.getOperand());
+        assertThat(ruleAttribute.getAttributeName()).isEqualTo("currency");
+        var yuan = ruleValueDao.findByOperand("YUAN").orElseThrow();
+        assertThat(yuan.getOperand()).isEqualTo("YUAN");
+        var yen = ruleValueDao.findByOperand("YEN").orElseThrow();
+        assertThat(yen.getOperand()).isEqualTo("YEN");
     }
 
     @Test @Order(5)
     public void whenGivenDataThenAmountSTPRuleIsCreated() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("amount", "NON-STP").orElseThrow();
-        createValue(ruleAttribute, "2300000.00");
-        assertEquals("amount", ruleAttribute.getAttributeName());
-        RuleValue amount = ruleValueDao.findByOperand("2300000.00").orElseThrow();
-        assertEquals("2300000.00", amount.getOperand());
+        var ruleAttribute = ruleAttributeDao.findRuleAttribute("amount", "NON-STP");
+        ruleAttribute.ifPresentOrElse(ra -> {
+            createValue(ra, "2300000.00");
+            assertThat(ra.getAttributeName()).isEqualTo("amount");
+            var amount = ruleValueDao.findByOperand("2300000.00");
+            amount.ifPresent(amt -> {
+                assertThat(amt.getOperand()).isEqualTo("2300000.00");
+            });
+        }, RuntimeException::new);
     }
 
     @Test @Order(7)
     public void whenGivenDataThenNettingRuleIsCreated() {
-        RuleAttribute cptyAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NETTING").orElseThrow();
-        RuleAttribute currencyAttribute = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
-        RuleAttribute settlementDtAttribute = ruleAttributeDao.findRuleAttribute("settlementDate", "NETTING").orElseThrow();
+        var cptyAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NETTING").orElseThrow();
+        var currencyAttribute = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
+        var settlementDtAttribute = ruleAttributeDao.findRuleAttribute("settlementDate", "NETTING").orElseThrow();
         createValue(cptyAttribute, "Lehman Brothers PLC");
         createValue(currencyAttribute, "USD");
         createValue(settlementDtAttribute, LocalDate.now().plusDays(10).toString());
-        assertThrows(Exception.class, ()-> ruleAttributeDao.findRuleAttribute("amount",  "NETTING").orElseThrow());
-        RuleValue currency = ruleValueDao.findByOperand("USD").orElseThrow();
-        assertEquals("USD", currency.getOperand());
-        RuleValue settlementDate = ruleValueDao.findByOperand(LocalDate.now().plusDays(10).toString()).orElseThrow();
-        assertEquals(LocalDate.now().plusDays(10), LocalDate.parse(settlementDate.getOperand()));
-        RuleValue cpty = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", cpty.getOperand());
-        assertThrows(Exception.class, ()-> ruleValueDao.findByOperand("Throws Exception").orElseThrow());
+        assertThat(ruleAttributeDao.findRuleAttribute("amount",  "NETTING")).isEmpty();
+        var currency = ruleValueDao.findByOperand("USD").orElseThrow();
+        assertThat(currency.getOperand()).isEqualTo("USD");
+        var settlementDate = ruleValueDao.findByOperand(LocalDate.now().plusDays(10).toString()).orElseThrow();
+        assertThat(LocalDate.parse(settlementDate.getOperand())).isEqualTo(LocalDate.now().plusDays(10));
+        var cpty = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
+        assertThat(cpty.getOperand()).isEqualTo("Lehman Brothers PLC");
     }
 
     @Test @Order(8)
     public void whenGivenDataThenNettingRuleIsAdded() {
-        RuleAttribute currencyAttribute = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
-        RuleAttribute settlementDtAttribute = ruleAttributeDao.findRuleAttribute("settlementDate", "NETTING").orElseThrow();
+        var currencyAttribute = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
+        var settlementDtAttribute = ruleAttributeDao.findRuleAttribute("settlementDate", "NETTING").orElseThrow();
         createValue(currencyAttribute, "EUR");
         createValue(settlementDtAttribute, LocalDate.now().plusDays(15).toString());
-        RuleValue cpty = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertEquals("Lehman Brothers PLC", cpty.getOperand());
-        RuleValue settlementDate = ruleValueDao.findByOperand(LocalDate.now().plusDays(15).toString()).orElseThrow();
-        assertEquals(LocalDate.now().plusDays(15), LocalDate.parse(settlementDate.getOperand()));
-        RuleValue currency = ruleValueDao.findByOperand("EUR").orElseThrow();
-        assertEquals("EUR", currency.getOperand());
-        assertThrows(Exception.class, ()-> ruleValueDao.findByOperand("Throws Exception").orElseThrow());
+        var cpty = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
+        assertThat(cpty.getOperand()).isEqualTo("Lehman Brothers PLC");
+        var settlementDate = ruleValueDao.findByOperand(LocalDate.now().plusDays(15).toString()).orElseThrow();
+        assertThat(LocalDate.parse(settlementDate.getOperand())).isEqualTo(LocalDate.now().plusDays(15));
+        var currency = ruleValueDao.findByOperand("EUR").orElseThrow();
+        assertThat(currency.getOperand()).isEqualTo("EUR");
+    }
+
+    @Test
+    public void whenGivenRuleValueDao_if_non_existent_operand_is_searched_then_returns_empty() {
+        assertThat(ruleValueDao.findByOperand("Throws Exception")).isEmpty();
     }
 
     private void createValue(RuleAttribute ruleAttribute, String operand) {
