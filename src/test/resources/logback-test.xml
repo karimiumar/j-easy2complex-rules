@@ -29,8 +29,9 @@
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
-    <logger name="org.springframework" level="ERROR"/>
-    <logger name="com.umar.apps" level="INFO" additivity="false">
-        <appender-ref ref="Console" />
+    <logger name="org.springframework" level="OFF"/>
+    <logger name="com.umar.apps" level="ERROR" additivity="false">
+        <!--<appender-ref ref="Console" />-->
+        <appender-ref ref="RollingFile"/>
     </logger>
 </configuration>
