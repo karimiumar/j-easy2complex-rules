@@ -29,23 +29,23 @@ public class AbstractTxExecutor {
          * Before transaction completion function
          */
         default void beforeTx() {
-            LOG.info(JPATransactionVoidFunction.class.getName() + ".beforeTx()...");
+            LOG.debug(JPATransactionVoidFunction.class.getName() + ".beforeTx()...");
         }
 
         /**
          * After transaction completion function
          */
         default void afterTx() {
-            LOG.info(JPATransactionVoidFunction.class.getName() + ".afterTx()...");
+            LOG.debug(JPATransactionVoidFunction.class.getName() + ".afterTx()...");
         }
     }
 
     public interface JPATxFunction<T> extends Function<EntityManager, T> {
         default void beforeTx() {
-            LOG.info(JPATxFunction.class.getName() + ".beforeTx()...");
+            LOG.debug(JPATxFunction.class.getName() + ".beforeTx()...");
         }
         default void afterTx() {
-            LOG.info(JPATxFunction.class.getName() + ".afterTx()...");
+            LOG.debug(JPATxFunction.class.getName() + ".afterTx()...");
         }
     }
 
@@ -58,7 +58,7 @@ public class AbstractTxExecutor {
             function.beforeTx();
             txn = em.getTransaction();
             txn.begin();
-            LOG.info("Transaction began...");
+            LOG.debug("Transaction began...");
             result = function.apply(em);
             if ( !txn.getRollbackOnly() ) {
                 txn.commit();
