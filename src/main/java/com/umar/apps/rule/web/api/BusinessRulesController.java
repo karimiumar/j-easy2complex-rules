@@ -1,32 +1,21 @@
-package com.umar.apps.rule.rest.api;
+package com.umar.apps.rule.web.api;
 
-import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.domain.BusinessRule;
-import com.umar.apps.rule.rest.exceptions.ElementAlreadyExistException;
-import com.umar.apps.rule.rest.exceptions.NoSuchElementFoundException;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.Optional;
 
 @Controller
 public class BusinessRulesController {
 
     @Autowired
     private BusinessRuleService businessRuleService;
-    @Autowired
-    private RuleDao ruleDao;
 
     @GetMapping("/index")
     public String showRulesList(Model model) {
@@ -48,7 +37,7 @@ public class BusinessRulesController {
         var ruleType = businessRule.getRuleType();
         var priority = businessRule.getPriority();
         var description = businessRule.getDescription();
-        createRule(ruleName, ruleType, priority);
+        createRule(ruleName, ruleType, description, priority);
 
         return "redirect:/index";
     }
@@ -66,30 +55,19 @@ public class BusinessRulesController {
             businessRule.setId(id);
             return "update-rule";
         }
-        ruleDao.save(businessRule);
+        businessRuleService.updateRule(businessRule);
         return "redirect:/index";
     }
 
-    @ExceptionHandler(ElementAlreadyExistException.class)
-    public ModelAndView handleElementAlreadyExistException(HttpServletRequest request, Exception exception) {
-        var mnv = new ModelAndView();
-        mnv.addObject("exception", exception);
-        mnv.addObject("url", request.getRequestURL());
-        mnv.setViewName("already-exist-exception");
-        return mnv;
+    @PostMapping(value = "/delete")
+    public String deleteBusinessRule(HttpServletRequest request) {
+        var id = Long.parseLong(request.getParameter("id"));
+        businessRuleService.deleteRuleById(id);
+        return "redirect:/index";
     }
 
-    @ExceptionHandler(NoSuchElementFoundException.class)
-    public ModelAndView handleNoSuchElementFoundException(HttpServletRequest request, Exception exception) {
-        var mnv = new ModelAndView();
-        mnv.addObject("exception", exception);
-        mnv.addObject("url", request.getRequestURL());
-        mnv.setViewName("no-element-found-exception");
-        return mnv;
-    }
-
-    private void createRule(String ruleName, String ruleType, int priority) {
-        businessRuleService.createRule(ruleName, ruleType, priority);
+    private void createRule(String ruleName, String ruleType, String description, int priority) {
+        businessRuleService.createRule(ruleName, ruleType, description, priority, true);
     }
 
 }

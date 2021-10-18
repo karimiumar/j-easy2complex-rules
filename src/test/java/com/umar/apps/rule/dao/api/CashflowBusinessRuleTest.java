@@ -88,8 +88,8 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var counterPartySTPRule = counterPartyCondition.getCondition(cashflow, "Counterparty STP Rule", "NON-STP");
-            var currencySTPRule = currencyCondition.getCondition(cashflow, "Currency STP Rule", "NON-STP");
+            var counterPartySTPRule = counterPartyCondition.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
+            var currencySTPRule = currencyCondition.getCondition(cashflow, "Currency STP Rule", "NON-STP", true);
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
             //with the comparator logic written in BasicRule.
@@ -123,11 +123,11 @@ public class CashflowBusinessRuleTest {
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         try {
-            CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 2, ruleService);
+            CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 2, ruleService, true);
         }catch (Exception ex) {
             //eat ElementAlreadyExistException
         }
-        var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP").orElseThrow();
+        var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP", true).orElseThrow();
         CashflowRulesTestProvider.createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date",ruleService);
         var stmtDtAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
         createValue(stmtDtAttrib, LocalDate.now().plusDays(10).toString());
@@ -142,8 +142,8 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var counterPartySTPRule = conditionService.getCondition(cashflow, "Counterparty STP Rule", "NON-STP");
-            var settlementDateSTPRule = conditionService.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP");
+            var counterPartySTPRule = conditionService.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
+            var settlementDateSTPRule = conditionService.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP", true);
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
             //with the comparator logic written in BasicRule.
@@ -175,8 +175,8 @@ public class CashflowBusinessRuleTest {
         assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
-        CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 1, ruleService);
-        var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP").orElseThrow();
+        CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 1, ruleService, true);
+        var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP", true).orElseThrow();
         CashflowRulesTestProvider.createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date",ruleService);
         var stmtDtAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
         createValue(stmtDtAttrib, LocalDate.now().plusDays(10).toString());
@@ -191,8 +191,8 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var counterPartySTPRule = conditionService.getCondition(cashflow, "Counterparty STP Rule", "NON-STP");
-            var settlementDateSTPRule = conditionService.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP");
+            var counterPartySTPRule = conditionService.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
+            var settlementDateSTPRule = conditionService.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP", true);
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
             //with the comparator logic written in BasicRule.
@@ -258,9 +258,9 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var cptyNettingCondition = conditionService.getCondition(cashflow, "Counterparty Netting Rule", "NETTING");
-            var currencyCondition = conditionService.getCondition(cashflow, "Currency Netting Rule", "NETTING");
-            var stmtDateCondition = conditionService.getCondition(cashflow, "Settlement Date Netting Rule", "NETTING");
+            var cptyNettingCondition = conditionService.getCondition(cashflow, "Counterparty Netting Rule", "NETTING", true);
+            var currencyCondition = conditionService.getCondition(cashflow, "Currency Netting Rule", "NETTING", true);
+            var stmtDateCondition = conditionService.getCondition(cashflow, "Settlement Date Netting Rule", "NETTING", true);
             Set<Cashflow> cashflowSet = new HashSet<>();
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
@@ -292,11 +292,11 @@ public class CashflowBusinessRuleTest {
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         try {
-            CashflowRulesTestProvider.createRule("Cashflows Anding Rule", "ANDER", 1, ruleService);
+            CashflowRulesTestProvider.createRule("Cashflows Anding Rule", "ANDER", 1, ruleService, true);
         }catch (Exception ex) {
             //eat ElementAlreadyExistException
         }
-        var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER").orElseThrow();
+        var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER", true).orElseThrow();
         CashflowRulesTestProvider.createAttribute(businessRule, "counterParty", "ANDER", "Counter Party", ruleService);
         CashflowRulesTestProvider.createAttribute(businessRule, "settlementDate", "ANDER", "Settlement Date", ruleService);
         CashflowRulesTestProvider.createAttribute(businessRule, "currency", "ANDER", "Currency", ruleService);
@@ -348,8 +348,8 @@ public class CashflowBusinessRuleTest {
         RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
         assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
-        CashflowRulesTestProvider.createRule("Cashflows Anding Rule","ANDER", 1, ruleService);
-        var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER").orElseThrow();
+        CashflowRulesTestProvider.createRule("Cashflows Anding Rule","ANDER", 1, ruleService, true);
+        var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER", true).orElseThrow();
         CashflowRulesTestProvider.createAttribute(businessRule, "counterParty", "ANDER", "Counter Party", ruleService);
         CashflowRulesTestProvider.createAttribute(businessRule, "settlementDate", "ANDER", "Settlement Date", ruleService);
         CashflowRulesTestProvider.createAttribute(businessRule, "currency", "ANDER", "Currency", ruleService);
@@ -407,7 +407,7 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var andCondition = conditionService.getCondition(cashflow, "Cashflows Anding Rule", "ANDER");
+            var andCondition = conditionService.getCondition(cashflow, "Cashflows Anding Rule", "ANDER", true);
             Set<Cashflow> cashflowSet = new HashSet<>();
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules

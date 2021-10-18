@@ -28,12 +28,12 @@ public class OrComposer implements ConditionService {
     }
 
     @Override
-    public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType) {
+    public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType, boolean isActive) {
         Objects.requireNonNull(ruleDao, "RuleDao is null");
         Objects.requireNonNull(ruleValueDao, "RuleValueDao is null");
         Objects.requireNonNull(ruleName, "RuleName is required");
         Objects.requireNonNull(ruleType, "RuleType is required");
-        var conditions = AndOrUtil.createConditions(workflowItem, ruleDao, ruleValueDao, ruleName, ruleType);
+        var conditions = AndOrUtil.createConditions(workflowItem, ruleDao, ruleValueDao, ruleName, ruleType, isActive);
         var actualCondition = Condition.FALSE;
         int count = 0;
         int size = conditions.size(); //"5" == 5 , "Age" == "Age", "xyz" == "abc"

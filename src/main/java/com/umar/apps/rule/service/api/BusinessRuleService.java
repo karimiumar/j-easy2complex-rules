@@ -19,9 +19,11 @@ public interface BusinessRuleService {
      *
      * @param ruleName The name of the Rule
      * @param ruleType The type of the Rule
+     * @param description The description of the Rule
      * @param priority The priority of the Rule
+     * @param active Whether the given rule is active
      */
-    void createRule(String ruleName, String ruleType, int priority);
+    void createRule(String ruleName, String ruleType, String description, int priority, boolean active);
 
     /**
      * Creates a {@link com.umar.apps.rule.domain.RuleAttribute} for the given parameters and attaches it to the given {@link BusinessRule}
@@ -52,4 +54,18 @@ public interface BusinessRuleService {
      * @return Returns a {@link BusinessRule}
      */
     BusinessRule findRuleById(long id);
+
+    /**
+     * Updates a given {@link BusinessRule}
+     *
+     * @param businessRule The {@link BusinessRule} to update.
+     */
+    void updateRule(BusinessRule businessRule);
+
+    /**
+     * Physically deletes a {@link BusinessRule}
+     *
+     * @param id The id of the {@link BusinessRule}
+     */
+    void deleteRuleById(long id);
 }

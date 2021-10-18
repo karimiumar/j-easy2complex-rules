@@ -19,16 +19,18 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      * Finds a Collection of Business Rules by name
      *
      * @param ruleName The name of the Business Rule
+     * @param isActive Whether the rule being searched is active or not
      * @return Returns a Collection of Business Rules
      */
-    Collection<BusinessRule> findByName(String ruleName);
+    Collection<BusinessRule> findByName(String ruleName, boolean isActive);
     /**
      * Finds a Collection of Business Ruls by name
      *
      * @param  type The type of the Business Rule
+     * @param isActive Whether the rule being searched is active or not
      * @return Returns a Collection of Business Rules
      */
-    Collection<BusinessRule> findByType(String type);
+    Collection<BusinessRule> findByType(String type, boolean isActive);
     /**
      * Finds a Collection of Business Rules by active flag
      *
@@ -42,10 +44,10 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      *
      * @param ruleName The rule name to lookup
      * @param ruleType The rule type to lookup
-     *
+     * @param isActive Whether the rule being searched is active or not
      * @return Returns an Optional
      */
-    Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType);
+    Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive);
 
     /**
      * Finds a {@link RuleValue} for the given set of params
@@ -53,7 +55,8 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      * @param ruleName The rule name
      * @param ruleType The rule type
      * @param ruleAttribute The {@link RuleAttribute} rule attribute
+     * @param isActive Whether the rule being searched is active or not
      * @return Returns an optional
      */
-    Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute);
+    Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive);
 }

@@ -45,7 +45,10 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         logger.info("findAll()");
         Collection<BusinessRule> rules = new ArrayList<>(Collections.emptyList());
         doInJPA(() -> emf, entityManager -> {
-            List<?> result = entityManager.createQuery("SELECT br FROM BusinessRule br")
+            List<?> result = entityManager
+                    .createQuery("""
+                        SELECT br FROM BusinessRule br ORDER BY br.active DESC, br.priority , br.ruleName , br.ruleType ASC
+                    """)
                     .getResultList();
             result.forEach(row -> {
                 rules.add((BusinessRule) row);
@@ -55,8 +58,8 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     }
 
     @Override
-    public Collection<BusinessRule> findByName(String ruleName) {
-        logger.info("findByName() with name: {}", ruleName);
+    public Collection<BusinessRule> findByName(String ruleName, boolean isActive) {
+        logger.info("findByName() with name: {}, isActive: {} ", ruleName, isActive);
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
@@ -66,7 +69,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery(sql)
                     .setParameter("ruleName", ruleName)
-                    .setParameter("active", true)
+                    .setParameter("active", isActive)
                     .getResultList();
             result.forEach(row -> businessRules.add((BusinessRule) row));
         }, null);
@@ -74,8 +77,8 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     }
 
     @Override
-    public Collection<BusinessRule> findByType(String type) {
-        logger.info("findByType() with type: {}", type);
+    public Collection<BusinessRule> findByType(String type, boolean isActive) {
+        logger.info("findByType() with type: {}, isActive:{}", type, isActive);
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
@@ -85,7 +88,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery(sql)
                     .setParameter("type", type)
-                    .setParameter("active", true)
+                    .setParameter("active", isActive)
                     .getResultList();
             result.forEach(row -> {
                 businessRules.add((BusinessRule) row);
@@ -114,8 +117,8 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     }
 
     @Override
-    public Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType) {
-        logger.info("findByNameAndType() with ruleName: {}, ruleType: {}", ruleName, ruleType);
+    public Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive) {
+        logger.info("findByNameAndType() with ruleName: {}, ruleType: {}, isActive: {}", ruleName, ruleType, isActive);
         AtomicReference<Object> result = new AtomicReference<>();
         String sql = """
                 SELECT rule FROM BusinessRule rule
@@ -128,7 +131,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 result.set(entityManager.createQuery(sql)
                         .setParameter("ruleName", ruleName)
                         .setParameter("ruleType", ruleType)
-                        .setParameter("active", true)
+                        .setParameter("active", isActive)
                         .getSingleResult());
             }catch (NoResultException e) {
                 //Simply ignore it. This is expected when no data exist.
@@ -142,8 +145,8 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     }
 
     @Override
-    public Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute) {
-        logger.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}", ruleName, ruleType, ruleAttribute);
+    public Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive) {
+        logger.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}, isActive: {}", ruleName, ruleType, ruleAttribute, isActive);
         Collection<RuleValue> values = new ArrayList<>(0);
         String sql = """
                 SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute attr, BusinessRule rule 
@@ -161,7 +164,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                     .setParameter("ruleName", ruleName)
                     .setParameter("ruleType", ruleType)
                     .setParameter("attributeName", ruleAttribute.getAttributeName())
-                    .setParameter("active", true)
+                    .setParameter("active", isActive)
                     .getResultList();
             values.addAll(ruleValues);
         }, null);

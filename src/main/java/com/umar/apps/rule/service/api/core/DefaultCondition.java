@@ -31,8 +31,8 @@ public class DefaultCondition implements ConditionService {
     }
 
     @Override
-    public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType) {
-        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
+    public <T> Condition getCondition(T workflowItem, String ruleName, String ruleType, boolean isActive) {
+        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType, isActive);
         if(optionalBusinessRule.isPresent()) {
             var businessRule = optionalBusinessRule.get();
             var ruleAttributes = businessRule.getRuleAttributes();
@@ -42,7 +42,7 @@ public class DefaultCondition implements ConditionService {
                 var field = workflowItem.getClass().getDeclaredField(attributeName);
                 field.setAccessible(true);
                 var value = field.get(workflowItem);
-                var ruleValues = ruleDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute);
+                var ruleValues = ruleDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute, isActive);
                 return getCondition(value, ruleValues);
             }catch (NoSuchFieldException | IllegalAccessException e) {
                 //eat up

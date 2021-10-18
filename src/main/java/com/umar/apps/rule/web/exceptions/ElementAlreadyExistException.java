@@ -1,4 +1,4 @@
-package com.umar.apps.rule.rest.exceptions;
+package com.umar.apps.rule.web.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;

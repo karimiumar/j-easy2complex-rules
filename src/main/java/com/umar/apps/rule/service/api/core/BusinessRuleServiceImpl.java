@@ -7,8 +7,8 @@ import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.domain.RuleAttributeValue;
 import com.umar.apps.rule.domain.RuleValue;
-import com.umar.apps.rule.rest.exceptions.ElementAlreadyExistException;
-import com.umar.apps.rule.rest.exceptions.NoSuchElementFoundException;
+import com.umar.apps.rule.web.exceptions.ElementAlreadyExistException;
+import com.umar.apps.rule.web.exceptions.NoSuchElementFoundException;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.util.GenericBuilder;
 import org.hibernate.Session;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
@@ -43,10 +44,10 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     }
 
     @Override
-    public void createRule(String ruleName, String ruleType, int priority) {
-        logger.info("createRule() ruleName: {}, ruleType: {}, priority: {}", ruleName, ruleType, priority);
-        final BusinessRule businessRule = createFromScratch(ruleName, ruleType, priority);
-        var persistedRule = findExistingRule(businessRule);
+    public void createRule(String ruleName, String ruleType, String description, int priority, boolean isActive) {
+        logger.info("createRule() ruleName: {}, ruleType: {}, priority: {}, active: {}", ruleName, ruleType, priority, isActive);
+        final BusinessRule businessRule = createFromScratch(ruleName, ruleType, description, priority, isActive);
+        var persistedRule = findExistingRule(businessRule, isActive);
         persistedRule.ifPresentOrElse(rule -> {
                     logger.debug("Found Rule : {}", rule);
                     throw new ElementAlreadyExistException("Rule already exist:" + rule);
@@ -94,20 +95,25 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             return;
         }
         if(null == existingValue) {
+            logger.debug("No RuleValue exist {} for operand", operand);
             doInJPA(()-> ruleValueDao.getEMF() ,entityManager -> {
                 Session session = entityManager.unwrap(Session.class);
                 RuleAttribute attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+                logger.debug("Found RuleAttribute {} for operand {}. ", attribute, operand);
                 ruleValue.addRuleAttribute(attribute);
                 session.save(ruleValue);
+                logger.debug("Saved Operand {} successfully", ruleValue);
             }, null);
         }
         else if(null != existingAttribute && !existingValue.getRuleAttributeValues().contains(new RuleAttributeValue(existingAttribute, existingValue))){
+            logger.debug("Existing RuleAttributes {} does not contain RuleValue {} ", existingValue.getRuleAttributeValues(), existingValue);
             doInJPA(()-> ruleValueDao.getEMF(), entityManager -> {
                 Session session = entityManager.unwrap(Session.class);
                 var value = session.find(RuleValue.class, existingValue.getId());
                 var attrib = session.find(RuleAttribute.class, existingAttribute.getId());
                 value.addRuleAttribute(attrib);
                 session.saveOrUpdate(value);
+                logger.debug("Updated existing RuleAttributes with RuleValue {} ", value);
             }, null);
         }
         else {
@@ -117,6 +123,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 var value = session.find(RuleValue.class, existingValue.getId());
                 value.addRuleAttribute(attribute);
                 session.saveOrUpdate(value);
+                logger.debug("Updated existing RuleAttribute {} with RuleValue {} ", attribute,  value);
             }, null);
         }
 
@@ -132,18 +139,53 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         return ruleDao.findById(id).orElseThrow(() -> new NoSuchElementFoundException("No BusinessRule exist for id:" + id));
     }
 
+    @Override
+    public void updateRule(BusinessRule businessRule) {
+        Objects.requireNonNull(businessRule, "Incoming BusinessRule cannot be null");
+        doInJPA(() -> ruleDao.getEMF(), entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(BusinessRule.class, businessRule.getId());
+            logger.debug("Found BusinessRule {} to update. ", entity);
+            update(entity, businessRule);
+            session.saveOrUpdate(entity);
+            logger.debug("Updated BusinessRule {} successfully. ", entity);
+        }, null);
+    }
 
-    private BusinessRule createFromScratch(String ruleName, String ruleType, int priority) {
+    @Override
+    public void deleteRuleById(long id) {
+        doInJPA(() -> ruleDao.getEMF(), entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(BusinessRule.class, id);
+            logger.debug("Found BusinessRule {} to delete. ", entity);
+            session.delete(entity);
+            logger.debug("Deleted BusinessRule {} successfully. ", entity);
+        }, null);
+    }
+
+
+    private BusinessRule createFromScratch(String ruleName, String ruleType, String description, int priority, boolean isActive) {
         return GenericBuilder.of(BusinessRule::new)
                 .with(BusinessRule::setRuleName, ruleName)
                 .with(BusinessRule::setRuleType, ruleType)
-                .with(BusinessRule::setActive, true)
+                .with(BusinessRule::setDescription, description)
+                .with(BusinessRule::setActive, isActive)
                 .with(BusinessRule::setPriority, priority)
                 .build();
     }
 
-    private Optional<BusinessRule> findExistingRule(BusinessRule businessRule) {
-        return ruleDao.findByNameAndType(businessRule.getRuleName(), businessRule.getRuleType());
+    private void update(BusinessRule persistentEntity, BusinessRule transientEntity) {
+        GenericBuilder.of(() -> persistentEntity)
+                .with(BusinessRule::setRuleName, transientEntity.getRuleName())
+                .with(BusinessRule::setRuleType, transientEntity.getRuleType())
+                .with(BusinessRule::setDescription, transientEntity.getDescription())
+                .with(BusinessRule::setPriority, transientEntity.getPriority())
+                .with(BusinessRule::setActive, transientEntity.isActive())
+                .build();
+    }
+
+    private Optional<BusinessRule> findExistingRule(BusinessRule businessRule, boolean isActive) {
+        return ruleDao.findByNameAndType(businessRule.getRuleName(), businessRule.getRuleType(), isActive);
     }
 
     private Optional<RuleAttribute> findExistingAttribute(RuleAttribute ruleAttribute) {

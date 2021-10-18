@@ -33,16 +33,16 @@ public class AndOrUtil {
      * @param ruleValueDao The {@link RuleValueDao}
      * @param ruleName The name of the rule to lookup
      * @param ruleType The type of the rule to lookup
-     * 
+     * @param isActive Whether to lookup for active or inactive rules
      * @return Returns a {@link Set} of {@link Condition}
      */
-    public static <T> Set<Condition> createConditions(T workflowItem, RuleDao ruleDao, RuleValueDao ruleValueDao, String ruleName, String ruleType) {
+    public static <T> Set<Condition> createConditions(T workflowItem, RuleDao ruleDao, RuleValueDao ruleValueDao, String ruleName, String ruleType, boolean isActive) {
         Objects.requireNonNull(workflowItem, "WorkflowItem is required");
         Objects.requireNonNull(ruleDao, "RuleDao is required");
         Objects.requireNonNull(ruleValueDao, "RuleValueDao is required");
         Objects.requireNonNull(ruleName, "RuleName is required");
         Objects.requireNonNull(ruleType, "RuleType is required");
-        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType);
+        Optional<BusinessRule> optionalBusinessRule = ruleDao.findByNameAndType(ruleName, ruleType, isActive);
         Set<Condition> conditions = new HashSet<>();
         optionalBusinessRule.ifPresent(rule -> {
             var ruleAttributes = rule.getRuleAttributes();

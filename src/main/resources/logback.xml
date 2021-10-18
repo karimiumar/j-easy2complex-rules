@@ -29,7 +29,7 @@
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
-    <logger name="com.umar.apps" level="DEBUG" additivity="false">
+    <logger name="com.umar.apps" level="TRACE" additivity="false">
         <appender-ref ref="Console" />
     </logger>
 </configuration>
