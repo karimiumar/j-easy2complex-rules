@@ -3,10 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Update Business Rule</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.1/font/bootstrap-icons.css">
+    <link th:href="@{/css/boot-min.css}" rel="stylesheet"/>
+    <link th:href="@{/css/boot-icons.css}" rel="stylesheet"/>
     <link th:href="@{/css/style.css}" rel="stylesheet" />
 </head>
 <body>
@@ -71,6 +75,13 @@
             </form>
         </div>
     </div>
+    <form action="#">
+        <p class="contact-submit">
+            <input type="submit" class="btn" value="Home" th:formaction="@{/index}">
+        </p>
+    </form>
 </div>
+
+<script th:src="@{/js/boot-bundle.js}"></script>
 </body>
 </html>

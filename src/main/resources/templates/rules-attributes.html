@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Attribute of Rule</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.1/font/bootstrap-icons.css">
+    <link th:href="@{/css/boot-min.css}" rel="stylesheet"/>
+    <link th:href="@{/css/boot-icons.css}" rel="stylesheet"/>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <div class="container py-4">
+        <main>
+            <div class="p-3 mb-4 bg-light rounded-3">
+                <div class="container-fluid py-2">
+                    <h1 class="display-5 fw-bold" th:text="${ruleName}"></h1>
+                </div>
+            </div>
+            <div class="about pull-right">
+                <p class="about-links">
+                    <a th:href="@{/createAttribute(ruleId=${ruleId})}">Add Attribute</a>
+                </p>
+            </div>
+            <div th:switch="${ruleAttributes}">
+                <h2 th:case="null">No Attributes !!</h2>
+                <div th:case="*">
+                    <table class="table table-striped table-responsive-md">
+                        <thead>
+                        <tr>
+                            <th>Attribute Name</th>
+                            <th>Rule Type</th>
+                            <th>Text To Display</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="ruleAttribute : ${ruleAttributes}">
+                            <td><a th:href="@{/createValue(ruleAttributeId=${ruleAttribute.id})}"><div th:text="${ruleAttribute.attributeName}"></div></a></td>
+                            <td th:text="${ruleAttribute.ruleType}"></td>
+                            <td th:text="${ruleAttribute.displayName}"></td>
+                            <td><a th:href="@{/editAttribute/{id}(id=${ruleAttribute.id})}" type="button"><i class="bi bi-pencil"></i></a></td>
+                            <!--<td><a th:href="@{/delete/{id}(id=${businessRule.id})}" type="button" class="btn-danger"><i class="bi bi-x"></i></a></td>-->
+                            <td>
+                                <form action="#" th:action="@{/deleteAttribute}" th:object="${ruleAttribute}" method="post">
+                                    <input type="hidden" th:value="${ruleAttribute.id}" name="id"/>
+                                    <button type="submit" name="delete" class="btn-link btn-danger"><i class="bi bi-x"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        <form action="#">
+            <p class="contact-submit">
+                <input type="submit" class="btn" value="Home" th:formaction="@{/index}">
+            </p>
+        </form>
+    </div>
+    <script th:src="@{/js/boot-bundle.js}"></script>
+</body>
+</html>

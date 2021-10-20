@@ -1,12 +1,14 @@
 package com.umar.apps.rule.web.api;
 
 import com.umar.apps.rule.domain.BusinessRule;
+import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -38,7 +40,6 @@ public class BusinessRulesController {
         var priority = businessRule.getPriority();
         var description = businessRule.getDescription();
         createRule(ruleName, ruleType, description, priority);
-
         return "redirect:/index";
     }
 
@@ -66,8 +67,58 @@ public class BusinessRulesController {
         return "redirect:/index";
     }
 
+    @GetMapping("/showAttributes")
+    public String showAttributes(@RequestParam("ruleId") long ruleId, Model model) {
+        var businessRule = businessRuleService.findRuleById(ruleId);
+        composeRuleAttributes(model, ruleId, businessRule);
+        return "rules-attributes";
+    }
+
+    @GetMapping("/createAttribute")
+    public String showAddAttributeForm(@RequestParam("ruleId") long ruleId, RuleAttribute ruleAttribute, Model model) {
+        var businessRule = businessRuleService.findRuleById(ruleId);
+        model.addAttribute("ruleName", businessRule.getRuleName());
+        model.addAttribute("ruleId", ruleId);
+        return "add-attribute-form";
+    }
+
+    @PostMapping("/addAttribute")
+    public String addAttribute(@Valid RuleAttribute ruleAttribute,
+                               BindingResult bindingResult, Model model,
+                               @RequestParam("ruleId")long ruleId,
+                               RedirectAttributes attributes) {
+        if(bindingResult.hasErrors()) {
+            return "add-attribute-form";
+        }
+        var attributeName = ruleAttribute.getAttributeName();
+        var attributeType = ruleAttribute.getRuleType();
+        var displayText = ruleAttribute.getDisplayName();
+        var businessRule = businessRuleService.findRuleById(ruleId);
+        createAttribute(businessRule, attributeName, attributeType, displayText);
+        composeRuleAttributes(model, ruleId, businessRule);
+        //RedirectAttributes is responsible for adding parameter to request url
+        //In the given case http://..../showAttributes?ruleId={1,2,3....}
+        attributes.addAttribute("ruleId", ruleId);
+        return "redirect:/showAttributes";
+    }
+
+    private void composeRuleAttributes(Model model, @RequestParam("ruleId") long ruleId, BusinessRule businessRule) {
+        var ruleAttributes = businessRuleService.findAttributesOfRule(ruleId);
+        model.addAttribute("ruleName", businessRule.getRuleName());
+        model.addAttribute("ruleId", ruleId);
+        model.addAttribute("ruleAttributes", ruleAttributes);
+        if(ruleAttributes != null ) {
+            ruleAttributes.forEach(System.out::println);
+        }
+    }
+
+
     private void createRule(String ruleName, String ruleType, String description, int priority) {
         businessRuleService.createRule(ruleName, ruleType, description, priority, true);
+    }
+
+    private void createAttribute(BusinessRule businessRule, String attributeName, String attributeType, String displayText) {
+        businessRuleService.createAttribute(businessRule, attributeName, attributeType, displayText);
     }
 
 }

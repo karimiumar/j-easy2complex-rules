@@ -56,6 +56,13 @@ public interface BusinessRuleService {
     BusinessRule findRuleById(long id);
 
     /**
+     * Finds name of {@link BusinessRule} for the given id
+     * @param ruleId The id to lookup
+     * @return Returns name of the {@link BusinessRule}
+     */
+    String findRuleNameById(long ruleId);
+
+    /**
      * Updates a given {@link BusinessRule}
      *
      * @param businessRule The {@link BusinessRule} to update.
@@ -68,4 +75,13 @@ public interface BusinessRuleService {
      * @param id The id of the {@link BusinessRule}
      */
     void deleteRuleById(long id);
+
+    /**
+     * Finds {@link RuleAttribute} for the given ruleId
+     *
+     * @param ruleId The id of the corresponding {@link BusinessRule}
+     *
+     * @return A {@link List} of {@link RuleAttribute}
+     */
+    List<RuleAttribute> findAttributesOfRule(long ruleId);
 }

@@ -11,10 +11,10 @@ import java.util.Properties;
 /*
 if you want to keep using persistence.xml file just add the below code in your configuration class
  */
-@Configuration
+//@Configuration
 class JPAConfig {
 
-    @Bean
+    //@Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         var factory = new LocalContainerEntityManagerFactoryBean();
         factory.setPersistenceUnitName("rulesPU");
@@ -28,7 +28,7 @@ class JPAConfig {
         return factory;
     }
 
-    @Bean
+    //@Bean
     JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
         transactionManager.setEntityManagerFactory(entityManagerFactory);

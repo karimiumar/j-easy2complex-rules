@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
@@ -65,16 +66,22 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         var persistedAttribute = findExistingAttribute(ruleAttribute);
         persistedAttribute.ifPresentOrElse(attribute -> {
             logger.debug("Found attribute {}", attribute);
-            attribute.setBusinessRule(businessRule);
-            businessRule.addRuleAttribute(attribute);
-            doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {entityManager.merge(attribute);}, null);
-        }, () -> {
+            doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+                var session = entityManager.unwrap(Session.class);
+                var attributeEntity = session.find(RuleAttribute.class, attribute.getId());
+                var businessRuleEntity = session.find(BusinessRule.class, businessRule.getId());
+                attributeEntity.setBusinessRule(businessRuleEntity);
+                businessRuleEntity.addRuleAttribute(attributeEntity);
+                entityManager.merge(attributeEntity);
+            }, null);
+        }, /* The Else Clause */() -> {
             logger.info("No Rule Attribute found in database. Saving RuleAttribute");
             doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
                 var session = entityManager.unwrap(Session.class);
+                var businessRuleEntity = session.find(BusinessRule.class, businessRule.getId());
                 session.save(ruleAttribute);
-                businessRule.addRuleAttribute(ruleAttribute);
-                session.merge(businessRule);
+                businessRuleEntity.addRuleAttribute(ruleAttribute);
+                session.merge(businessRuleEntity);
                 }, null
             );
             logger.info("Saved RuleAttribute {}:", ruleAttribute);
@@ -98,7 +105,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             logger.debug("No RuleValue exist {} for operand", operand);
             doInJPA(()-> ruleValueDao.getEMF() ,entityManager -> {
                 Session session = entityManager.unwrap(Session.class);
-                RuleAttribute attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
+                var attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
                 logger.debug("Found RuleAttribute {} for operand {}. ", attribute, operand);
                 ruleValue.addRuleAttribute(attribute);
                 session.save(ruleValue);
@@ -140,6 +147,18 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     }
 
     @Override
+    public String findRuleNameById(long ruleId) {
+        doInJPA(() -> ruleDao.getEMF(), entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            return session
+                    .createQuery("SELECT ruleName FROM BusinessRule br WHERE br.id = :id", String.class)
+                    .setParameter("id", ruleId)
+                    .uniqueResult();
+        }, null);
+        return null;
+    }
+
+    @Override
     public void updateRule(BusinessRule businessRule) {
         Objects.requireNonNull(businessRule, "Incoming BusinessRule cannot be null");
         doInJPA(() -> ruleDao.getEMF(), entityManager -> {
@@ -160,6 +179,22 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             logger.debug("Found BusinessRule {} to delete. ", entity);
             session.delete(entity);
             logger.debug("Deleted BusinessRule {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
+    public List<RuleAttribute> findAttributesOfRule(long ruleId) {
+        return doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+            var sql = """
+                    SELECT ra from RuleAttribute ra WHERE ra.businessRule.id = :ruleId
+                    """;
+            var session = entityManager.unwrap(Session.class);
+            var result = session
+                    .createQuery(sql, RuleAttribute.class)
+                    .setParameter("ruleId", ruleId)
+                    .getResultList();
+            logger.debug("Found RuleAttributes {} for ruleId {} ", result, ruleId);
+            return result;
         }, null);
     }
 
