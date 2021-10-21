@@ -49,7 +49,7 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
         return ruleType;
     }
 
-    //@NotBlank(message = "Describe this rule.")
+    @NotBlank(message = "Describe this rule.")
     @Column(name = "[desc]", length = 100)
     @Override
     public String getDescription() {
