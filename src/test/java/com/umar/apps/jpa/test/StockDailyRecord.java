@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @EqualsAndHashCode
-@ToString
+@ToString(exclude = "stock")
 public class StockDailyRecord {
 
     protected StockDailyRecord() {

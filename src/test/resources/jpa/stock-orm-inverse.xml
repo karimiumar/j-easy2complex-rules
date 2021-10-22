@@ -40,7 +40,7 @@
             <basic name="date" optional="false">
                 <column name="[date]"/>
             </basic>
-            <many-to-one name="stock" target-entity="com.umar.apps.jpa.test.Stock">
+            <many-to-one name="stock" target-entity="com.umar.apps.jpa.test.Stock" fetch="LAZY">
                 <join-column name="STOCK_ID"/>
             </many-to-one>
         </attributes>

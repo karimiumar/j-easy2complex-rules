@@ -2,6 +2,9 @@ package com.umar.apps.jpa.test;
 
 import lombok.*;
 
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -9,6 +12,10 @@ import java.util.Set;
 @Setter
 @EqualsAndHashCode(exclude = {"stockDailyRecords"})
 @ToString(exclude = "stockDailyRecords")
+@NamedEntityGraph(name = "graph.Stock.stockDailyRecords",
+        attributeNodes = @NamedAttributeNode(value = "stockDailyRecords", subgraph = "stockDailyRecords")
+        , subgraphs = @NamedSubgraph(name = "stockDailyRecords", attributeNodes = @NamedAttributeNode("stock"))
+)
 public class Stock {
 
     protected Stock() {}
