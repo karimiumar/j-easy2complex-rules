@@ -56,7 +56,7 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
         return description;
     }
 
-    @OneToMany(mappedBy = "businessRule", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "businessRule", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY, orphanRemoval = true)
     public Set<RuleAttribute> getRuleAttributes() {
         return ruleAttributes;
     }

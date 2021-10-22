@@ -7,9 +7,8 @@ import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.domain.RuleAttributeValue;
 import com.umar.apps.rule.domain.RuleValue;
-import com.umar.apps.rule.web.exceptions.ElementAlreadyExistException;
-import com.umar.apps.rule.web.exceptions.NoSuchElementFoundException;
 import com.umar.apps.rule.service.api.BusinessRuleService;
+import com.umar.apps.rule.web.exceptions.ElementAlreadyExistException;
 import com.umar.apps.util.GenericBuilder;
 import org.hibernate.Session;
 import org.slf4j.Logger;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
@@ -142,8 +140,8 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     }
 
     @Override
-    public BusinessRule findRuleById(long id) {
-        return ruleDao.findById(id).orElseThrow(() -> new NoSuchElementFoundException("No BusinessRule exist for id:" + id));
+    public Optional<BusinessRule> findRuleById(long id) {
+        return ruleDao.findById(id);
     }
 
     @Override
@@ -159,7 +157,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     }
 
     @Override
-    public void updateRule(BusinessRule businessRule) {
+    public void update(BusinessRule businessRule) {
         Objects.requireNonNull(businessRule, "Incoming BusinessRule cannot be null");
         doInJPA(() -> ruleDao.getEMF(), entityManager -> {
             var session = entityManager.unwrap(Session.class);
@@ -168,6 +166,32 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             update(entity, businessRule);
             session.saveOrUpdate(entity);
             logger.debug("Updated BusinessRule {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
+    public void update(RuleAttribute ruleAttribute) {
+        Objects.requireNonNull(ruleAttribute, "Incoming RuleAttribute cannot be null");
+        doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(RuleAttribute.class, ruleAttribute.getId());
+            logger.debug("Found RuleAttribute {} to update. ", entity);
+            update(entity, ruleAttribute);
+            session.saveOrUpdate(entity);
+            logger.debug("Updated RuleAttribute {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
+    public void update(RuleValue ruleValue) {
+        Objects.requireNonNull(ruleValue, "Incoming RuleValue cannot be null");
+        doInJPA(() -> ruleValueDao.getEMF(), entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(RuleValue.class, ruleValue.getId());
+            logger.debug("Found RuleValue {} to update. ", entity);
+            update(entity, ruleValue);
+            session.saveOrUpdate(entity);
+            logger.debug("Updated RuleValue {} successfully. ", entity);
         }, null);
     }
 
@@ -198,6 +222,43 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         }, null);
     }
 
+    @Override
+    public Optional<RuleAttribute> findAttributeById(long id) {
+        var result = doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+            var sql = """
+                    SELECT ra FROM RuleAttribute  ra
+                    LEFT JOIN FETCH ra.businessRule
+                    WHERE ra.id = :id
+                    """;
+            return entityManager.createQuery(sql, RuleAttribute.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
+        }, null);
+        return Optional.ofNullable(result);
+    }
+
+    @Override
+    public void deleteRuleAttributeById(long id) {
+        doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(RuleAttribute.class, id);
+            logger.debug("Found RuleAttribute {} to delete. ", entity);
+            session.delete(entity);
+            logger.debug("Deleted RuleAttribute {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
+    public void deleteRuleValueById(long id) {
+        doInJPA(() -> ruleValueDao.getEMF(), entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(RuleValue.class, id);
+            logger.debug("Found RuleValue {} to delete. ", entity);
+            session.delete(entity);
+            logger.debug("Deleted RuleValue {} successfully. ", entity);
+        }, null);
+    }
+
 
     private BusinessRule createFromScratch(String ruleName, String ruleType, String description, int priority, boolean isActive) {
         return GenericBuilder.of(BusinessRule::new)
@@ -209,13 +270,27 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 .build();
     }
 
-    private void update(BusinessRule persistentEntity, BusinessRule transientEntity) {
-        GenericBuilder.of(() -> persistentEntity)
-                .with(BusinessRule::setRuleName, transientEntity.getRuleName())
-                .with(BusinessRule::setRuleType, transientEntity.getRuleType())
-                .with(BusinessRule::setDescription, transientEntity.getDescription())
-                .with(BusinessRule::setPriority, transientEntity.getPriority())
-                .with(BusinessRule::setActive, transientEntity.isActive())
+    private void update(BusinessRule entity, BusinessRule transientObj) {
+        GenericBuilder.of(() -> entity)
+                .with(BusinessRule::setRuleName, transientObj.getRuleName())
+                .with(BusinessRule::setRuleType, transientObj.getRuleType())
+                .with(BusinessRule::setDescription, transientObj.getDescription())
+                .with(BusinessRule::setPriority, transientObj.getPriority())
+                .with(BusinessRule::setActive, transientObj.isActive())
+                .build();
+    }
+
+    private void update(RuleAttribute entity, RuleAttribute transientObj) {
+        GenericBuilder.of(() -> entity)
+                .with(RuleAttribute::setAttributeName, transientObj.getAttributeName())
+                .with(RuleAttribute::setRuleType, transientObj.getRuleType())
+                .with(RuleAttribute::setDisplayName, transientObj.getDisplayName())
+                .build();
+    }
+
+    private void update(RuleValue entity, RuleValue transientObj) {
+        GenericBuilder.of(() -> entity)
+                .with(RuleValue::setOperand, transientObj.getOperand())
                 .build();
     }
 

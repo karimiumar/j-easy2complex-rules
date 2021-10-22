@@ -29,7 +29,14 @@
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
-    <logger name="com.umar.apps" level="TRACE" additivity="false">
+    <logger name="org.springframework" level="DEBUG">
         <appender-ref ref="Console" />
+    </logger>
+    <logger name="org.hibernate.SQL" level="DEBUG">
+        <appender-ref ref="Console" />
+    </logger>
+    <logger name="com.umar.apps" level="DEBUG" additivity="false">
+        <appender-ref ref="Console" />
+        <!--appender-ref ref="RollingFile"/-->
     </logger>
 </configuration>

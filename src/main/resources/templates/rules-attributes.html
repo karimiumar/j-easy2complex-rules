@@ -41,15 +41,22 @@
                         </thead>
                         <tbody>
                         <tr th:each="ruleAttribute : ${ruleAttributes}">
-                            <td><a th:href="@{/createValue(ruleAttributeId=${ruleAttribute.id})}"><div th:text="${ruleAttribute.attributeName}"></div></a></td>
+                            <td><a th:href="@{/createValue(ruleAttributeId=${ruleAttribute.id})}">
+                                <div th:text="${ruleAttribute.attributeName}"></div></a>
+                            </td>
                             <td th:text="${ruleAttribute.ruleType}"></td>
                             <td th:text="${ruleAttribute.displayName}"></td>
-                            <td><a th:href="@{/editAttribute/{id}(id=${ruleAttribute.id})}" type="button"><i class="bi bi-pencil"></i></a></td>
+                            <td><a th:href="@{/editAttribute/{id}(id=${ruleAttribute.id})}" type="button">
+                                <i class="bi bi-pencil"></i></a>
+                            </td>
                             <!--<td><a th:href="@{/delete/{id}(id=${businessRule.id})}" type="button" class="btn-danger"><i class="bi bi-x"></i></a></td>-->
                             <td>
                                 <form action="#" th:action="@{/deleteAttribute}" th:object="${ruleAttribute}" method="post">
                                     <input type="hidden" th:value="${ruleAttribute.id}" name="id"/>
-                                    <button type="submit" name="delete" class="btn-link btn-danger"><i class="bi bi-x"></i></button>
+                                    <input type="hidden" th:value="${ruleId}" name="ruleId"/>
+                                    <button type="submit" name="delete" class="btn-link btn-danger">
+                                        <i class="bi bi-x"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

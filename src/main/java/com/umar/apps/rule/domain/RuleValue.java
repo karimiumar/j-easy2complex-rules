@@ -51,7 +51,7 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
         this.version = version;
     }
 
-    @OneToMany(mappedBy = "ruleValue", cascade = {CascadeType.PERSIST,CascadeType.REMOVE}, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "ruleValue", cascade = {CascadeType.PERSIST,CascadeType.REMOVE}, orphanRemoval = true, fetch = FetchType.LAZY)
     public Set<RuleAttributeValue> getRuleAttributeValues() {
         return ruleAttributeValues;
     }

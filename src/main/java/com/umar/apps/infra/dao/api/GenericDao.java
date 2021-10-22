@@ -21,6 +21,16 @@ public interface GenericDao <T, ID extends Serializable> {
     Optional<T> findById(ID id);
 
     /**
+     * Finds a given JPA entity by ID for the given query hint and graph name.
+     *
+     * @param id The id to lookup
+     * @param queryHint The
+     * @param graphName
+     * @return Returns an {@link Optional}
+     */
+    Optional<T> findById(ID id, String queryHint, String graphName);
+
+    /**
      * Finds All the entities of a given type <strong>T</strong>.
      *
      * @return Returns a {@link Collection}

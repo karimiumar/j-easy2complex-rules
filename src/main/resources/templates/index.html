@@ -49,10 +49,10 @@
                         <td th:if="${businessRule.active} == true"><p><i class="bi bi-check-circle-fill"></i></p> </td>
                         <td th:if="${businessRule.active} == false"><p><i class="bi bi-x-circle"></i></p> </td>
                         <td th:text="${businessRule.description}"></td>
-                        <td><a th:href="@{/edit/{id}(id=${businessRule.id})}" type="button"><i class="bi bi-pencil"></i></a></td>
+                        <td><a th:href="@{/editRule/{id}(id=${businessRule.id})}" type="button"><i class="bi bi-pencil"></i></a></td>
                         <!--<td><a th:href="@{/delete/{id}(id=${businessRule.id})}" type="button" class="btn-danger"><i class="bi bi-x"></i></a></td>-->
                         <td>
-                            <form action="#" th:action="@{/delete}" th:object="${businessRule}" method="post">
+                            <form action="#" th:action="@{/deleteRule}" th:object="${businessRule}" method="post">
                                 <input type="hidden" th:value="${businessRule.id}" name="id"/>
                                 <button type="submit" name="delete" class="btn-link btn-danger"><i class="bi bi-x"></i></button>
                             </form>

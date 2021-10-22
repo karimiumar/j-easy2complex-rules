@@ -2,8 +2,10 @@ package com.umar.apps.rule.service.api;
 
 import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
+import com.umar.apps.rule.domain.RuleValue;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BusinessRuleService {
     /**
@@ -49,14 +51,16 @@ public interface BusinessRuleService {
     List<BusinessRule> findAll();
 
     /**
-     * Finds a {@link BusinessRule} for the given id
+     * Finds an {@link Optional} of {@link BusinessRule} for the given id
+     *
      * @param id The id to lookup
      * @return Returns a {@link BusinessRule}
      */
-    BusinessRule findRuleById(long id);
+    Optional<BusinessRule> findRuleById(long id);
 
     /**
      * Finds name of {@link BusinessRule} for the given id
+     *
      * @param ruleId The id to lookup
      * @return Returns name of the {@link BusinessRule}
      */
@@ -67,7 +71,21 @@ public interface BusinessRuleService {
      *
      * @param businessRule The {@link BusinessRule} to update.
      */
-    void updateRule(BusinessRule businessRule);
+    void update(BusinessRule businessRule);
+
+    /**
+     * Updates a given {@link RuleAttribute}
+     *
+     * @param ruleAttribute The {@link RuleAttribute} to update
+     */
+    void update(RuleAttribute ruleAttribute);
+
+    /**
+     * Updates a given {@link RuleValue}
+     *
+     * @param ruleValue The {@link RuleValue} to update
+     */
+    void update(RuleValue ruleValue);
 
     /**
      * Physically deletes a {@link BusinessRule}
@@ -80,8 +98,29 @@ public interface BusinessRuleService {
      * Finds {@link RuleAttribute} for the given ruleId
      *
      * @param ruleId The id of the corresponding {@link BusinessRule}
-     *
      * @return A {@link List} of {@link RuleAttribute}
      */
     List<RuleAttribute> findAttributesOfRule(long ruleId);
+
+    /**
+     * Finds an {@link Optional} of {@link RuleAttribute} for the given id
+     *
+     * @param id The id to lookup
+     * @return Returns an {@link Optional}
+     */
+    Optional<RuleAttribute> findAttributeById(long id);
+
+    /**
+     * Deletes a {@link RuleAttribute} for the given id
+     *
+     * @param id The id to delete
+     */
+    void deleteRuleAttributeById(long id);
+
+    /**
+     * Deletes a {@link com.umar.apps.rule.domain.RuleValue} for the given id
+     *
+     * @param id The id to delete
+     */
+    void deleteRuleValueById(long id);
 }

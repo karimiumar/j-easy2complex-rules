@@ -7,7 +7,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @Import(JPATestConfig.class)
-@TestPropertySource(locations = "classpath:test.properties")
+@TestPropertySource(locations = "classpath:application.properties")
 class JRooolsTests {
 
 	@Test

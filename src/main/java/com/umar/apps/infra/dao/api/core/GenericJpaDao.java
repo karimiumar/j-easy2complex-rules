@@ -9,7 +9,10 @@ import org.hibernate.Session;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceContext;
+import javax.persistence.QueryHint;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.*;
@@ -40,6 +43,20 @@ public abstract class GenericJpaDao<MODEL extends WorkflowItem<ID>, ID
         AtomicReference<MODEL> entity = new AtomicReference<>();
         doInJPA(() -> emf, entityManager -> {
             entity.set(entityManager.find(persistentClass, id));
+        }, null);
+        return Optional.ofNullable(entity.get());
+    }
+
+    @Override
+    public Optional<MODEL> findById(ID id, String queryHint, String graphName) {
+        Objects.requireNonNull(queryHint, "queryHint is required");
+        Objects.requireNonNull(graphName, "graphName is required");
+        log.debug("findById {}, queryHint {}, graphName ", queryHint, graphName);
+        AtomicReference<MODEL> entity = new AtomicReference<>();
+        doInJPA(() -> emf, entityManager -> {
+            entity.set(entityManager.find(persistentClass, id, Collections.singletonMap(
+                    queryHint, entityManager.getEntityGraph(graphName)
+            )));
         }, null);
         return Optional.ofNullable(entity.get());
     }

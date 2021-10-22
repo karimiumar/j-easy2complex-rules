@@ -78,7 +78,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         this.displayName = displayName;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinTable(
             name = "rule_attribute",
             joinColumns = @JoinColumn(name = "attribute_id"),
@@ -122,6 +122,9 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
                 ", attributeName='" + attributeName + '\'' +
                 ", ruleType='" + ruleType + '\'' +
                 ", version=" + version +
+                ", displayName='" + displayName + '\'' +
+                ", businessRule=" + businessRule +
+                ", ruleAttributeValues=" + ruleAttributeValues +
                 '}';
     }
 }
