@@ -259,6 +259,21 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         }, null);
     }
 
+    @Override
+    public Optional<RuleAttribute> findRuleAttribute(String attributeName, String ruleType) {
+        return ruleAttributeDao.findRuleAttribute(attributeName, ruleType);
+    }
+
+    @Override
+    public Optional<RuleValue> findByOperand(String operand) {
+        return ruleValueDao.findByOperand(operand);
+    }
+
+    @Override
+    public Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive) {
+        return ruleDao.findByNameAndType(ruleName, ruleType, isActive);
+    }
+
 
     private BusinessRule createFromScratch(String ruleName, String ruleType, String description, int priority, boolean isActive) {
         return GenericBuilder.of(BusinessRule::new)

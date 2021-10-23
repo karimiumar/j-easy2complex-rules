@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.*;
 
 @Entity(name = "RuleValue")
-@Table(name = "[VALUES]")
+@Table(name = "[values]")
 @NaturalIdCache
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class RuleValue implements WorkflowItem<Long>, Serializable {

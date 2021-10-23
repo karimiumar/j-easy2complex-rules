@@ -9,13 +9,10 @@ import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
@@ -119,29 +116,24 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     @Override
     public Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive) {
         logger.info("findByNameAndType() with ruleName: {}, ruleType: {}, isActive: {}", ruleName, ruleType, isActive);
-        AtomicReference<Object> result = new AtomicReference<>();
         String sql = """
                 SELECT rule FROM BusinessRule rule
+                LEFT JOIN FETCH rule.ruleAttributes ra
+                LEFT JOIN FETCH ra.ruleAttributeValues ravs
+                LEFT JOIN FETCH ravs.ruleValue rv
                 WHERE rule.ruleName = :ruleName
                 AND rule.ruleType = :ruleType
                 AND rule.active = :active
                 """;
-        doInJPA(() -> emf, entityManager -> {
-            try {
-                result.set(entityManager.createQuery(sql)
-                        .setParameter("ruleName", ruleName)
-                        .setParameter("ruleType", ruleType)
-                        .setParameter("active", isActive)
-                        .getSingleResult());
-            }catch (NoResultException e) {
-                //Simply ignore it. This is expected when no data exist.
-            }
+        var result = doInJPA(() -> emf, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            return session.createQuery(sql, BusinessRule.class)
+                    .setParameter("ruleName", ruleName)
+                    .setParameter("ruleType", ruleType)
+                    .setParameter("active", isActive)
+                    .getResultList();
         }, null);
-        if(null != result.get()) {
-            BusinessRule rule = (BusinessRule) result.get();
-            return Optional.of(rule);
-        }
-        return Optional.empty();
+        return result.isEmpty()? Optional.empty() : Optional.of(result.get(0));
     }
 
     @Override

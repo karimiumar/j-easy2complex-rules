@@ -16,8 +16,14 @@
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:java-tuts"/>
+            <!--
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/rulesdb?zeroDateTimeBehavior=CONVERT_TO_NULL"/>
+            -->
             <!--<property name="javax.persistence.jdbc.url" value="jdbc:h2:~/rulesdb_test_db;mode=mysql;AUTO_SERVER=true"/>-->
-            <property name="javax.persistence.jdbc.user" value="sa"/>
+            <property name="javax.persistence.jdbc.user" value="rulesman"/>
+            <property name="javax.persistence.jdbc.password" value="rules"/>
             <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
         </properties>
     </persistence-unit>

@@ -7,6 +7,8 @@ import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.ConditionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -18,6 +20,7 @@ import static com.umar.apps.rule.api.Condition.holds;
  * 
  * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
  */
+@Component
 public class DefaultCondition implements ConditionService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultCondition.class);
@@ -26,6 +29,7 @@ public class DefaultCondition implements ConditionService {
 
     DefaultCondition(){}
 
+    @Autowired
     public DefaultCondition(final RuleDao ruleDao) {
         this.ruleDao = ruleDao;
     }
@@ -43,6 +47,7 @@ public class DefaultCondition implements ConditionService {
                 field.setAccessible(true);
                 var value = field.get(workflowItem);
                 var ruleValues = ruleDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute, isActive);
+                logger.debug("Found RuleValues to evaluate {}", ruleValues);
                 return getCondition(value, ruleValues);
             }catch (NoSuchFieldException | IllegalAccessException e) {
                 //eat up

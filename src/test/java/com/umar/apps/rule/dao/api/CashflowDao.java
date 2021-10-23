@@ -2,6 +2,8 @@ package com.umar.apps.rule.dao.api;
 
 import com.umar.apps.infra.dao.api.core.GenericJpaDao;
 import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManagerFactory;
 import java.time.LocalDate;
@@ -11,12 +13,13 @@ import java.util.List;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
+@Component
 public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
 
     protected CashflowDao() {
         this(null);
     }
-
+    @Autowired
     public CashflowDao(EntityManagerFactory emf) {
         super(Cashflow.class, emf);
     }

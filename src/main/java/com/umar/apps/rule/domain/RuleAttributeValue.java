@@ -12,11 +12,11 @@ public class RuleAttributeValue {
     @EmbeddedId
     private RuleAttributeValueId id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("attributeId")
     private RuleAttribute ruleAttribute;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("valueId")
     private RuleValue ruleValue;
 
@@ -87,7 +87,10 @@ public class RuleAttributeValue {
 
     @Embeddable
     public static class RuleAttributeValueId implements Serializable {
+        @Column(name = "attribute_id")
         private Long attributeId;
+
+        @Column(name = "value_id")
         private Long valueId;
 
         RuleAttributeValueId() {}
@@ -110,7 +113,6 @@ public class RuleAttributeValue {
             return Objects.hash(attributeId, valueId);
         }
 
-        @Column(name = "attribute_id")
         public Long getAttributeId() {
             return attributeId;
         }
@@ -119,7 +121,6 @@ public class RuleAttributeValue {
             this.attributeId = attributeId;
         }
 
-        @Column(name = "value_id")
         public Long getValueId() {
             return valueId;
         }

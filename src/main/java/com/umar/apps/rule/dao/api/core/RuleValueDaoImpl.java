@@ -3,7 +3,9 @@ package com.umar.apps.rule.dao.api.core;
 import com.umar.apps.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.domain.RuleAttribute;
+import com.umar.apps.rule.domain.RuleAttributeValue;
 import com.umar.apps.rule.domain.RuleValue;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
@@ -26,7 +26,7 @@ import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 @Repository
 public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements RuleValueDao {
 
-    private static final Logger logger = LoggerFactory.getLogger(RuleValueDaoImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RuleValueDaoImpl.class);
 
     //Constructor needed for CDI. Do not remove
     RuleValueDaoImpl() {
@@ -40,35 +40,30 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
 
     @Override
     public Optional<RuleValue> findByOperand(String operand) {
-        logger.info("findByOperand() with operand {}", operand);
-        AtomicReference<Object> result = new AtomicReference<>();
+        LOGGER.info("findByOperand() with operand {}", operand);
         String sql = """
-                SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute ra
-                WHERE ruleVal = rav.ruleValue
-                AND rav.ruleAttribute = ra
-                AND ruleVal.operand = :operand
+                SELECT ruleVal FROM RuleValue ruleVal
+                LEFT JOIN FETCH ruleVal.ruleAttributeValues rav
+                LEFT JOIN FETCH rav.ruleAttribute
+                WHERE ruleVal.operand = :operand
                 """;
-        doInJPA(() -> emf, entityManager -> {
-            try {
-                result.set(entityManager.createQuery(sql)
-                        .setParameter("operand", operand)
-                        .getSingleResult());
-            } catch (NoResultException ex) {
-                //Simply ignore it. This is expected when no data exist.
-            }
+        var result = doInJPA(() -> emf, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            return session.createQuery(sql, RuleValue.class)
+                    .setParameter("operand", operand)
+                    .getResultList();
         }, null);
-
-        if(null != result.get()) {
-            RuleValue ruleValue = (RuleValue) result.get();
+        if(result.isEmpty()) {
+            return Optional.empty();
+        } else {
+            var ruleValue = result.get(0);
             return Optional.of(ruleValue);
         }
-        return Optional.empty();
     }
 
     @Override
     public Optional<RuleValue> findByRuleAttributeAndValue(RuleAttribute ruleAttribute, String operand) {
-        logger.info("findByRuleAttributeAndValue() for params ruleAttribute{}, operand{}", ruleAttribute, operand);
-        AtomicReference<Object> result = new AtomicReference<>();
+        LOGGER.info("findByRuleAttributeAndValue() for params ruleAttribute{}, operand{}", ruleAttribute, operand);
         String sql = """
                 SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute ra
                 WHERE ruleVal = rav.ruleValue
@@ -77,28 +72,20 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
                 AND ra.ruleType = :ruleType
                 AND ruleVal.operand = :operand
                 """;
-        doInJPA(() -> emf, entityManager -> {
-            try {
-                result.set(entityManager.createQuery(sql)
-                        .setParameter("attributeName", ruleAttribute.getAttributeName())
-                        .setParameter("ruleType", ruleAttribute.getRuleType())
-                        .setParameter("operand", operand)
-                        .getSingleResult());
-            } catch (NoResultException ex) {
-                //Simply ignore it. This is expected when no data exist.
-            }
+        var result = doInJPA(() -> emf, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            return session.createQuery(sql, RuleValue.class)
+                    .setParameter("attributeName", ruleAttribute.getAttributeName())
+                    .setParameter("ruleType", ruleAttribute.getRuleType())
+                    .setParameter("operand", operand)
+                    .getResultList();
         }, null);
-
-        if(null != result.get()) {
-            RuleValue ruleValue = (RuleValue) result.get();
-            return Optional.of(ruleValue);
-        }
-        return Optional.empty();
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 
     @Override
     public List<RuleValue> findByRuleAttribute(RuleAttribute ruleAttribute) {
-        logger.info("findByRuleAttribute() for params ruleAttribute{}", ruleAttribute);
+        LOGGER.info("findByRuleAttribute() for params ruleAttribute{}", ruleAttribute);
         List<RuleValue> ruleValues = new ArrayList<>(0);
         String sql = """
                 SELECT "ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute ra
@@ -122,7 +109,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
 
     @Override
     public Collection<RuleValue> findAll() {
-        logger.info("findAll()");
+        LOGGER.info("findAll()");
         Collection<RuleValue> ruleValues = new ArrayList<>(Collections.emptyList());
         doInJPA(() -> emf, entityManager -> {
             List<?> result = entityManager.createQuery("SELECT rv FROM RuleValue rv").getResultList();

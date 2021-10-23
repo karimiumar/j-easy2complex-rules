@@ -93,7 +93,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         this.businessRule = businessRule;
     }
 
-    @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST,CascadeType.REMOVE} , orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST,CascadeType.REMOVE} , orphanRemoval = true, fetch = FetchType.LAZY)
     public List<RuleAttributeValue> getRuleAttributeValues() {
         return ruleAttributeValues;
     }

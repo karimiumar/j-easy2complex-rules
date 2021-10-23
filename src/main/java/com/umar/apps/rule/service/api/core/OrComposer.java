@@ -4,6 +4,10 @@ import com.umar.apps.rule.api.Condition;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.service.api.ConditionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
@@ -12,7 +16,10 @@ import java.util.Objects;
  * 
  * @author Mohammad Umar Ali Karimi (karimiumar@gmail.com)
  */
+@Component
 public class OrComposer implements ConditionService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrComposer.class);
 
     private final RuleDao ruleDao;
     private final RuleValueDao ruleValueDao;
@@ -22,6 +29,7 @@ public class OrComposer implements ConditionService {
         ruleDao = null;
     }
 
+    @Autowired
     public OrComposer(final RuleDao ruleDao, final RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;
         this.ruleValueDao = ruleValueDao;
@@ -34,6 +42,7 @@ public class OrComposer implements ConditionService {
         Objects.requireNonNull(ruleName, "RuleName is required");
         Objects.requireNonNull(ruleType, "RuleType is required");
         var conditions = AndOrUtil.createConditions(workflowItem, ruleDao, ruleValueDao, ruleName, ruleType, isActive);
+        LOGGER.debug("Creating OrCondition");
         var actualCondition = Condition.FALSE;
         int count = 0;
         int size = conditions.size(); //"5" == 5 , "Age" == "Age", "xyz" == "abc"
@@ -52,6 +61,7 @@ public class OrComposer implements ConditionService {
                 count++;
             }
         }
+        LOGGER.debug("Actual OrCondition {}", actualCondition);
         return actualCondition;
     }
 }

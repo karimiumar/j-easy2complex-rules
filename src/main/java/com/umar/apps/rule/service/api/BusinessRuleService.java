@@ -123,4 +123,31 @@ public interface BusinessRuleService {
      * @param id The id to delete
      */
     void deleteRuleValueById(long id);
+
+    /**
+     * Finds a unique {@link RuleAttribute} for the given ruleName and ruleType
+     *
+     * @param attributeName The name of the attribute
+     * @param ruleType The type of the rule
+     * @return Returns an {@link Optional} of {@link RuleAttribute}
+     */
+    Optional<RuleAttribute> findRuleAttribute(String attributeName, String ruleType);
+
+    /**
+     * Finds a unique {@link RuleValue} for the given operand
+     *
+     * @param operand The operand to lookup
+     * @return Returns an {@link Optional} of {@link RuleValue}
+     */
+    Optional<RuleValue> findByOperand(String operand);
+
+    /**
+     * Finds a unique {@link BusinessRule} for the given rule name, type and active flag
+     *
+     * @param ruleName The name of the rule to lookup
+     * @param ruleType The type of the rule to lookup
+     * @param isActive Whether the rule to lookup us active
+     * @return Returns an {@link Optional} of {@link BusinessRule}
+     */
+    Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive);
 }

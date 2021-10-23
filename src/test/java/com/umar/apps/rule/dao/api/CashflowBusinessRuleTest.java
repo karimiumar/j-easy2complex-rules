@@ -5,72 +5,70 @@ import com.umar.apps.rule.api.Rule;
 import com.umar.apps.rule.api.Rules;
 import com.umar.apps.rule.api.core.InferenceRuleEngine;
 import com.umar.apps.rule.api.core.RuleBuilder;
-import com.umar.apps.rule.dao.api.core.RuleAttributeDaoImpl;
-import com.umar.apps.rule.dao.api.core.RuleDaoImpl;
-import com.umar.apps.rule.dao.api.core.RuleValueDaoImpl;
+import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.service.api.ConditionService;
-import com.umar.apps.rule.service.api.core.AndComposer;
 import com.umar.apps.rule.service.api.core.BusinessRuleServiceImpl;
-import com.umar.apps.rule.service.api.core.DefaultCondition;
-import com.umar.apps.rule.service.api.core.OrComposer;
 import com.umar.apps.util.GenericBuilder;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.ContextConfiguration;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@ComponentScan(basePackages = "com.umar.apps")
+@ContextConfiguration(classes = {CashflowBusinessRuleTest.class, BusinessRuleServiceImpl.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CashflowBusinessRuleTest {
-    final static EntityManagerFactory emf = Persistence.createEntityManagerFactory("testPU");
-    final RuleDao ruleDao = new RuleDaoImpl(emf);
-    final RuleAttributeDao ruleAttributeDao = new RuleAttributeDaoImpl(emf);
-    final RuleValueDao ruleValueDao = new RuleValueDaoImpl(emf);
-    final BusinessRuleService ruleService = new BusinessRuleServiceImpl(ruleDao, ruleAttributeDao, ruleValueDao);
-    final ConditionService orCondition = new OrComposer(ruleDao, ruleValueDao);
-    final ConditionService andingCondition = new AndComposer(ruleDao, ruleValueDao);
-    final ConditionService conditionService = new DefaultCondition(ruleDao);
-    private static final CashflowDao cashflowDao = new CashflowDao(emf);
 
-    @BeforeEach
-    void setup() {
-        try {
-            new CashflowRuleServiceTest().createSomeRules();
-        }catch (Exception ex) {
-            //eat ElementAlreadyExistException
-        }
+    @Autowired BusinessRuleService ruleService;
+    @Autowired CashflowDao cashflowDao;
+    @Autowired ConditionService defaultCondition;
+    @Autowired ConditionService andComposer;
+    @Autowired ConditionService orComposer;
+
+    //@BeforeAll
+    static void setup() {
+
     }
 
     @AfterEach
     void after() {
         cashflowDao.delete();
-        deleteAllRulesAndValues();
     }
 
     @AfterAll
     static void teardown() {
-        cashflowDao.closeEntityManagerFactory();
+        //cashflowDao.closeEntityManagerFactory();
     }
 
-    private void deleteAllRulesAndValues() {
-        ruleValueDao.findAll().forEach(ruleValueDao::delete);
-        ruleAttributeDao.findAll().forEach(ruleAttributeDao::delete);
-        //ruleDao.findAll().forEach(ruleDao::delete);
-    }
 
     @Test
     public void givenCashFlows_WhenEitherFact_Then_ApplyRules() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
+        createRule("Counterparty STP Rule", "NON-STP",1,  true);
+        BusinessRule businessRule = ruleService.findByNameAndType("Counterparty STP Rule", "NON-STP", true).orElseThrow();
+        createAttribute(businessRule, "counterParty", "NON-STP", "Counter Party");
+
+        createRule("Currency STP Rule", "NON-STP",3, true);
+        BusinessRule currencyBusinessRule = ruleService.findByNameAndType("Currency STP Rule", "NON-STP", true).orElseThrow();
+        createAttribute(currencyBusinessRule, "currency", "NON-STP", "Currency");
+        createRule("Amount STP Rule", "NON-STP", 2, true);
+        BusinessRule amountBusinessRule = ruleService.findByNameAndType("Amount STP Rule", "NON-STP", true).orElseThrow();
+        createAttribute(amountBusinessRule, "amount", "NON-STP", "Amount");
+
+        RuleAttribute ruleAttribute = ruleService.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
+        RuleValue ruleValue = ruleService.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
         Cashflow cf1 = createCashFlow("Lehman Brothers PLC", "USD", 210000.00, LocalDate.now().plusDays(10));
         Cashflow cf2 = createCashFlow("Lehman Brothers PLC", "USD", 10000.00, LocalDate.now().plusDays(10));
@@ -78,8 +76,6 @@ public class CashflowBusinessRuleTest {
         cashflowDao.save(cf1);
         cashflowDao.save(cf2);
         cashflowDao.save(cf3);
-        var counterPartyCondition = new DefaultCondition(ruleDao);
-        var currencyCondition = new DefaultCondition(ruleDao);
         var rulesEngine = new InferenceRuleEngine();
         var cashflows = cashflowDao.findAll();
         var facts = new Facts();
@@ -88,8 +84,8 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var counterPartySTPRule = counterPartyCondition.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
-            var currencySTPRule = currencyCondition.getCondition(cashflow, "Currency STP Rule", "NON-STP", true);
+            var counterPartySTPRule = defaultCondition.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
+            var currencySTPRule = defaultCondition.getCondition(cashflow, "Currency STP Rule", "NON-STP", true);
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
             //with the comparator logic written in BasicRule.
@@ -117,21 +113,16 @@ public class CashflowBusinessRuleTest {
     @Test
     public void givenCashFlows_When_Mutiple_STP_Rules_Then_Highest_Priority_RuleApplied_CashflowIsNotSTPAllowed() {
 
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
+        RuleAttribute ruleAttribute = ruleService.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
+        RuleValue ruleValue = ruleService.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
-        try {
-            CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 2, ruleService, true);
-        }catch (Exception ex) {
-            //eat ElementAlreadyExistException
-        }
-        var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP", true).orElseThrow();
-        CashflowRulesTestProvider.createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date",ruleService);
-        var stmtDtAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
+        createRule("Settlement Date STP Rule", "NON-STP", 2, true);
+        var stmtDtSTPRule = ruleService.findByNameAndType("Settlement Date STP Rule", "NON-STP", true).orElseThrow();
+        createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date");
+        var stmtDtAttrib = ruleService.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
         createValue(stmtDtAttrib, LocalDate.now().plusDays(10).toString());
-        var conditionService = new DefaultCondition(ruleDao);
         Cashflow cf4 = createCashFlow("Lehman Brothers PLC", "YUAN", 210000.00, LocalDate.now().plusDays(10));
         cashflowDao.save(cf4);
         var rulesEngine = new InferenceRuleEngine();
@@ -142,8 +133,8 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var counterPartySTPRule = conditionService.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
-            var settlementDateSTPRule = conditionService.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP", true);
+            var counterPartySTPRule = defaultCondition.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
+            var settlementDateSTPRule = defaultCondition.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP", true);
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
             //with the comparator logic written in BasicRule.
@@ -170,17 +161,22 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlows_WhenCptyLehman_Brothers_PLC_And_SettlementDateNONSTPThenCashflowIsNotSTPAllowed() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
+        createRule("Counterparty STP Rule", "NON-STP", 1, true);
+        createRule("Settlement Date STP Rule", "NON-STP", 1, true);
+        BusinessRule cptySTPRule = ruleService.findByNameAndType("Counterparty STP Rule", "NON-STP", true).orElseThrow();
+        createAttribute(cptySTPRule, "counterParty", "NON-STP", "Counter Party");
+        BusinessRule stmtDateSTPRule = ruleService.findByNameAndType("Settlement Date STP Rule", "NON-STP", true).orElseThrow();
+        createAttribute(stmtDateSTPRule, "settlementDate", "NON-STP", "Settlement Date");
+        RuleAttribute ruleAttribute = ruleService.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
         createValue(ruleAttribute, "Lehman Brothers PLC");
         assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
+        RuleValue ruleValue = ruleService.findByOperand("Lehman Brothers PLC").orElseThrow();
         assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
-        CashflowRulesTestProvider.createRule("Settlement Date STP Rule", "NON-STP", 1, ruleService, true);
-        var stmtDtSTPRule = ruleDao.findByNameAndType("Settlement Date STP Rule", "NON-STP", true).orElseThrow();
-        CashflowRulesTestProvider.createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date",ruleService);
-        var stmtDtAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
+        createRule("Settlement Date STP Rule", "NON-STP", 1, true);
+        var stmtDtSTPRule = ruleService.findByNameAndType("Settlement Date STP Rule", "NON-STP", true).orElseThrow();
+        createAttribute(stmtDtSTPRule, "settlementDate", "NON-STP", "Settlement Date");
+        var stmtDtAttrib = ruleService.findRuleAttribute("settlementDate","NON-STP").orElseThrow();
         createValue(stmtDtAttrib, LocalDate.now().plusDays(10).toString());
-        var conditionService = new DefaultCondition(ruleDao);
         Cashflow cf4 = createCashFlow("Lehman Brothers PLC", "YUAN", 210000.00, LocalDate.now().plusDays(10));
         cashflowDao.save(cf4);
         var rulesEngine = new InferenceRuleEngine();
@@ -191,8 +187,8 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var counterPartySTPRule = conditionService.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
-            var settlementDateSTPRule = conditionService.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP", true);
+            var counterPartySTPRule = defaultCondition.getCondition(cashflow, "Counterparty STP Rule", "NON-STP", true);
+            var settlementDateSTPRule = defaultCondition.getCondition(cashflow, "Settlement Date STP Rule", "NON-STP", true);
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
             //with the comparator logic written in BasicRule.
@@ -212,14 +208,18 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenNettCashflows() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
-        createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
-        var stmtDateAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","NETTING").orElseThrow();
-        var cptyAttrib = ruleAttributeDao.findRuleAttribute("counterParty", "NETTING").orElseThrow();
-        var currencyAttrib = ruleAttributeDao.findRuleAttribute("currency", "NETTING").orElseThrow();
+        createRule("Counterparty Netting Rule", "NETTING", 1, true);
+        createRule("Currency Netting Rule", "NETTING", 2, true);
+        createRule("Settlement Date Netting Rule", "NETTING", 1, true);
+        var cptyNettingRule = ruleService.findByNameAndType("Counterparty Netting Rule", "NETTING", true).orElseThrow();
+        var currNettingRule = ruleService.findByNameAndType("Currency Netting Rule", "NETTING", true).orElseThrow();
+        var stmdDateRule = ruleService.findByNameAndType("Settlement Date Netting Rule", "NETTING", true).orElseThrow();
+        createAttribute(cptyNettingRule, "settlementDate", "NETTING", "Settlement Date");
+        createAttribute(currNettingRule, "counterParty", "NETTING", "Counterparty");
+        createAttribute(stmdDateRule, "currency", "NETTING", "Currency");
+        var stmtDateAttrib = ruleService.findRuleAttribute("settlementDate","NETTING").orElseThrow();
+        var cptyAttrib = ruleService.findRuleAttribute("counterParty", "NETTING").orElseThrow();
+        var currencyAttrib = ruleService.findRuleAttribute("currency", "NETTING").orElseThrow();
         createValue(cptyAttrib, "Meryl Lynch PLC");
         createValue(cptyAttrib, "Lehman Brothers PLC");
         createValue(stmtDateAttrib, LocalDate.now().plusDays(10).toString());
@@ -258,9 +258,9 @@ public class CashflowBusinessRuleTest {
         for(Cashflow cashflow: cashflows) {
             facts.put("cashflow-" + cnt, cashflow);
             cnt++;
-            var cptyNettingCondition = conditionService.getCondition(cashflow, "Counterparty Netting Rule", "NETTING", true);
-            var currencyCondition = conditionService.getCondition(cashflow, "Currency Netting Rule", "NETTING", true);
-            var stmtDateCondition = conditionService.getCondition(cashflow, "Settlement Date Netting Rule", "NETTING", true);
+            var cptyNettingCondition = defaultCondition.getCondition(cashflow, "Counterparty Netting Rule", "NETTING", true);
+            var currencyCondition = defaultCondition.getCondition(cashflow, "Currency Netting Rule", "NETTING", true);
+            var stmtDateCondition = defaultCondition.getCondition(cashflow, "Settlement Date Netting Rule", "NETTING", true);
             Set<Cashflow> cashflowSet = new HashSet<>();
             //Hack the comparator logic of DefaultRule/BasicRule in order to override its internal logic as below.
             //This is needed to register our Rule with Rules which uses a Set<Rule> to register new Rules
@@ -286,23 +286,14 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlowsHavingSameSettlementDate_WhenDistinctCpty_DistinctCurrency_ThenGroupCashflows() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
-        createValue(ruleAttribute, "Lehman Brothers PLC");
-        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
-        try {
-            CashflowRulesTestProvider.createRule("Cashflows Anding Rule", "ANDER", 1, ruleService, true);
-        }catch (Exception ex) {
-            //eat ElementAlreadyExistException
-        }
-        var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER", true).orElseThrow();
-        CashflowRulesTestProvider.createAttribute(businessRule, "counterParty", "ANDER", "Counter Party", ruleService);
-        CashflowRulesTestProvider.createAttribute(businessRule, "settlementDate", "ANDER", "Settlement Date", ruleService);
-        CashflowRulesTestProvider.createAttribute(businessRule, "currency", "ANDER", "Currency", ruleService);
-        var stmtDateAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","ANDER").orElseThrow();
-        var cptyAttrib = ruleAttributeDao.findRuleAttribute("counterParty", "ANDER").orElseThrow();
-        var currencyAttrib = ruleAttributeDao.findRuleAttribute("currency", "ANDER").orElseThrow();
+        createRule("Cashflows Anding Rule", "ANDER", 1, true);
+        var businessRule = ruleService.findByNameAndType("Cashflows Anding Rule", "ANDER", true).orElseThrow();
+        createAttribute(businessRule, "counterParty", "ANDER", "Counter Party");
+        createAttribute(businessRule, "settlementDate", "ANDER", "Settlement Date");
+        createAttribute(businessRule, "currency", "ANDER", "Currency");
+        var stmtDateAttrib = ruleService.findRuleAttribute("settlementDate","ANDER").orElseThrow();
+        var cptyAttrib = ruleService.findRuleAttribute("counterParty", "ANDER").orElseThrow();
+        var currencyAttrib = ruleService.findRuleAttribute("currency", "ANDER").orElseThrow();
         createValue(cptyAttrib, "Meryl Lynch PLC");
         createValue(cptyAttrib, "Lehman Brothers PLC");
         createValue(cptyAttrib, "HSBC");
@@ -334,7 +325,7 @@ public class CashflowBusinessRuleTest {
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
-        var cashflowMap = groupCashflows(cashflows, andingCondition);
+        var cashflowMap = groupCashflows(cashflows, andComposer);
         assertThat(cashflowMap).hasSize(2);
         assertThat(cashflowMap).containsOnlyKeys("Lehman Brothers PLC-EUR", "Meryl Lynch PLC-USD");
         assertThat(cashflowMap.get("Lehman Brothers PLC-EUR")).hasSize(2);
@@ -343,19 +334,14 @@ public class CashflowBusinessRuleTest {
 
     @Test
     public void givenCashFlowsWhenOrService_ThenGroupCashflows() {
-        RuleAttribute ruleAttribute = ruleAttributeDao.findRuleAttribute("counterParty", "NON-STP").orElseThrow();
-        createValue(ruleAttribute, "Lehman Brothers PLC");
-        RuleValue ruleValue = ruleValueDao.findByOperand("Lehman Brothers PLC").orElseThrow();
-        assertThat(ruleAttribute.getAttributeName()).isEqualTo("counterParty");
-        assertThat(ruleValue.getOperand()).isEqualTo("Lehman Brothers PLC");
-        CashflowRulesTestProvider.createRule("Cashflows Anding Rule","ANDER", 1, ruleService, true);
-        var businessRule = ruleDao.findByNameAndType("Cashflows Anding Rule", "ANDER", true).orElseThrow();
-        CashflowRulesTestProvider.createAttribute(businessRule, "counterParty", "ANDER", "Counter Party", ruleService);
-        CashflowRulesTestProvider.createAttribute(businessRule, "settlementDate", "ANDER", "Settlement Date", ruleService);
-        CashflowRulesTestProvider.createAttribute(businessRule, "currency", "ANDER", "Currency", ruleService);
-        var stmtDateAttrib = ruleAttributeDao.findRuleAttribute("settlementDate","ANDER").orElseThrow();
-        var cptyAttrib = ruleAttributeDao.findRuleAttribute("counterParty", "ANDER").orElseThrow();
-        var currencyAttrib = ruleAttributeDao.findRuleAttribute("currency", "ANDER").orElseThrow();
+        createRule("Cashflows Anding Rule","ANDER", 1, true);
+        var businessRule = ruleService.findByNameAndType("Cashflows Anding Rule", "ANDER", true).orElseThrow();
+        createAttribute(businessRule, "counterParty", "ANDER", "Counter Party");
+        createAttribute(businessRule, "settlementDate", "ANDER", "Settlement Date");
+        createAttribute(businessRule, "currency", "ANDER", "Currency");
+        var stmtDateAttrib = ruleService.findRuleAttribute("settlementDate","ANDER").orElseThrow();
+        var cptyAttrib = ruleService.findRuleAttribute("counterParty", "ANDER").orElseThrow();
+        var currencyAttrib = ruleService.findRuleAttribute("currency", "ANDER").orElseThrow();
         createValue(cptyAttrib, "Meryl Lynch PLC");
         createValue(cptyAttrib, "Lehman Brothers PLC");
         createValue(cptyAttrib, "HSBC");
@@ -388,7 +374,7 @@ public class CashflowBusinessRuleTest {
         cashflowDao.save(cf10);
         cashflowDao.save(cf11);
         var cashflows = new LinkedList<>(cashflowDao.findBySettlementDateBetween(LocalDate.now().plusDays(5), LocalDate.now().plusDays(15)));
-        var cashflowMap = groupCashflows(cashflows, orCondition);
+        var cashflowMap = groupCashflows(cashflows, orComposer);
         assertThat(cashflowMap).hasSize(4);
         assertThat(cashflowMap).containsOnlyKeys("Lehman Brothers PLC-EUR","Meryl Lynch PLC-USD", "HSBC-INR", "Lehman Brothers PLC-YUAN");
         assertThat(cashflowMap.get("Lehman Brothers PLC-EUR")).hasSize(2);
@@ -447,4 +433,19 @@ public class CashflowBusinessRuleTest {
                 .build();
     }
 
+    private void createRule(String ruleName, String ruleType, int priority, boolean isActive) {
+        try {
+            ruleService.createRule(ruleName, ruleType, "testing", priority, isActive);
+        }catch (Exception ex) {
+
+        }
+    }
+
+    private void createAttribute(BusinessRule businessRule, String attributeName, String ruleType, String displayName) {
+        try {
+            ruleService.createAttribute(businessRule, attributeName, ruleType, displayName);
+        }catch (Exception ex) {
+
+        }
+    }
 }
