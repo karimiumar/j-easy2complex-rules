@@ -150,4 +150,20 @@ public interface BusinessRuleService {
      * @return Returns an {@link Optional} of {@link BusinessRule}
      */
     Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive);
+
+    /**
+     * Finds a {@link List} of {@link RuleValue} for the given attributeId
+     *
+     * @param attributeId The id to lookup
+     * @return Returns a {@link List} of {@link RuleValue}
+     */
+    List<RuleValue> findValuesOf(long attributeId);
+
+    /**
+     * Finds a unique {@link RuleValue} for the given id
+     *
+     * @param id The id to lookup
+     * @return Returns an {@link Optional} of {@link RuleValue}
+     */
+    Optional<RuleValue> findRuleValueById(long id);
 }

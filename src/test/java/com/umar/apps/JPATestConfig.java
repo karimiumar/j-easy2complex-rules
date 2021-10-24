@@ -1,9 +1,11 @@
 package com.umar.apps;
 
+import org.h2.tools.Server;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
+import java.sql.SQLException;
 import java.util.Properties;
 
 @TestConfiguration
@@ -22,4 +24,9 @@ public class JPATestConfig {
         factory.setJpaProperties(properties);
         return factory;
     }
+
+    /*@Bean(initMethod = "start", destroyMethod = "stop")
+    public Server h2server() throws SQLException {
+        return Server.createTcpServer("-tcp","-tcpAllowOthers","-tcpPort","9043", "-webAllowOthers","-webPort","9090");
+    }*/
 }

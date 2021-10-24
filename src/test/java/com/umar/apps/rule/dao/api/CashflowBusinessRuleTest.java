@@ -1,5 +1,6 @@
 package com.umar.apps.rule.dao.api;
 
+import com.umar.apps.JRooolsApp;
 import com.umar.apps.rule.api.Facts;
 import com.umar.apps.rule.api.Rule;
 import com.umar.apps.rule.api.Rules;
@@ -24,9 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(classes = JRooolsApp.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ComponentScan(basePackages = "com.umar.apps")
-@ContextConfiguration(classes = {CashflowBusinessRuleTest.class, BusinessRuleServiceImpl.class})
+@ContextConfiguration(classes = {CashflowBusinessRuleTest.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CashflowBusinessRuleTest {
 
@@ -36,21 +37,10 @@ public class CashflowBusinessRuleTest {
     @Autowired ConditionService andComposer;
     @Autowired ConditionService orComposer;
 
-    //@BeforeAll
-    static void setup() {
-
-    }
-
     @AfterEach
     void after() {
         cashflowDao.delete();
     }
-
-    @AfterAll
-    static void teardown() {
-        //cashflowDao.closeEntityManagerFactory();
-    }
-
 
     @Test
     public void givenCashFlows_WhenEitherFact_Then_ApplyRules() {

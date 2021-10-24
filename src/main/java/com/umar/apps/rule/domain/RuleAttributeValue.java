@@ -20,7 +20,7 @@ public class RuleAttributeValue {
     @MapsId("valueId")
     private RuleValue ruleValue;
 
-    @Column(name = "created_on")
+    @Column(name = "created")
     private LocalDateTime created = LocalDateTime.now();
 
     protected RuleAttributeValue(){}

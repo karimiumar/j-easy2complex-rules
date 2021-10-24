@@ -4,6 +4,7 @@ import com.umar.apps.infra.dao.api.WorkflowItem;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +23,8 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     private int version;
     private String displayName;
     private BusinessRule businessRule;
+    private LocalDateTime created = LocalDateTime.now();
+    private LocalDateTime updated;
     private List<RuleAttributeValue> ruleAttributeValues = new ArrayList<>();
 
     public RuleAttribute(Long id, String attributeName, String ruleType, String displayName) {
@@ -100,6 +103,24 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
 
     public void setRuleAttributeValues(List<RuleAttributeValue> ruleAttributeValues) {
         this.ruleAttributeValues = ruleAttributeValues;
+    }
+
+    @Column(name = "created")
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    @Column(name = "updated")
+    public LocalDateTime getUpdated() {
+        return updated;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
+    }
+
+    public void setUpdated(LocalDateTime updated) {
+        this.updated = updated;
     }
 
     @Override

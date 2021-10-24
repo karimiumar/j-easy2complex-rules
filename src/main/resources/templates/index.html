@@ -47,7 +47,7 @@
                         <td th:text="${businessRule.ruleType}"></td>
                         <td th:text="${businessRule.priority}"></td>
                         <td th:if="${businessRule.active} == true"><p><i class="bi bi-check-circle-fill"></i></p> </td>
-                        <td th:if="${businessRule.active} == false"><p><i class="bi bi-x-circle"></i></p> </td>
+                        <td th:if="${businessRule.active} == false"><p><i class="bi bi-x-circle-fill"></i></p> </td>
                         <td th:text="${businessRule.description}"></td>
                         <td><a th:href="@{/editRule/{id}(id=${businessRule.id})}" type="button"><i class="bi bi-pencil"></i></a></td>
                         <!--<td><a th:href="@{/delete/{id}(id=${businessRule.id})}" type="button" class="btn-danger"><i class="bi bi-x"></i></a></td>-->

@@ -6,6 +6,7 @@ import com.umar.apps.rule.api.core.BasicRule;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -19,6 +20,8 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
     private String ruleType;
     private boolean active;
     private int version;
+    private LocalDateTime created = LocalDateTime.now();
+    private LocalDateTime updated;
     private Set<RuleAttribute> ruleAttributes = new HashSet<>();
 
     public BusinessRule(){
@@ -76,6 +79,24 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
     @Override
     public Long getId() {
         return id;
+    }
+
+    @Column(name = "created")
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    @Column(name = "updated")
+    public LocalDateTime getUpdated() {
+        return updated;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
+    }
+
+    public void setUpdated(LocalDateTime updated) {
+        this.updated = updated;
     }
 
     public void addRuleAttribute(RuleAttribute ruleAttribute) {

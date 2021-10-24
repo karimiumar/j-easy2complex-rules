@@ -2,6 +2,7 @@ package com.umar.apps.rule.web.api;
 
 import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
+import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.web.exceptions.NoSuchElementFoundException;
 import org.slf4j.Logger;
@@ -33,13 +34,13 @@ public class BusinessRulesController {
 
     @GetMapping("/rulesForm")
     public String showRulesForm(BusinessRule businessRule) {
-        return "add-rules-form";
+        return "add-rules";
     }
 
     @PostMapping("/addRule")
     public String addRule(@Valid BusinessRule businessRule, BindingResult bindingResult, Model model) {
         if(bindingResult.hasErrors()) {
-            return "add-rules-form";
+            return "add-rules";
         }
         var ruleName = businessRule.getRuleName();
         var ruleType = businessRule.getRuleType();
@@ -98,7 +99,7 @@ public class BusinessRulesController {
         }, () -> {
             throw new NoSuchElementFoundException("No BusinessRule found for the id: " + ruleId);
         });
-        return "add-attribute-form";
+        return "add-attribute";
     }
 
     @PostMapping("/addAttribute")
@@ -107,7 +108,7 @@ public class BusinessRulesController {
                                @RequestParam("ruleId")long ruleId,
                                RedirectAttributes attributes) {
         if(bindingResult.hasErrors()) {
-            return "add-attribute-form";
+            return "add-attribute";
         }
         var attributeName = ruleAttribute.getAttributeName();
         var attributeType = ruleAttribute.getRuleType();
@@ -137,7 +138,7 @@ public class BusinessRulesController {
               throw new NoSuchElementFoundException("No RuleAttribute exists for the given id:" + id);
            }
         );
-        return "edit-attribute-form";
+        return "update-attribute";
     }
 
     @PostMapping("/updateAttribute/{id}")
@@ -147,7 +148,7 @@ public class BusinessRulesController {
             ,RedirectAttributes attributes) {
         if(result.hasErrors()) {
             ruleAttribute.setId(id);
-            return "edit-attribute-form";
+            return "update-attribute";
         }
         LOGGER.debug("Received updateAttribute() request for {} with RuleAttribute {}", id, ruleAttribute);
         businessRuleService.update(ruleAttribute);
@@ -185,13 +186,127 @@ public class BusinessRulesController {
         return "redirect:/showAttributes";
     }
 
-    private void composeRuleAttributes(Model model, @RequestParam("ruleId") long ruleId, BusinessRule businessRule) {
+    @GetMapping("/showValues")
+    public String showValues(@RequestParam("attributeId") long attributeId, Model model) {
+        composeRuleValues(model, attributeId);
+        return "rules-attr-vals";
+    }
+
+    @GetMapping("/createValue")
+    public String showAddValueForm(@RequestParam("attributeId") long attributeId, RuleValue ruleValue, Model model) {
+        var attr = businessRuleService.findAttributeById(attributeId);
+        attr.ifPresentOrElse(ruleAttribute -> {
+            model.addAttribute("ruleName", ruleAttribute.getBusinessRule().getRuleName());
+            model.addAttribute("ruleId", ruleAttribute.getBusinessRule().getId());
+            model.addAttribute("attributeName", ruleAttribute.getAttributeName());
+            model.addAttribute("attributeId", attributeId);
+            model.addAttribute("ruleType", ruleAttribute.getRuleType());
+            model.addAttribute("ruleAttribute", ruleAttribute);
+        }, () -> {
+            throw new NoSuchElementFoundException("No RuleAttribute found for the id: " + attributeId);
+        });
+        return "add-value";
+    }
+
+    @PostMapping("/addValue")
+    public String addValue(@Valid RuleValue ruleValue,
+                           BindingResult bindingResult, Model model,
+                           @RequestParam("attributeId")long attributeId,
+                           RedirectAttributes attributes) {
+        if(bindingResult.hasErrors()) {
+            return "add-value";
+        }
+        var operand = ruleValue.getOperand();
+        var attr = businessRuleService.findAttributeById(attributeId);
+        attr.ifPresentOrElse(ruleAttribute -> {
+            createOperand(ruleAttribute, operand);
+            composeRuleValues(model, attributeId);
+        }, () -> {
+            throw new NoSuchElementFoundException("No RuleAttribute found for the id: " + attributeId);
+        });
+        attributes.addAttribute("attributeId", attributeId);
+        return "redirect:/showValues";
+    }
+
+
+    @GetMapping("/editValue/{id}/{attributeId}")
+    public String showEditValueForm(
+            @PathVariable("id") long id,
+            @PathVariable("attributeId") long attributeId,
+            Model model) {
+        var optVal = businessRuleService.findRuleValueById(id);
+        optVal.ifPresentOrElse(
+            ruleVal -> {
+                model.addAttribute("ruleValue", ruleVal);
+                model.addAttribute("attributeId",attributeId);
+            }
+            , () -> {
+                throw new NoSuchElementFoundException("No RuleValue exists for the given id:" + id);
+            }
+        );
+        return "update-value";
+    }
+
+    @PostMapping("/updateValue/{id}/{attributeId}")
+    public String updateValue(
+            @PathVariable("id")long id
+            ,@PathVariable("attributeId") long attributeId
+            ,@Valid RuleValue ruleValue
+            , BindingResult result, Model model
+            ,RedirectAttributes attributes) {
+        if(result.hasErrors()) {
+            ruleValue.setId(id);
+            return "update-value";
+        }
+        LOGGER.debug("Received updateValue() request for {} with RuleValue {}", id, ruleValue);
+        businessRuleService.update(ruleValue);
+        var operand = ruleValue.getOperand();
+        var attr = businessRuleService.findAttributeById(attributeId);
+        attr.ifPresentOrElse( ruleAttribute -> {
+            createOperand(ruleAttribute, operand);
+            composeRuleValues(model, attributeId);
+        }, () -> {
+            throw new NoSuchElementFoundException("No RuleAttribute found for the id: " + id);
+        });
+        attributes.addAttribute("attributeId", attributeId);
+        return "redirect:/showValues";
+    }
+
+    @PostMapping("/deleteValue")
+    public String deleteAttribute(
+            @RequestParam("id") long id
+            ,@RequestParam("attributeId") long attributeId
+            ,RedirectAttributes attributes) {
+        businessRuleService.deleteRuleValueById(id);
+        attributes.addAttribute("attributeId", attributeId);
+        return "redirect:/showValues";
+    }
+
+    private void composeRuleAttributes(Model model, long ruleId, BusinessRule businessRule) {
         Objects.requireNonNull(businessRule, "BusinessRule cannot be null");
         var ruleAttributes = businessRuleService.findAttributesOfRule(ruleId);
         model.addAttribute("ruleName", businessRule.getRuleName());
         model.addAttribute("ruleId", ruleId);
         model.addAttribute("businessRule", businessRule);
         model.addAttribute("ruleAttributes", ruleAttributes);
+    }
+
+    private void composeRuleValues(Model model,long attributeId) {
+        var attr = businessRuleService.findAttributeById(attributeId);
+        attr.ifPresentOrElse(
+            ruleAttribute -> {
+                var ruleValues = businessRuleService.findValuesOf(attributeId);
+                model.addAttribute("ruleName", ruleAttribute.getBusinessRule().getRuleName());
+                model.addAttribute("ruleId", ruleAttribute.getBusinessRule().getId());
+                model.addAttribute("businessRule", ruleAttribute.getBusinessRule());
+                model.addAttribute("attributeId", ruleAttribute.getId());
+                model.addAttribute("ruleAttribute", ruleAttribute);
+                model.addAttribute("ruleValues", ruleValues);
+            },
+            () -> {
+                throw new NoSuchElementFoundException("RuleAttribute for the given id not found: " + attributeId);
+            }
+        );
     }
 
 
@@ -203,4 +318,7 @@ public class BusinessRulesController {
         businessRuleService.createAttribute(businessRule, attributeName, attributeType, displayText);
     }
 
+    private void createOperand(RuleAttribute ruleAttribute, String operand) {
+        businessRuleService.createValue(ruleAttribute, operand);
+    }
 }

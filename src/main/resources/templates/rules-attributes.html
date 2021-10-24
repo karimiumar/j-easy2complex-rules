@@ -41,7 +41,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="ruleAttribute : ${ruleAttributes}">
-                            <td><a th:href="@{/createValue(ruleAttributeId=${ruleAttribute.id})}">
+                            <td><a th:href="@{/showValues(attributeId=${ruleAttribute.id})}">
                                 <div th:text="${ruleAttribute.attributeName}"></div></a>
                             </td>
                             <td th:text="${ruleAttribute.ruleType}"></td>

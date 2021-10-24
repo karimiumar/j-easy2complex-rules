@@ -6,6 +6,7 @@ import org.hibernate.annotations.NaturalIdCache;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity(name = "RuleValue")
@@ -15,11 +16,10 @@ import java.util.*;
 public class RuleValue implements WorkflowItem<Long>, Serializable {
 
     private Long id;
-
     private String operand;
-
+    private LocalDateTime created;
+    private LocalDateTime updated;
     private int version;
-
     private Set<RuleAttributeValue> ruleAttributeValues = new HashSet<>();
 
     @Id
@@ -58,6 +58,24 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
 
     public void setRuleAttributeValues(Set<RuleAttributeValue> ruleAttributeValues) {
         this.ruleAttributeValues = ruleAttributeValues;
+    }
+
+    @Column(name = "created")
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    @Column(name = "updated")
+    public LocalDateTime getUpdated() {
+        return updated;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
+    }
+
+    public void setUpdated(LocalDateTime updated) {
+        this.updated = updated;
     }
 
     public void addRuleAttribute(RuleAttribute ruleAttribute) {

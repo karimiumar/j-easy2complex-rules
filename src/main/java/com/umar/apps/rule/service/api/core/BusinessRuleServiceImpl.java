@@ -228,6 +228,8 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             var sql = """
                     SELECT ra FROM RuleAttribute  ra
                     LEFT JOIN FETCH ra.businessRule
+                    LEFT JOIN FETCH ra.ruleAttributeValues ravs
+                    LEFT JOIN FETCH ravs.ruleValue rv
                     WHERE ra.id = :id
                     """;
             return entityManager.createQuery(sql, RuleAttribute.class)
@@ -272,6 +274,29 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
     @Override
     public Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive) {
         return ruleDao.findByNameAndType(ruleName, ruleType, isActive);
+    }
+
+    @Override
+    public List<RuleValue> findValuesOf(long attributeId) {
+        var sql = """
+                SELECT rv FROM RuleValue rv
+                LEFT JOIN FETCH rv.ruleAttributeValues ravs
+                LEFT JOIN FETCH ravs.ruleAttribute
+                LEFT JOIN FETCH ravs.ruleValue
+                WHERE ravs.ruleAttribute.id = :attributeId
+                """;
+        var result = doInJPA(() -> ruleValueDao.getEMF(), entityManager ->  {
+            var session = entityManager.unwrap(Session.class);
+            return session.createQuery(sql, RuleValue.class)
+                    .setParameter("attributeId", attributeId)
+                    .getResultList();
+        }, null);
+        return result;
+    }
+
+    @Override
+    public Optional<RuleValue> findRuleValueById(long id) {
+        return ruleValueDao.findById(id);
     }
 
 
