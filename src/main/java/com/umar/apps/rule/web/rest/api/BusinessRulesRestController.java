@@ -19,19 +19,20 @@ public class BusinessRulesRestController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessRulesRestController.class);
 
-    @Autowired BusinessRuleRestHelper businessRuleRestHelper;
+    @Autowired
+    BusinessRuleRestFacade businessRuleRestFacade;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
     @GetMapping("/rules")
     List<BusinessRuleDTO> findAllRules() {
-        return businessRuleRestHelper.findAll();
+        return businessRuleRestFacade.findAll();
     }
 
     @GetMapping("/rules/{id}")
     BusinessRuleDTO findById(@PathVariable("id")long id, final HttpServletResponse response) {
-        var businessRule = businessRuleRestHelper.findRuleById(id);
+        var businessRule = businessRuleRestFacade.findRuleById(id);
         eventPublisher.publishEvent(new SingleResourceRetrievedEvent(this, response));
         return businessRule;
     }
@@ -40,7 +41,7 @@ public class BusinessRulesRestController {
     @ResponseStatus(HttpStatus.CREATED)
     Long create(@RequestBody BusinessRuleDTO resource, final HttpServletResponse response) {
         Objects.requireNonNull(resource, "Incoming BusinessRule resource is null");
-        return businessRuleRestHelper.createRule(resource);
+        return businessRuleRestFacade.createRule(resource);
         /*
         var optRule = businessRuleService.findByNameAndType(ruleName, ruleType, true);
 
@@ -55,12 +56,12 @@ public class BusinessRulesRestController {
     @ResponseStatus(HttpStatus.OK)
     void update(@PathVariable("id") long id, @RequestBody BusinessRuleDTO resource) {
         Objects.requireNonNull(resource, "Incoming BusinessRule resource is null");
-        businessRuleRestHelper.updateRule(resource);
+        businessRuleRestFacade.updateRule(resource);
     }
 
     @DeleteMapping("/rules/id")
     @ResponseStatus(HttpStatus.OK)
     void delete(@PathVariable("id") long id) {
-        businessRuleRestHelper.deleteRuleById(id);
+        businessRuleRestFacade.deleteRuleById(id);
     }
 }
