@@ -41,17 +41,18 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     public Collection<BusinessRule> findAll() {
         logger.info("findAll()");
         Collection<BusinessRule> rules = new ArrayList<>(Collections.emptyList());
-        doInJPA(() -> emf, entityManager -> {
-            List<?> result = entityManager
-                    .createQuery("""
-                        SELECT br FROM BusinessRule br ORDER BY br.active DESC, br.priority , br.ruleName , br.ruleType ASC
-                    """)
-                    .getResultList();
-            result.forEach(row -> {
-                rules.add((BusinessRule) row);
-            });
+        return doInJPA(() -> emf, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var result = session.createQuery("""
+                        SELECT DISTINCT rule FROM BusinessRule rule
+                        LEFT JOIN FETCH rule.ruleAttributes ras
+                        LEFT JOIN FETCH ras.ruleAttributeValues ravs
+                        LEFT JOIN FETCH ravs.ruleValue rv
+                        ORDER BY rule.active DESC, rule.priority , rule.ruleName , rule.ruleType ASC
+                    """, BusinessRule.class).getResultList();
+            logger.debug("findAll() returning BusinessRules with size {}", result.size());
+            return result;
         }, null);
-        return rules;
     }
 
     @Override
@@ -60,6 +61,9 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
+                LEFT JOIN FETCH rule.ruleAttributes ras
+                LEFT JOIN FETCH ras.ruleAttributeValues ravs
+                LEFT JOIN FETCH ravs.ruleValue rv
                 WHERE rule.ruleName = :ruleName
                 AND rule.active = :active
                 """;
@@ -79,6 +83,9 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
+                LEFT JOIN FETCH rule.ruleAttributes ras
+                LEFT JOIN FETCH ras.ruleAttributeValues ravs
+                LEFT JOIN FETCH ravs.ruleValue rv
                 WHERE rule.ruleType = :type
                 AND rule.active = :active
                 """;
@@ -100,6 +107,9 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
+                LEFT JOIN FETCH rule.ruleAttributes ras
+                LEFT JOIN FETCH ras.ruleAttributeValues ravs
+                LEFT JOIN FETCH ravs.ruleValue rv
                 WHERE rule.active = :active
                 """;
         doInJPA(() -> emf, entityManager -> {
@@ -141,7 +151,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         logger.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}, isActive: {}", ruleName, ruleType, ruleAttribute, isActive);
         Collection<RuleValue> values = new ArrayList<>(0);
         String sql = """
-                SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute attr, BusinessRule rule 
+                SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute attr, BusinessRule rule
                 WHERE rule.ruleName = :ruleName
                 AND rule.ruleType = :ruleType
                 AND attr.attributeName =:attributeName

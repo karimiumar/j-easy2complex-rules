@@ -16,9 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
@@ -136,7 +134,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     @Override
     public List<BusinessRule> findAll() {
-        return List.copyOf(ruleDao.findAll());
+        return new ArrayList<>(ruleDao.findAll());
     }
 
     @Override

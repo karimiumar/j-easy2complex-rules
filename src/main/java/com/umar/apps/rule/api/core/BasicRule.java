@@ -32,7 +32,7 @@ import com.umar.apps.rule.api.Rule;
 import java.util.Objects;
 
 /**
- * @author: Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
+ * @author Mahmoud Ben Hassine (mahmoud.benhassine@icloud.com)
  */
 public class BasicRule implements Rule {
 

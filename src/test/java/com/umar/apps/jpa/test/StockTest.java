@@ -26,7 +26,7 @@ public class StockTest {
         }
     }
 
-    //@Test
+    @Test
     @Order(value = 1)
     void createSomeStocks() {
         doInJPA(() -> emf, entityManager -> {
@@ -58,8 +58,8 @@ public class StockTest {
         assertThat(stocks.size()).isEqualTo(3);
     }
 
-    //@Order(value = 2)
-    //@Test
+    @Order(value = 2)
+    @Test
     void testFetchStocks() {
         var stocks = fetchStocks();
         assertThat(stocks.size()).isEqualTo(3);
@@ -69,8 +69,8 @@ public class StockTest {
         assertThat(stocks.get(2).getStockCode()).isEqualTo("SAP");
     }
 
-    //@Order(value = 2)
-    //@Test
+    @Order(value = 2)
+    @Test
     void testFetchStockDailyRecord() {
         var stockDailyRecord = fetchStockDailyRecord();
         assertThat(stockDailyRecord).isNotNull();

@@ -1,5 +1,7 @@
 package com.umar.apps.rule.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -14,10 +16,12 @@ public class RuleAttributeValue {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("attributeId")
+    @JsonBackReference
     private RuleAttribute ruleAttribute;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("valueId")
+    @JsonBackReference
     private RuleValue ruleValue;
 
     @Column(name = "created")
@@ -79,8 +83,7 @@ public class RuleAttributeValue {
     public String toString() {
         return "RuleAttributeValue{" +
                 "id=" + id +
-                ", ruleAttribute=" + ruleAttribute.getAttributeName() +
-                ", ruleValue=" + ruleValue.getOperand() +
+                ", ruleValue=" + ruleValue +
                 ", created=" + created +
                 '}';
     }

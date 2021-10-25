@@ -1,5 +1,6 @@
 package com.umar.apps.rule.domain;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.umar.apps.infra.dao.api.WorkflowItem;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalIdCache;
@@ -52,6 +53,7 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
     }
 
     @OneToMany(mappedBy = "ruleValue", cascade = {CascadeType.PERSIST,CascadeType.REMOVE}, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     public Set<RuleAttributeValue> getRuleAttributeValues() {
         return ruleAttributeValues;
     }

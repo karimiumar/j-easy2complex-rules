@@ -1,5 +1,7 @@
 package com.umar.apps.rule.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.umar.apps.infra.dao.api.WorkflowItem;
 
 import javax.persistence.*;
@@ -88,6 +90,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
             inverseJoinColumns = @JoinColumn(name = "rule_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"attribute_id","rule_id"})
     )
+    @JsonBackReference
     public BusinessRule getBusinessRule() {
         return businessRule;
     }
@@ -97,6 +100,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     }
 
     @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST,CascadeType.REMOVE} , orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     public List<RuleAttributeValue> getRuleAttributeValues() {
         return ruleAttributeValues;
     }
@@ -144,7 +148,6 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
                 ", ruleType='" + ruleType + '\'' +
                 ", version=" + version +
                 ", displayName='" + displayName + '\'' +
-                ", businessRule=" + businessRule +
                 ", ruleAttributeValues=" + ruleAttributeValues +
                 '}';
     }

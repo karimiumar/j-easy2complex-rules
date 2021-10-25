@@ -1,5 +1,6 @@
 package com.umar.apps.rule.domain;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.umar.apps.infra.dao.api.WorkflowItem;
 import com.umar.apps.rule.api.core.BasicRule;
 
@@ -60,6 +61,7 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
     }
 
     @OneToMany(mappedBy = "businessRule", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonManagedReference
     public Set<RuleAttribute> getRuleAttributes() {
         return ruleAttributes;
     }
@@ -155,10 +157,11 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
     public String toString() {
         return "BusinessRule{" +
                 "id=" + id +
-                ", ruleName='" + name + '\'' +
+                ", ruleName='" + name +
                 ", priority=" + priority +
-                ", ruleType='" + ruleType + '\'' +
+                ", ruleType='" + ruleType +
                 ", active=" + active +
+                ", ruleAttributes=" + ruleAttributes +
                 '}';
     } 
 
