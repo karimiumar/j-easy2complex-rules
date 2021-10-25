@@ -144,119 +144,50 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     @Override
     public String findRuleNameById(long ruleId) {
-        doInJPA(() -> ruleDao.getEMF(), entityManager -> {
-            var session = entityManager.unwrap(Session.class);
-            return session
-                    .createQuery("SELECT ruleName FROM BusinessRule br WHERE br.id = :id", String.class)
-                    .setParameter("id", ruleId)
-                    .uniqueResult();
-        }, null);
-        return null;
+        return ruleDao.findRuleNameById(ruleId);
     }
 
     @Override
     public void update(BusinessRule businessRule) {
         Objects.requireNonNull(businessRule, "Incoming BusinessRule cannot be null");
-        doInJPA(() -> ruleDao.getEMF(), entityManager -> {
-            var session = entityManager.unwrap(Session.class);
-            var entity = session.find(BusinessRule.class, businessRule.getId());
-            logger.debug("Found BusinessRule {} to update. ", entity);
-            update(entity, businessRule);
-            session.saveOrUpdate(entity);
-            logger.debug("Updated BusinessRule {} successfully. ", entity);
-        }, null);
+        ruleDao.update(businessRule);
     }
 
     @Override
     public void update(RuleAttribute ruleAttribute) {
         Objects.requireNonNull(ruleAttribute, "Incoming RuleAttribute cannot be null");
-        doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
-            var session = entityManager.unwrap(Session.class);
-            var entity = session.find(RuleAttribute.class, ruleAttribute.getId());
-            logger.debug("Found RuleAttribute {} to update. ", entity);
-            update(entity, ruleAttribute);
-            session.saveOrUpdate(entity);
-            logger.debug("Updated RuleAttribute {} successfully. ", entity);
-        }, null);
+        ruleAttributeDao.update(ruleAttribute);
     }
 
     @Override
     public void update(RuleValue ruleValue) {
         Objects.requireNonNull(ruleValue, "Incoming RuleValue cannot be null");
-        doInJPA(() -> ruleValueDao.getEMF(), entityManager -> {
-            var session = entityManager.unwrap(Session.class);
-            var entity = session.find(RuleValue.class, ruleValue.getId());
-            logger.debug("Found RuleValue {} to update. ", entity);
-            update(entity, ruleValue);
-            session.saveOrUpdate(entity);
-            logger.debug("Updated RuleValue {} successfully. ", entity);
-        }, null);
+        ruleValueDao.update(ruleValue);
     }
 
     @Override
     public void deleteRuleById(long id) {
-        doInJPA(() -> ruleDao.getEMF(), entityManager -> {
-            var session = entityManager.unwrap(Session.class);
-            var entity = session.find(BusinessRule.class, id);
-            logger.debug("Found BusinessRule {} to delete. ", entity);
-            session.delete(entity);
-            logger.debug("Deleted BusinessRule {} successfully. ", entity);
-        }, null);
+        ruleDao.deleteById(id);
     }
 
     @Override
     public List<RuleAttribute> findAttributesOfRule(long ruleId) {
-        return doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
-            var sql = """
-                    SELECT ra from RuleAttribute ra WHERE ra.businessRule.id = :ruleId
-                    """;
-            var session = entityManager.unwrap(Session.class);
-            var result = session
-                    .createQuery(sql, RuleAttribute.class)
-                    .setParameter("ruleId", ruleId)
-                    .getResultList();
-            logger.debug("Found RuleAttributes {} for ruleId {} ", result, ruleId);
-            return result;
-        }, null);
+        return ruleAttributeDao.findAttributesOfRule(ruleId);
     }
 
     @Override
     public Optional<RuleAttribute> findAttributeById(long id) {
-        var result = doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
-            var sql = """
-                    SELECT ra FROM RuleAttribute  ra
-                    LEFT JOIN FETCH ra.businessRule
-                    LEFT JOIN FETCH ra.ruleAttributeValues ravs
-                    LEFT JOIN FETCH ravs.ruleValue rv
-                    WHERE ra.id = :id
-                    """;
-            return entityManager.createQuery(sql, RuleAttribute.class)
-                    .setParameter("id", id)
-                    .getSingleResult();
-        }, null);
-        return Optional.ofNullable(result);
+        return ruleAttributeDao.findAttributeById(id);
     }
 
     @Override
     public void deleteRuleAttributeById(long id) {
-        doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
-            var session = entityManager.unwrap(Session.class);
-            var entity = session.find(RuleAttribute.class, id);
-            logger.debug("Found RuleAttribute {} to delete. ", entity);
-            session.delete(entity);
-            logger.debug("Deleted RuleAttribute {} successfully. ", entity);
-        }, null);
+        ruleAttributeDao.deleteRuleAttributeById(id);
     }
 
     @Override
     public void deleteRuleValueById(long id) {
-        doInJPA(() -> ruleValueDao.getEMF(), entityManager -> {
-            var session = entityManager.unwrap(Session.class);
-            var entity = session.find(RuleValue.class, id);
-            logger.debug("Found RuleValue {} to delete. ", entity);
-            session.delete(entity);
-            logger.debug("Deleted RuleValue {} successfully. ", entity);
-        }, null);
+        ruleValueDao.deleteById(id);
     }
 
     @Override
@@ -276,20 +207,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     @Override
     public List<RuleValue> findValuesOf(long attributeId) {
-        var sql = """
-                SELECT rv FROM RuleValue rv
-                LEFT JOIN FETCH rv.ruleAttributeValues ravs
-                LEFT JOIN FETCH ravs.ruleAttribute
-                LEFT JOIN FETCH ravs.ruleValue
-                WHERE ravs.ruleAttribute.id = :attributeId
-                """;
-        var result = doInJPA(() -> ruleValueDao.getEMF(), entityManager ->  {
-            var session = entityManager.unwrap(Session.class);
-            return session.createQuery(sql, RuleValue.class)
-                    .setParameter("attributeId", attributeId)
-                    .getResultList();
-        }, null);
-        return result;
+        return ruleValueDao.findValuesOf(attributeId);
     }
 
     @Override
@@ -305,30 +223,6 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 .with(BusinessRule::setDescription, description)
                 .with(BusinessRule::setActive, isActive)
                 .with(BusinessRule::setPriority, priority)
-                .build();
-    }
-
-    private void update(BusinessRule entity, BusinessRule transientObj) {
-        GenericBuilder.of(() -> entity)
-                .with(BusinessRule::setRuleName, transientObj.getRuleName())
-                .with(BusinessRule::setRuleType, transientObj.getRuleType())
-                .with(BusinessRule::setDescription, transientObj.getDescription())
-                .with(BusinessRule::setPriority, transientObj.getPriority())
-                .with(BusinessRule::setActive, transientObj.isActive())
-                .build();
-    }
-
-    private void update(RuleAttribute entity, RuleAttribute transientObj) {
-        GenericBuilder.of(() -> entity)
-                .with(RuleAttribute::setAttributeName, transientObj.getAttributeName())
-                .with(RuleAttribute::setRuleType, transientObj.getRuleType())
-                .with(RuleAttribute::setDisplayName, transientObj.getDisplayName())
-                .build();
-    }
-
-    private void update(RuleValue entity, RuleValue transientObj) {
-        GenericBuilder.of(() -> entity)
-                .with(RuleValue::setOperand, transientObj.getOperand())
                 .build();
     }
 

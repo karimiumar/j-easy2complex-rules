@@ -5,6 +5,7 @@ import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.domain.RuleValue;
+import com.umar.apps.util.GenericBuilder;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,5 +172,50 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             values.addAll(ruleValues);
         }, null);
         return values;
+    }
+
+    @Override
+    public String findRuleNameById(long ruleId) {
+        doInJPA(this::getEMF, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            return session
+                    .createQuery("SELECT ruleName FROM BusinessRule br WHERE br.id = :id", String.class)
+                    .setParameter("id", ruleId)
+                    .uniqueResult();
+        }, null);
+        return null;
+    }
+
+    @Override
+    public void update(BusinessRule businessRule) {
+        doInJPA(this::getEMF, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(BusinessRule.class, businessRule.getId());
+            logger.debug("Found BusinessRule {} to update. ", entity);
+            update(entity, businessRule);
+            session.saveOrUpdate(entity);
+            logger.debug("Updated BusinessRule {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
+    public void deleteById(long id) {
+        doInJPA(this::getEMF, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(BusinessRule.class, id);
+            logger.debug("Found BusinessRule {} to delete. ", entity);
+            session.delete(entity);
+            logger.debug("Deleted BusinessRule {} successfully. ", entity);
+        }, null);
+    }
+
+    private void update(BusinessRule entity, BusinessRule transientObj) {
+        GenericBuilder.of(() -> entity)
+                .with(BusinessRule::setRuleName, transientObj.getRuleName())
+                .with(BusinessRule::setRuleType, transientObj.getRuleType())
+                .with(BusinessRule::setDescription, transientObj.getDescription())
+                .with(BusinessRule::setPriority, transientObj.getPriority())
+                .with(BusinessRule::setActive, transientObj.isActive())
+                .build();
     }
 }

@@ -5,6 +5,7 @@ import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.domain.RuleAttributeValue;
 import com.umar.apps.rule.domain.RuleValue;
+import com.umar.apps.util.GenericBuilder;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.slf4j.Logger;
@@ -108,6 +109,46 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
     }
 
     @Override
+    public List<RuleValue> findValuesOf(long attributeId) {
+        var sql = """
+                SELECT rv FROM RuleValue rv
+                LEFT JOIN FETCH rv.ruleAttributeValues ravs
+                LEFT JOIN FETCH ravs.ruleAttribute
+                LEFT JOIN FETCH ravs.ruleValue
+                WHERE ravs.ruleAttribute.id = :attributeId
+                """;
+        return doInJPA(this::getEMF, entityManager ->  {
+            var session = entityManager.unwrap(Session.class);
+            return session.createQuery(sql, RuleValue.class)
+                    .setParameter("attributeId", attributeId)
+                    .getResultList();
+        }, null);
+    }
+
+    @Override
+    public void update(RuleValue ruleValue) {
+        doInJPA(this::getEMF, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(RuleValue.class, ruleValue.getId());
+            LOGGER.debug("Found RuleValue {} to update. ", entity);
+            update(entity, ruleValue);
+            session.saveOrUpdate(entity);
+            LOGGER.debug("Updated RuleValue {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
+    public void deleteById(long id) {
+        doInJPA(this::getEMF, entityManager -> {
+            var session = entityManager.unwrap(Session.class);
+            var entity = session.find(RuleValue.class, id);
+            LOGGER.debug("Found RuleValue {} to delete. ", entity);
+            session.delete(entity);
+            LOGGER.debug("Deleted RuleValue {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
     public Collection<RuleValue> findAll() {
         LOGGER.info("findAll()");
         Collection<RuleValue> ruleValues = new ArrayList<>(Collections.emptyList());
@@ -118,5 +159,11 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
             });
         }, null);
         return ruleValues;
+    }
+
+    private void update(RuleValue entity, RuleValue transientObj) {
+        GenericBuilder.of(() -> entity)
+                .with(RuleValue::setOperand, transientObj.getOperand())
+                .build();
     }
 }

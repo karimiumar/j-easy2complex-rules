@@ -59,4 +59,26 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      * @return Returns an optional
      */
     Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive);
+
+    /**
+     * Finds the name of the {@link BusinessRule} for the given id
+     *
+     * @param ruleId The id to lookup
+     * @return Returns the name of the BusinessRule
+     */
+    String findRuleNameById(long ruleId);
+
+    /**
+     * Updates a given {@link BusinessRule}
+     *
+     * @param businessRule The {@link BusinessRule} to update
+     */
+    void update(BusinessRule businessRule);
+
+    /**
+     * Deletes a {@link BusinessRule} for the given id
+     *
+     * @param id The id to lookup and delete
+     */
+    void deleteById(long id);
 }

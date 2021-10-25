@@ -35,4 +35,26 @@ public interface RuleValueDao extends GenericDao<RuleValue, Long> {
      * @return Returns an Optional
      */
     List<RuleValue> findByRuleAttribute(RuleAttribute ruleAttribute);
+
+    /**
+     * Finds {@link RuleValue} for the given id of {@link RuleAttribute}
+     *
+     * @param attributeId The id of the {@link RuleAttribute} to lookup
+     * @return Returns a {@link List} of {@link RuleValue}
+     */
+    List<RuleValue> findValuesOf(long attributeId);
+
+    /**
+     * Updates a given {@link RuleValue}
+     *
+     * @param ruleValue The {@link RuleValue} to update
+     */
+    void update(RuleValue ruleValue);
+
+    /**
+     * Deletes a {@link RuleValue} for the given id
+     *
+     * @param id The id of the {@link RuleValue} to lookup and delete
+     */
+    void deleteById(long id);
 }
