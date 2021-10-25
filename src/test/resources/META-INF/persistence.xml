@@ -18,7 +18,7 @@
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:~/rulesdb;mode=mysql;AUTO_SERVER=true"/>
             <property name="javax.persistence.jdbc.user" value="rulesman"/>
             <property name="javax.persistence.jdbc.password" value="rules"/>          
-            <property name="javax.persistence.schema-generation.database.action" value="none"/>
+            <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
             <!--<property name="javax.persistence.jdbc.url" value="jdbc:h2:~/rulesdb;mode=mysql;AUTO_SERVER=true"/>-->
             <!--<property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:java-tuts"/>-->
         </properties>
