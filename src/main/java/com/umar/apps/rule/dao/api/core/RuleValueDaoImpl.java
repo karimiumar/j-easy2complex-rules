@@ -161,6 +161,30 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
         return ruleValues;
     }
 
+    @Override
+    public Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive) {
+        LOGGER.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}, isActive: {}", ruleName, ruleType, ruleAttribute, isActive);
+        String sql = """
+                SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute attr, BusinessRule rule
+                WHERE rule.ruleName = :ruleName
+                AND rule.ruleType = :ruleType
+                AND attr.attributeName =:attributeName
+                AND rav.ruleValue = ruleVal
+                AND rav.ruleAttribute = attr
+                AND rule.ruleType = attr.ruleType
+                AND rule.active = :active
+                """;
+        return doInJPA(() -> emf, entityManager -> {
+            Session session = entityManager.unwrap(Session.class);
+            return session.createQuery(sql, RuleValue.class)
+                    .setParameter("ruleName", ruleName)
+                    .setParameter("ruleType", ruleType)
+                    .setParameter("attributeName", ruleAttribute.getAttributeName())
+                    .setParameter("active", isActive)
+                    .getResultList();
+        }, null);
+    }
+
     private void update(RuleValue entity, RuleValue transientObj) {
         GenericBuilder.of(() -> entity)
                 .with(RuleValue::setOperand, transientObj.getOperand())

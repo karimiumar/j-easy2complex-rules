@@ -6,7 +6,7 @@ import java.util.Set;
 /**
  * A {@link com.umar.apps.rule.domain.BusinessRule} DTO for REST API
  */
-public record BusinessRuleDTO(long id, String ruleName, String ruleType, String description, int priority, boolean active,
+public record BusinessRuleDTO(Long id, String ruleName, String ruleType, String description, int priority, boolean active,
                               LocalDateTime created, LocalDateTime updated, int version, Set<RuleAttributeDTO> ruleAttributes) {
 
     /**
@@ -18,7 +18,7 @@ public record BusinessRuleDTO(long id, String ruleName, String ruleType, String 
      * @param ruleAttributes The attributes of this Rule
      */
     public BusinessRuleDTO(String ruleName,String ruleType,String description, int priority, Set<RuleAttributeDTO> ruleAttributes) {
-        this(0L, ruleName, ruleType, description, priority, true, LocalDateTime.now(), null, 0, ruleAttributes);
+        this(null, ruleName, ruleType, description, priority, true, LocalDateTime.now(), null, 0, ruleAttributes);
     }
 
     /**
@@ -33,7 +33,7 @@ public record BusinessRuleDTO(long id, String ruleName, String ruleType, String 
      * @param version The database version of the Rule
      * @param ruleAttributes The attributes of this Rule
      */
-    public BusinessRuleDTO(long id, String ruleName,String ruleType,String description,int priority, boolean active, LocalDateTime created, int version, Set<RuleAttributeDTO> ruleAttributes) {
+    public BusinessRuleDTO(Long id, String ruleName,String ruleType,String description,int priority, boolean active, LocalDateTime created, int version, Set<RuleAttributeDTO> ruleAttributes) {
         this(id, ruleName, ruleType, description, priority, active, created, LocalDateTime.now(), version, ruleAttributes);
     }
 }

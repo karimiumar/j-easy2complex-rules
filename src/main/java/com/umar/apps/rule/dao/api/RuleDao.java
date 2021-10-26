@@ -50,17 +50,6 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
     Optional<BusinessRule> findByNameAndType(String ruleName, String ruleType, boolean isActive);
 
     /**
-     * Finds a {@link RuleValue} for the given set of params
-     *
-     * @param ruleName The rule name
-     * @param ruleType The rule type
-     * @param ruleAttribute The {@link RuleAttribute} rule attribute
-     * @param isActive Whether the rule being searched is active or not
-     * @return Returns an optional
-     */
-    Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive);
-
-    /**
      * Finds the name of the {@link BusinessRule} for the given id
      *
      * @param ruleId The id to lookup
@@ -81,4 +70,12 @@ public interface RuleDao extends GenericDao<BusinessRule, Long> {
      * @param id The id to lookup and delete
      */
     void deleteById(long id);
+
+    /**
+     * Finds a {@link BusinessRule} for the given id along with its child objects
+     *
+     * @param id The id of the {@link BusinessRule}
+     * @return Returns an {@link Optional} of {@link BusinessRule}
+     */
+    Optional<BusinessRule> findByIdWithSubgraphs(long id);
 }

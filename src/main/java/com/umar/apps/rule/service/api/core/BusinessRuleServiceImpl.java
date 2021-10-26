@@ -139,7 +139,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     @Override
     public Optional<BusinessRule> findRuleById(long id) {
-        return ruleDao.findById(id);
+        return ruleDao.findByIdWithSubgraphs(id);
     }
 
     @Override
@@ -215,6 +215,15 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         return ruleValueDao.findById(id);
     }
 
+    @Override
+    public Optional<BusinessRule> findRuleByIdWithSubgraphs(long id) {
+        return ruleDao.findByIdWithSubgraphs(id);
+    }
+
+    @Override
+    public BusinessRule save(BusinessRule rule) {
+        return ruleDao.save(rule);
+    }
 
     private BusinessRule createFromScratch(String ruleName, String ruleType, String description, int priority, boolean isActive) {
         return GenericBuilder.of(BusinessRule::new)

@@ -166,4 +166,20 @@ public interface BusinessRuleService {
      * @return Returns an {@link Optional} of {@link RuleValue}
      */
     Optional<RuleValue> findRuleValueById(long id);
+
+    /**
+     * Finds a {@link BusinessRule} for the given id along with associated child objects
+     *
+     * @param id The id of the {@link BusinessRule}
+     * @return Returns an {@link Optional} of {@link BusinessRule}
+     */
+    Optional<BusinessRule> findRuleByIdWithSubgraphs(long id);
+
+    /**
+     * Persists a new {@link BusinessRule}
+     *
+     * @param rule The {@link BusinessRule} to persist
+     * @return The persisted {@link BusinessRule}
+     */
+    BusinessRule save(BusinessRule rule);
 }

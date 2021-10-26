@@ -2,6 +2,7 @@ package com.umar.apps.rule.service.api.core;
 
 import com.umar.apps.rule.api.Condition;
 import com.umar.apps.rule.dao.api.RuleDao;
+import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.ConditionService;
@@ -27,6 +28,9 @@ public class DefaultCondition implements ConditionService {
 
     protected RuleDao ruleDao;
 
+    @Autowired
+    protected RuleValueDao ruleValueDao;
+
     DefaultCondition(){}
 
     @Autowired
@@ -46,7 +50,7 @@ public class DefaultCondition implements ConditionService {
                 var field = workflowItem.getClass().getDeclaredField(attributeName);
                 field.setAccessible(true);
                 var value = field.get(workflowItem);
-                var ruleValues = ruleDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute, isActive);
+                var ruleValues = ruleValueDao.findByNameAndAttribute(ruleName, ruleType, ruleAttribute, isActive);
                 logger.debug("Found RuleValues to evaluate {}", ruleValues);
                 return getCondition(value, ruleValues);
             }catch (NoSuchFieldException | IllegalAccessException e) {

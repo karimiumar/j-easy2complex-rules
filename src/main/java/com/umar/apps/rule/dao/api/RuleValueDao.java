@@ -4,6 +4,7 @@ import com.umar.apps.infra.dao.api.GenericDao;
 import com.umar.apps.rule.domain.RuleAttribute;
 import com.umar.apps.rule.domain.RuleValue;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +44,17 @@ public interface RuleValueDao extends GenericDao<RuleValue, Long> {
      * @return Returns a {@link List} of {@link RuleValue}
      */
     List<RuleValue> findValuesOf(long attributeId);
+
+    /**
+     * Finds a {@link RuleValue} for the given set of params
+     *
+     * @param ruleName The rule name
+     * @param ruleType The rule type
+     * @param ruleAttribute The {@link RuleAttribute} rule attribute
+     * @param isActive Whether the rule being searched is active or not
+     * @return Returns an optional
+     */
+    Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive);
 
     /**
      * Updates a given {@link RuleValue}

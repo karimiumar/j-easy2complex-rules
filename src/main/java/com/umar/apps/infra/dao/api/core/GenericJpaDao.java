@@ -63,11 +63,12 @@ public abstract class GenericJpaDao<MODEL extends WorkflowItem<ID>, ID
 
     @Override
     public MODEL save(MODEL model) {
-        log.debug("Persisting {} ", model.getClass());
+        log.debug("Persisting {} ", model);
         doInJPA(()-> emf, entityManager -> {
             entityManager.persist(model);
             entityManager.flush();
         },null);
+        log.debug("Persisted {} ", model);
         return model;
     }
 

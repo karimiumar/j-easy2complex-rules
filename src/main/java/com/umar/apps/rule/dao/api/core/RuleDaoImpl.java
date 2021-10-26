@@ -41,7 +41,6 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     @Override
     public Collection<BusinessRule> findAll() {
         logger.info("findAll()");
-        Collection<BusinessRule> rules = new ArrayList<>(Collections.emptyList());
         return doInJPA(() -> emf, entityManager -> {
             var session = entityManager.unwrap(Session.class);
             var result = session.createQuery("""
@@ -59,7 +58,6 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
     @Override
     public Collection<BusinessRule> findByName(String ruleName, boolean isActive) {
         logger.info("findByName() with name: {}, isActive: {} ", ruleName, isActive);
-        Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
                 LEFT JOIN FETCH rule.ruleAttributes ras
@@ -68,20 +66,17 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 WHERE rule.ruleName = :ruleName
                 AND rule.active = :active
                 """;
-        doInJPA(() -> emf, entityManager -> {
-            List<?> result = entityManager.createQuery(sql)
+        return doInJPA(() -> emf, entityManager -> {
+            return entityManager.createQuery(sql, BusinessRule.class)
                     .setParameter("ruleName", ruleName)
                     .setParameter("active", isActive)
                     .getResultList();
-            result.forEach(row -> businessRules.add((BusinessRule) row));
         }, null);
-        return businessRules;
     }
 
     @Override
     public Collection<BusinessRule> findByType(String type, boolean isActive) {
         logger.info("findByType() with type: {}, isActive:{}", type, isActive);
-        Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
                 LEFT JOIN FETCH rule.ruleAttributes ras
@@ -90,22 +85,17 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 WHERE rule.ruleType = :type
                 AND rule.active = :active
                 """;
-        doInJPA(() -> emf, entityManager -> {
-            List<?> result = entityManager.createQuery(sql)
+        return doInJPA(() -> emf, entityManager -> {
+            return entityManager.createQuery(sql, BusinessRule.class)
                     .setParameter("type", type)
                     .setParameter("active", isActive)
                     .getResultList();
-            result.forEach(row -> {
-                businessRules.add((BusinessRule) row);
-            });
         }, null);
-        return businessRules;
     }
 
     @Override
     public Collection<BusinessRule> findActiveRules(boolean isActive) {
         logger.info("findActiveRules() with isActive: {}", isActive);
-        Collection<BusinessRule> businessRules = new ArrayList<>(Collections.emptyList());
         String sql = """
                 SELECT rule FROM BusinessRule rule
                 LEFT JOIN FETCH rule.ruleAttributes ras
@@ -113,15 +103,11 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                 LEFT JOIN FETCH ravs.ruleValue rv
                 WHERE rule.active = :active
                 """;
-        doInJPA(() -> emf, entityManager -> {
-            List<?> result = entityManager.createQuery(sql)
+        return doInJPA(() -> emf, entityManager -> {
+            return entityManager.createQuery(sql, BusinessRule.class)
                     .setParameter("active", isActive)
                     .getResultList();
-            result.forEach(row -> {
-                businessRules.add((BusinessRule) row);
-            });
         }, null);
-        return businessRules;
     }
 
     @Override
@@ -145,33 +131,6 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
                     .getResultList();
         }, null);
         return result.isEmpty()? Optional.empty() : Optional.of(result.get(0));
-    }
-
-    @Override
-    public Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive) {
-        logger.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}, isActive: {}", ruleName, ruleType, ruleAttribute, isActive);
-        Collection<RuleValue> values = new ArrayList<>(0);
-        String sql = """
-                SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute attr, BusinessRule rule
-                WHERE rule.ruleName = :ruleName
-                AND rule.ruleType = :ruleType
-                AND attr.attributeName =:attributeName
-                AND rav.ruleValue = ruleVal
-                AND rav.ruleAttribute = attr
-                AND rule.ruleType = attr.ruleType
-                AND rule.active = :active
-                """;
-        doInJPA(() -> emf, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            List<RuleValue> ruleValues = session.createQuery(sql, RuleValue.class)
-                    .setParameter("ruleName", ruleName)
-                    .setParameter("ruleType", ruleType)
-                    .setParameter("attributeName", ruleAttribute.getAttributeName())
-                    .setParameter("active", isActive)
-                    .getResultList();
-            values.addAll(ruleValues);
-        }, null);
-        return values;
     }
 
     @Override
@@ -206,6 +165,24 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             logger.debug("Found BusinessRule {} to delete. ", entity);
             session.delete(entity);
             logger.debug("Deleted BusinessRule {} successfully. ", entity);
+        }, null);
+    }
+
+    @Override
+    public Optional<BusinessRule> findByIdWithSubgraphs(long id) {
+        return doInJPA(this::getEMF, entityManager -> {
+            var sql = """
+                    SELECT rule FROM BusinessRule rule
+                    LEFT JOIN FETCH rule.ruleAttributes ras
+                    LEFT JOIN FETCH ras.ruleAttributeValues ravs
+                    LEFT JOIN FETCH ravs.ruleValue rv
+                    WHERE rule.id = :id
+                    """;
+            var session = entityManager.unwrap(Session.class);
+            var result = session.createQuery(sql, BusinessRule.class)
+                    .setParameter("id", id)
+                    .getResultList();
+            return  result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
         }, null);
     }
 
