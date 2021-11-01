@@ -16,17 +16,6 @@ E-R Diagram
 ---
 ![](src/main/resources/images/E-R%20Diagram.png)
 
-WorkflowItem Interface
----
-
-Every entity must inherit `WorkflowItem` interface defined as:
-
-```java
-interface WorkflowItem<ID extends Serializable>{
-  ID getId();
-}
-``` 
-
 Example
 ---
 **Group together a given set of cashflows when a matching rule exist in the database for counter party, currency and settlement date.**
