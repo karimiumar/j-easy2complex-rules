@@ -9,6 +9,7 @@ import com.umar.apps.rule.domain.RuleAttributeValue;
 import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.web.exceptions.ElementAlreadyExistException;
+import com.umar.apps.rule.web.exceptions.NoSuchElementFoundException;
 import com.umar.apps.util.GenericBuilder;
 import org.hibernate.Session;
 import org.slf4j.Logger;
@@ -68,16 +69,16 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 var businessRuleEntity = session.find(BusinessRule.class, businessRule.getId());
                 attributeEntity.setBusinessRule(businessRuleEntity);
                 businessRuleEntity.addRuleAttribute(attributeEntity);
-                entityManager.merge(attributeEntity);
+                session.merge(attributeEntity);
             }, null);
         }, /* The Else Clause */() -> {
-            logger.info("No Rule Attribute found in database. Saving RuleAttribute");
+            logger.debug("No Rule Attribute found in database. Saving RuleAttribute");
             doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
                 var session = entityManager.unwrap(Session.class);
                 var businessRuleEntity = session.find(BusinessRule.class, businessRule.getId());
-                session.save(ruleAttribute);
                 businessRuleEntity.addRuleAttribute(ruleAttribute);
-                session.merge(businessRuleEntity);
+                session.save(ruleAttribute);
+                session.saveOrUpdate(businessRuleEntity);
                 }, null
             );
             logger.info("Saved RuleAttribute {}:", ruleAttribute);
@@ -222,7 +223,36 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
 
     @Override
     public BusinessRule save(BusinessRule rule) {
-        return ruleDao.save(rule);
+        var ruleName = rule.getRuleName();
+        var ruleType = rule.getRuleType();
+        var description = rule.getDescription();
+        var priority = rule.getPriority();
+        var active = rule.isActive();
+        //First Save The Rule
+        createRule(ruleName, ruleType, description, priority, active);
+        //Find  the saved rule from database.
+        var optRule = findByNameAndType(ruleName, ruleType, active);
+        optRule.ifPresentOrElse( businessRule -> {
+            var attribs = rule.getRuleAttributes();
+            attribs.forEach(attr -> {
+                var attribName = attr.getAttributeName();
+                var displayText = attr.getDisplayName();
+                //First Save The attribute. Use the persisted BusinessRule
+                createAttribute(businessRule, attribName, ruleType, displayText);
+                //Find the saved attribute from database
+                var optAttr = findRuleAttribute(attribName, ruleType);
+                optAttr.ifPresentOrElse(ruleAttr -> {
+                    var ravs = attr.getRuleAttributeValues();
+                    ravs.forEach(rav -> {
+                        var ruleVal = rav.getRuleValue();
+                        var operand = ruleVal.getOperand();
+                        //Use the persisted RuleAttribute
+                        createValue(ruleAttr, operand);
+                    });
+                },() -> {});
+            });
+        },() -> {});
+        return optRule.orElseThrow(() -> new NoSuchElementFoundException(String.format("Unable to find an attribute  with the given name %s  and type %s", ruleName, ruleType)));
     }
 
     private BusinessRule createFromScratch(String ruleName, String ruleType, String description, int priority, boolean isActive) {

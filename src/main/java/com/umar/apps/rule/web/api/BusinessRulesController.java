@@ -26,7 +26,7 @@ public class BusinessRulesController {
     @Autowired
     private BusinessRuleService businessRuleService;
 
-    @GetMapping("/index")
+    @GetMapping(value = {"/","/index"})
     public String showRulesList(Model model) {
         model.addAttribute("businessRules", businessRuleService.findAll());
         return "index";

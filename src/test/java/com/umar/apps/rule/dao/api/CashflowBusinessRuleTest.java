@@ -1,5 +1,6 @@
 package com.umar.apps.rule.dao.api;
 
+import com.umar.apps.H2JpaConfig;
 import com.umar.apps.JRooolsApp;
 import com.umar.apps.rule.api.Facts;
 import com.umar.apps.rule.api.Rule;
@@ -19,7 +20,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -27,12 +27,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = JRooolsApp.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {JRooolsApp.class, H2JpaConfig.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ComponentScan(basePackages = "com.umar.apps")
-@ContextConfiguration(classes = {CashflowBusinessRuleTest.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CashflowBusinessRuleTest {
-
     @Autowired BusinessRuleService ruleService;
     @Autowired CashflowDao cashflowDao;
     @Autowired ConditionService defaultCondition;

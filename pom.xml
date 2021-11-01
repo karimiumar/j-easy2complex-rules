@@ -38,16 +38,11 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+        </dependency-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -58,8 +53,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
-
     <build>
         <resources>
             <resource>
@@ -89,57 +88,6 @@
                         <arg>--enable-preview</arg>
                     </compilerArgs>
                 </configuration>
-            </plugin>
-            <!-- start/stop H2 DB as a server -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>start-h2</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>org.h2.tools.Server</mainClass>
-                            <arguments>
-                                <argument>-tcp</argument>
-                                <argument>-tcpDaemon</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>stop-h2</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>org.h2.tools.Server</mainClass>
-                            <arguments>
-                                <argument>-tcpShutdown</argument>
-                                <argument>tcp://localhost:9092</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <includeProjectDependencies>true</includeProjectDependencies>
-                    <includePluginDependencies>true</includePluginDependencies>
-                    <executableDependency>
-                        <groupId>com.h2database</groupId>
-                        <artifactId>h2</artifactId>
-                    </executableDependency>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.h2database</groupId>
-                        <artifactId>h2</artifactId>
-                        <version>1.4.200</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

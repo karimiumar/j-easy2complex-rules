@@ -1,41 +1,27 @@
 package com.umar.apps.rule.dao.api;
 
-import com.umar.apps.infra.dao.api.WorkflowItem;
-import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-@Entity
-@Table(name = "cashflows")
-public class Cashflow implements WorkflowItem<Long> {
+public class Cashflow{
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "counter_party")
     private String counterParty;
 
-    @Column
     private String currency;
 
-    @Column(name = "settlement_date")
     private LocalDate settlementDate;
 
-    @Column
     private Double amount;
 
-    @Column(name = "version", columnDefinition ="int default 0")
     private Integer version;
 
-    @Column(name = "created_on")
     private LocalDateTime createdOn;
 
-    @Column(name = "stp_allowed", columnDefinition ="boolean default true")
-    private boolean stpAllowed;
+    private boolean stpAllowed = true;
 
-    @Column(name = "notes")
     private String note;
 
     public Cashflow(){}
@@ -108,7 +94,6 @@ public class Cashflow implements WorkflowItem<Long> {
         return note;
     }
 
-    @Override
     public Long getId() {
         return id;
     }
@@ -117,8 +102,7 @@ public class Cashflow implements WorkflowItem<Long> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Cashflow cashflow)) return false;
-        return stpAllowed == cashflow.stpAllowed &&
-                id.equals(cashflow.id) &&
+        return  id.equals(cashflow.id) &&
                 counterParty.equals(cashflow.counterParty) &&
                 currency.equals(cashflow.currency) &&
                 settlementDate.equals(cashflow.settlementDate) &&
@@ -126,9 +110,13 @@ public class Cashflow implements WorkflowItem<Long> {
                 createdOn.equals(cashflow.createdOn);
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(id, counterParty, currency, settlementDate, amount, createdOn, stpAllowed);
+        return Objects.hash(id, counterParty, currency, settlementDate, amount, createdOn);
     }
 
     @Override

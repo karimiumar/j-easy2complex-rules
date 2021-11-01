@@ -4,25 +4,17 @@
   "description": "Counterparty STP Rule to STP a Workflow item which meets the criteria",
   "priority": 1,
   "active": true,
-  "updated": null,
-  "version": 0,
   "ruleAttributes": [
     {
       "attributeName": "counterParty",
       "ruleType": "STP",
       "displayText": "Counterparty",
-      "updated": null,
-      "version": 0,
       "ruleValues": [
         {
-          "operand": "Lehman Brothers PLC, London",
-          "updated": null,
-          "version": 0
+          "operand": "Lehman Brothers PLC, London"
         },
         {
-          "operand": "Lehman Brothers PLC, New York",
-          "updated": null,
-          "version": 0
+          "operand": "Lehman Brothers PLC, New York"
         }
       ]
     }

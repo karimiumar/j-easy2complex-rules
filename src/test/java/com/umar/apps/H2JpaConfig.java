@@ -6,23 +6,24 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.Objects;
 import java.util.Properties;
 
-/*
-if you want to keep using persistence.xml file just add the below code in your configuration class
- */
 @Configuration
-@Profile("default")
-@PropertySource("classpath:application.properties")
-class JPAConfig {
+@EnableJpaRepositories(basePackages = { "com.umar.apps" })
+@EnableTransactionManagement
+@Profile("test")
+@PropertySource("classpath:test.properties")
+public class H2JpaConfig {
 
     @Autowired
     private Environment env;
@@ -57,11 +58,27 @@ class JPAConfig {
 
     final Properties additionalProperties() {
         final Properties hibernateProperties = new Properties();
-
         hibernateProperties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("hibernate.hbm2ddl.auto"));
         hibernateProperties.setProperty("hibernate.dialect", env.getProperty("hibernate.dialect"));
         hibernateProperties.setProperty("hibernate.show_sql", env.getProperty("hibernate.show_sql"));
         return hibernateProperties;
     }
 
+    /*@Bean(name = "cashflowEMF")
+    public LocalContainerEntityManagerFactoryBean cashflowEMF() {
+        var factory = new LocalContainerEntityManagerFactoryBean();
+        factory.setPersistenceUnitName("cashflowPU");
+        factory.setPersistenceXmlLocation("classpath:META-INF/persistence.xml");
+        factory.setMappingResources("classpath:META-INF/jpa/stock-orm-inverse.xml");
+        var properties = new Properties();
+        properties.setProperty("spring.datasource.username", "cf");
+        properties.setProperty("spring.datasource.password", "cf");
+        properties.setProperty("spring.datasource.driver-class-name","");
+        properties.setProperty("spring.datasource.url", "jdbc:h2:mem:cfdb;DB_CLOSE_DELAY=-1");
+        properties.setProperty("hibernate.show_sql", "true");
+        properties.setProperty("hibernate.jdbc.fetch_size", "100");
+        properties.setProperty("javax.persistence.schema-generation.database.action", "drop-and-create");
+        factory.setJpaProperties(properties);
+        return factory;
+    }*/
 }

@@ -1,141 +1,72 @@
 package com.umar.apps.rule.dao.api;
 
-import com.umar.apps.infra.dao.api.core.GenericJpaDao;
-import org.hibernate.Session;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.EntityManagerFactory;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
-public class CashflowDao extends GenericJpaDao<Cashflow, Long> {
+public class CashflowDao {
 
-    protected CashflowDao() {
-        this(null);
-    }
-    @Autowired
-    public CashflowDao(EntityManagerFactory emf) {
-        super(Cashflow.class, emf);
-    }
+    public CashflowDao() {
 
-    @Override
+    }
+    static final Set<Cashflow> cashflowSet = new HashSet<>();
+    private static volatile long id = 0;
+
     public Collection<Cashflow> findAll() {
-        Collection<Cashflow> cashflows = new ArrayList<>(0);
-        doInJPA(()-> emf, entityManager -> {
-            List<?> result = entityManager.createQuery("SELECT c FROM Cashflow c").getResultList();
-            result.forEach(row -> cashflows.add((Cashflow) row));
-        }, null);
-        return cashflows;
+        return new ArrayList<>(cashflowSet);
     }
 
     public List<Cashflow> findByCounterParty(String counterParty) {
-        ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = """
-                SELECT c FROM Cashflow c
-                WHERE c.counterParty = :counterParty
-                """;
-        doInJPA(()-> emf, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            List<Cashflow> result = session.createQuery(sql, Cashflow.class).setParameter("counterParty", counterParty).getResultList();
-            cashflows.addAll(result);
-        }, null);
-        return cashflows ;
+        return cashflowSet.stream().filter(cashflow -> cashflow.getCounterParty().equals(counterParty)).collect(Collectors.toList());
     }
 
     public List<Cashflow> findByCounterPartyAndSettlementDate(String counterParty, LocalDate settlementDate) {
-        ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = """
-                SELECT c FROM Cashflow c
-                WHERE c.settlementDate = :settlementDate
-                AND c.counterParty = :counterParty
-                """;
-        doInJPA(()-> emf, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            List<Cashflow> result = session.createQuery(sql, Cashflow.class)
-                    .setParameter("counterParty", counterParty)
-                    .setParameter("settlementDate", settlementDate)
-                    .getResultList();
-            cashflows.addAll(result);
-        }, null);
-        return cashflows;
+        return cashflowSet.stream()
+                .filter(cashflow -> cashflow.getCounterParty().equals(counterParty))
+                .filter(cashflow -> cashflow.getSettlementDate().equals(settlementDate))
+                .collect(Collectors.toList());
     }
 
     public List<Cashflow> findByCounterPartyCurrencyAndSettlementDate(String counterParty,String currency, LocalDate settlementDate) {
-        ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = """
-                SELECT c FROM Cashflow c
-                WHERE c.settlementDate = :settlementDate
-                AND c.counterParty = :counterParty
-                AND c.currency = :currency
-                """;
-        doInJPA(()-> emf, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            List<Cashflow> result = session.createQuery(sql, Cashflow.class)
-                    .setParameter("counterParty", counterParty )
-                    .setParameter("currency", currency)
-                    .setParameter("settlementDate", settlementDate)
-                    .getResultList();
-            cashflows.addAll(result);
-        }, null);
-        return cashflows;
+        return findByCounterPartyAndSettlementDate(counterParty, settlementDate)
+                .stream().filter(cashflow -> cashflow.getCurrency().equals(currency))
+                .collect(Collectors.toList());
     }
 
     public void delete() {
-        doInJPA(() -> emf, entityManager -> {
-            entityManager.createQuery("DELETE FROM Cashflow c").executeUpdate();
-        }, null);
+        cashflowSet.clear();
     }
 
     public void applySTPRule(Cashflow workflowItem, String note) {
-        doInJPA(()-> emf, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            if(!entityManager.contains(workflowItem)) {
-                entityManager.find(Cashflow.class, workflowItem.getId());
-                workflowItem.setStpAllowed(false);
-                workflowItem.setNote(note);
-                workflowItem.setVersion(workflowItem.getVersion() + 1);
-                session.merge(workflowItem);
-            }
-        }, null);
+        var optCF = cashflowSet.stream().filter(cashflow -> cashflow.equals(workflowItem)).findFirst();
+        optCF.ifPresentOrElse(cf -> {
+           cf.setNote(note);
+           cf.setStpAllowed(false);
+           cf.setVersion(cf.getVersion() + 1);
+           cashflowSet.remove(workflowItem);
+           cashflowSet.add(cf);
+        }, () -> System.out.println("Not Found"));
     }
 
     public Collection<Cashflow> findBySettlementDateBetween(LocalDate startDate, LocalDate endDate) {
-        ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = """
-                SELECT c FROM Cashflow c
-                WHERE c.settlementDate 
-                BETWEEN :startDate AND :endDate
-                """;
-        doInJPA(()-> emf, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            List<Cashflow> result = session.createQuery(sql, Cashflow.class)
-                    .setParameter("startDate", startDate)
-                    .setParameter("endDate", endDate)
-                    .getResultList();
-            cashflows.addAll(result);
-        }, null);
-        return cashflows;
+        return cashflowSet.stream()
+                .filter(cashflow -> cashflow.getSettlementDate().isAfter(startDate.plusDays(-1)))
+                .filter(cashflow -> cashflow.getSettlementDate().isBefore(endDate.plusDays(1)))
+                .collect(Collectors.toList());
     }
 
     public Collection<Cashflow> findBySettlementDate(LocalDate settlementDate) {
-        ArrayList<Cashflow> cashflows = new ArrayList<>(0);
-        String sql = """
-                SELECT c FROM Cashflow c
-                WHERE c.settlementDate = :settlementDate
-                """;
-        doInJPA(()-> emf, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
-            List<Cashflow> result = session.createQuery(sql, Cashflow.class)
-                    .setParameter("settlementDate", settlementDate)
-                    .getResultList();
-            cashflows.addAll(result);
-        }, null);
-        return cashflows;
+        return cashflowSet.stream()
+                .filter(cashflow -> cashflow.getSettlementDate().equals(settlementDate)).collect(Collectors.toList());
+    }
+
+    public void save(Cashflow cashflow) {
+        synchronized(Cashflow.class) {
+            cashflow.setId(++id);
+            cashflowSet.add(cashflow);
+        }
     }
 }

@@ -6,12 +6,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(JPATestConfig.class)
-@TestPropertySource(locations = "classpath:application.properties")
+@Import(H2JpaConfig.class)
+@TestPropertySource(locations = "classpath:test.properties")
 class JRooolsTests {
 
 	@Test
 	void contextLoads() {
 	}
-
 }

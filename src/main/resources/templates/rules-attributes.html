@@ -49,7 +49,6 @@
                             <td><a th:href="@{/editAttribute/{id}(id=${ruleAttribute.id})}" type="button">
                                 <i class="bi bi-pencil"></i></a>
                             </td>
-                            <!--<td><a th:href="@{/delete/{id}(id=${businessRule.id})}" type="button" class="btn-danger"><i class="bi bi-x"></i></a></td>-->
                             <td>
                                 <form action="#" th:action="@{/deleteAttribute}" th:object="${ruleAttribute}" method="post">
                                     <input type="hidden" th:value="${ruleAttribute.id}" name="id"/>
