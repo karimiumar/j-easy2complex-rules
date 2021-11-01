@@ -1,12 +1,16 @@
 package com.umar.apps.rule.web.rest;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * A {@link com.umar.apps.rule.domain.RuleValue} DTO for REST API
  */
 public record RuleValueDTO(Long id, String operand, LocalDateTime created, LocalDateTime updated, int version) {
 
+    public RuleValueDTO {
+        Objects.requireNonNull(operand, "operand is required");
+    }
     /**
      * Constructor for creating a fresh RuleValue
      *

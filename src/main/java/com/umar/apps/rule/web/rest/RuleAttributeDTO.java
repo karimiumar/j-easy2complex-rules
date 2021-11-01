@@ -1,6 +1,7 @@
 package com.umar.apps.rule.web.rest;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -8,6 +9,12 @@ import java.util.Set;
  */
 public record RuleAttributeDTO(Long id, String attributeName, String ruleType, String displayText, LocalDateTime created, LocalDateTime updated, int version, Set<RuleValueDTO> ruleValues) {
 
+    public RuleAttributeDTO {
+        Objects.requireNonNull(attributeName, "attributeName is required");
+        Objects.requireNonNull(ruleType, "ruleType is required");
+        Objects.requireNonNull(displayText, "displayText is required");
+        Objects.requireNonNull(ruleValues, "ruleValues is required");
+    }
     /**
      * Constructor for creating a new RuleAttribute
      *
