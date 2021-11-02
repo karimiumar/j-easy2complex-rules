@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,7 +18,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StockTest {
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("testPU");
+    private static final Map<String, String> persistenceConfig = Map.of("spring.datasource.driver-class-name","org.h2.Driver"
+            ,"spring.datasource.url","jdbc:h2:mem:stockdb;"
+            ,"hibernate.dialect","org.hibernate.dialect.H2Dialect"
+            , "javax.persistence.schema-generation.database.action","create"
+            ,"spring.datasource.username","sa"
+            ,"spring.datasource.password","sa"
+    );
+
+    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("stockPU"
+            , persistenceConfig
+    );
 
     @AfterAll
     static void afterAll() {
@@ -26,7 +37,7 @@ public class StockTest {
         }
     }
 
-    //@Test
+    @Test
     @Order(value = 1)
     void createSomeStocks() {
         doInJPA(() -> emf, entityManager -> {
@@ -35,7 +46,7 @@ public class StockTest {
             stock.addStockDailyRecord(sdr);
             entityManager.persist(stock);
             entityManager.persist(sdr);
-        }, null);
+        }, persistenceConfig);
 
         doInJPA(() -> emf, entityManager -> {
             var stock = new Stock("INFY","Infosys");
@@ -43,7 +54,7 @@ public class StockTest {
             stock.addStockDailyRecord(sdr);
             entityManager.persist(stock);
             entityManager.persist(sdr);
-        }, null);
+        }, persistenceConfig);
 
         doInJPA(() -> emf, entityManager -> {
             var stock = new Stock("IBM","IBM");
@@ -51,15 +62,15 @@ public class StockTest {
             stock.addStockDailyRecord(sdr);
             entityManager.persist(stock);
             entityManager.persist(sdr);
-        }, null);
+        }, persistenceConfig);
 
 
         var stocks = fetchStocks();
         assertThat(stocks.size()).isEqualTo(3);
     }
 
-    //@Order(value = 2)
-    //@Test
+    @Order(value = 2)
+    @Test
     void testFetchStocks() {
         var stocks = fetchStocks();
         assertThat(stocks.size()).isEqualTo(3);
@@ -69,8 +80,8 @@ public class StockTest {
         assertThat(stocks.get(2).getStockCode()).isEqualTo("SAP");
     }
 
-    //@Order(value = 2)
-    //@Test
+    @Order(value = 2)
+    @Test
     void testFetchStockDailyRecord() {
         var stockDailyRecord = fetchStockDailyRecord();
         assertThat(stockDailyRecord).isNotNull();
@@ -92,7 +103,7 @@ public class StockTest {
             var stock = (Stock) Hibernate.unproxy(sdr.getStock());
             sdr.setStock(stock);
             return sdr;
-        }, null);
+        }, persistenceConfig);
     }
 
     private List<Stock> fetchStocks() {
@@ -100,8 +111,8 @@ public class StockTest {
             //Query to Fetch associated StockDailyRecords
             var query = entityManager.createQuery("""
                     select s from Stock s LEFT JOIN FETCH s.stockDailyRecords
-                    """);
+                    """, Stock.class);
             return query.getResultList();
-        }, null);
+        }, persistenceConfig);
     }
 }
