@@ -25,11 +25,6 @@ public class AndComposer implements ConditionService {
     private final RuleValueDao ruleValueDao;
     private final RuleDao ruleDao;
 
-    AndComposer(){
-        ruleValueDao = null;
-        ruleDao = null;
-    }
-
     @Autowired
     public AndComposer(RuleDao ruleDao, RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;

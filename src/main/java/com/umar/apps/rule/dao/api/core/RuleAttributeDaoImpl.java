@@ -25,11 +25,6 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
 
     private static final Logger logger = LoggerFactory.getLogger(RuleAttributeDaoImpl.class);
 
-    //Constructor needed for CDI. Do not remove
-    RuleAttributeDaoImpl() {
-        this(null);
-    }
-
     @Autowired
     public RuleAttributeDaoImpl(EntityManagerFactory entityManagerFactory) {
         super(RuleAttribute.class, entityManagerFactory);

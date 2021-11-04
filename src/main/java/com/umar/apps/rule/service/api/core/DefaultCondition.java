@@ -31,8 +31,6 @@ public class DefaultCondition implements ConditionService {
     @Autowired
     protected RuleValueDao ruleValueDao;
 
-    DefaultCondition(){}
-
     @Autowired
     public DefaultCondition(final RuleDao ruleDao) {
         this.ruleDao = ruleDao;

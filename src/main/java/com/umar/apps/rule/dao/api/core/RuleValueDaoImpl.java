@@ -29,11 +29,6 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RuleValueDaoImpl.class);
 
-    //Constructor needed for CDI. Do not remove
-    RuleValueDaoImpl() {
-        this(null);
-    }
-
     @Autowired
     public RuleValueDaoImpl(EntityManagerFactory entityManagerFactory) {
         super(RuleValue.class, entityManagerFactory);

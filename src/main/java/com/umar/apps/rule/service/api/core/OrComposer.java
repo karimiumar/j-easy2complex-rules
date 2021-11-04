@@ -24,11 +24,6 @@ public class OrComposer implements ConditionService {
     private final RuleDao ruleDao;
     private final RuleValueDao ruleValueDao;
 
-    OrComposer(){
-        ruleValueDao = null;
-        ruleDao = null;
-    }
-
     @Autowired
     public OrComposer(final RuleDao ruleDao, final RuleValueDao ruleValueDao) {
         this.ruleDao = ruleDao;

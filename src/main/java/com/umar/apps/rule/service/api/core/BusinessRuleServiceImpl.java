@@ -24,15 +24,11 @@ import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 @Service
 public class BusinessRuleServiceImpl implements BusinessRuleService {
 
-    private RuleDao ruleDao;
-    private RuleAttributeDao ruleAttributeDao;
-    private RuleValueDao ruleValueDao;
+    private final RuleDao ruleDao;
+    private final RuleAttributeDao ruleAttributeDao;
+    private final RuleValueDao ruleValueDao;
 
     private static final Logger logger = LoggerFactory.getLogger(BusinessRuleServiceImpl.class);
-
-    //Constructor needed for CDI. Do not remove
-    BusinessRuleServiceImpl() {
-    }
 
     @Autowired
     public BusinessRuleServiceImpl(final RuleDao ruleDao, final RuleAttributeDao ruleAttributeDao, final RuleValueDao ruleValueDao) {
