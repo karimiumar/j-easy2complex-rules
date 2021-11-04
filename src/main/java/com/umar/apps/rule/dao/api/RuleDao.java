@@ -2,8 +2,6 @@ package com.umar.apps.rule.dao.api;
 
 import com.umar.apps.infra.dao.api.GenericDao;
 import com.umar.apps.rule.domain.BusinessRule;
-import com.umar.apps.rule.domain.RuleAttribute;
-import com.umar.apps.rule.domain.RuleValue;
 
 import java.util.Collection;
 import java.util.Optional;
