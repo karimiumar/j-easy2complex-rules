@@ -3,8 +3,6 @@ package com.umar.apps.rule.dao.api.core;
 import com.umar.apps.infra.dao.api.core.GenericJpaDao;
 import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.domain.BusinessRule;
-import com.umar.apps.rule.domain.RuleAttribute;
-import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.util.GenericBuilder;
 import org.hibernate.Session;
 import org.slf4j.Logger;
@@ -13,7 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManagerFactory;
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
