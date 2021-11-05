@@ -21,8 +21,7 @@ import java.util.Properties;
 @Configuration
 @EnableJpaRepositories(basePackages = { "com.umar.apps" })
 @EnableTransactionManagement
-@Profile("test")
-@PropertySource("classpath:test.properties")
+//@PropertySource("classpath:test.properties")
 public class H2JpaConfig {
 
     @Autowired

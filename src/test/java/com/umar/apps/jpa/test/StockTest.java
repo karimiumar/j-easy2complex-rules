@@ -18,17 +18,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StockTest {
 
-    private static final Map<String, String> persistenceConfig = Map.of("spring.datasource.driver-class-name","org.h2.Driver"
-            ,"spring.datasource.url","jdbc:h2:mem:stockdb;"
-            ,"hibernate.dialect","org.hibernate.dialect.H2Dialect"
-            , "javax.persistence.schema-generation.database.action","create"
-            ,"spring.datasource.username","sa"
-            ,"spring.datasource.password","sa"
-    );
+    private static final Map<String, String> persistenceConfig = null; /*Map.of("spring.datasource.driver-class-name","com.mysql.cj.jdbc.Driver"
+            ,"spring.datasource.url","jdbc:mysql://localhost:3306/rulesdb"
+            ,"hibernate.dialect","org.hibernate.dialect.MySQL8Dialect"
+            , "javax.persistence.schema-generation.database.action","drop-and-create"
+            ,"spring.datasource.username","rulesman"
+            ,"spring.datasource.password","rules"
+    );*/
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("stockPU"
-            , persistenceConfig
-    );
+    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("stockPU", persistenceConfig);
 
     @AfterAll
     static void afterAll() {
@@ -67,6 +65,7 @@ public class StockTest {
 
         var stocks = fetchStocks();
         assertThat(stocks.size()).isEqualTo(3);
+        stocks.forEach(System.out::println);
     }
 
     @Order(value = 2)
@@ -86,16 +85,15 @@ public class StockTest {
         var stockDailyRecord = fetchStockDailyRecord();
         assertThat(stockDailyRecord).isNotNull();
         assertThat(stockDailyRecord.getStock()).isNotNull();
-        assertThat(stockDailyRecord.getStock().getId()).isEqualTo(3L);
+        assertThat(stockDailyRecord.getStock().getId()).isEqualTo(2L);
         var stockId = stockDailyRecord.getStock().getId();
         var stock  = stockDailyRecord.getStock();
         assertThat(stock.getStockCode()).isEqualTo("INFY");
     }
 
     private StockDailyRecord fetchStockDailyRecord() {
-        //ids used for StockDailyRecord are 2, 4, and 6
         return doInJPA(() -> emf, entityManager -> {
-            var sdr =  entityManager.find(StockDailyRecord.class, 4L
+            var sdr =  entityManager.find(StockDailyRecord.class, 2L
                     , Collections.singletonMap(
                     "javax.persistence.fetchgraph"
                     , entityManager.getEntityGraph("graph.Stock.stockDailyRecords")

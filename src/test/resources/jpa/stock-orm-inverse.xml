@@ -6,13 +6,16 @@
         <table name="stocks"/>
         <attributes>
             <id name="id">
-                <generated-value strategy="AUTO"/>
+                <generated-value strategy="IDENTITY"/>
             </id>
             <basic name="stockCode" optional="false">
                 <column name="stock_code"/>
             </basic>
             <basic name="stockName" optional="false">
                 <column name="stock_name"/>
+            </basic>
+            <basic name="created">
+                <column name="created_on" column-definition="timestamp DEFAULT CURRENT_TIMESTAMP" insertable="false" updatable="false"/>
             </basic>
             <one-to-many name="stockDailyRecords" fetch="LAZY" mapped-by="stock">
                 <!--join-column name="STOCK_ID"/-->
@@ -23,7 +26,7 @@
         <table name="stock_daily_records"/>
         <attributes>
             <id name="id">
-                <generated-value strategy="AUTO"/>
+                <generated-value strategy="IDENTITY"/>
             </id>
             <basic name="openingPrice" optional="false">
                 <column name="opening_price"/>

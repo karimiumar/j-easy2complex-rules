@@ -25,7 +25,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     private int version;
     private String displayName;
     private BusinessRule businessRule;
-    private LocalDateTime created = LocalDateTime.now();
+    private LocalDateTime created;
     private LocalDateTime updated;
     private List<RuleAttributeValue> ruleAttributeValues = new ArrayList<>();
 
@@ -66,6 +66,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     }
 
     @Column(name = "version")
+    @Version
     public int getVersion() {
         return version;
     }
@@ -109,12 +110,12 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
         this.ruleAttributeValues = ruleAttributeValues;
     }
 
-    @Column(name = "created")
+    @Column(name = "created", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", insertable = false, updatable = false)
     public LocalDateTime getCreated() {
         return created;
     }
 
-    @Column(name = "updated")
+    @Column(name = "updated", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP", insertable = false, updatable = false)
     public LocalDateTime getUpdated() {
         return updated;
     }

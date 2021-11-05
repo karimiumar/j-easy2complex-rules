@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @Entity(name = "RuleAttributeValue")
 @Table(name = "attribute_values")
-public class RuleAttributeValue {
+public class RuleAttributeValue implements Serializable {
 
     @EmbeddedId
     private RuleAttributeValueId id;
@@ -24,8 +24,8 @@ public class RuleAttributeValue {
     @JsonBackReference
     private RuleValue ruleValue;
 
-    @Column(name = "created")
-    private LocalDateTime created = LocalDateTime.now();
+    @Column(name = "created" , columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", insertable = false, updatable = false)
+    private LocalDateTime created;
 
     protected RuleAttributeValue(){}
 

@@ -21,7 +21,7 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
     private String ruleType;
     private boolean active;
     private int version;
-    private LocalDateTime created = LocalDateTime.now();
+    private LocalDateTime created;
     private LocalDateTime updated;
     private Set<RuleAttribute> ruleAttributes = new HashSet<>();
 
@@ -72,6 +72,7 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
     }
 
     @Column(name = "version")
+    @Version
     public int getVersion() {
         return version;
     }
@@ -83,12 +84,12 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
         return id;
     }
 
-    @Column(name = "created")
+    @Column(name = "created", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", insertable = false, updatable = false)
     public LocalDateTime getCreated() {
         return created;
     }
 
-    @Column(name = "updated")
+    @Column(name = "updated", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP", insertable = false, updatable = false)
     public LocalDateTime getUpdated() {
         return updated;
     }
@@ -104,6 +105,11 @@ public class BusinessRule extends BasicRule implements WorkflowItem<Long>, Seria
     public void addRuleAttribute(RuleAttribute ruleAttribute) {
         ruleAttributes.add(ruleAttribute);
         ruleAttribute.setBusinessRule(this);
+    }
+
+    public void removeRuleAttribute(RuleAttribute ruleAttribute) {
+        ruleAttributes.remove(ruleAttribute);
+        ruleAttribute.setBusinessRule(null);
     }
 
     public void setRuleName(String ruleName) {

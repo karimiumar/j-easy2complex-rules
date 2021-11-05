@@ -20,6 +20,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ImportResource;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = {JRooolsApp.class, H2JpaConfig.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ComponentScan(basePackages = "com.umar.apps")
+//@ImportResource(value = "classpath:test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CashflowBusinessRuleTest {
     @Autowired BusinessRuleService ruleService;
