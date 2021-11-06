@@ -17,7 +17,7 @@ a database and can run independently of the actual product.
  
 E-R Diagram
 ---
-![](src/main/resources/images/E-R%20Diagram.png)
+![](https://github.com/karimiumar/j-easy2complex-rules/blob/master/src/main/resources/images/E-R%20Diagram.png)
 
 Example
 ---
