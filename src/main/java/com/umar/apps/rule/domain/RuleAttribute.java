@@ -27,7 +27,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
     private BusinessRule businessRule;
     private LocalDateTime created;
     private LocalDateTime updated;
-    private List<RuleAttributeValue> ruleAttributeValues = new ArrayList<>();
+    private List<RuleValue> ruleValues = new ArrayList<>();
 
     public RuleAttribute(Long id, String attributeName, String ruleType, String displayName) {
         this.id = id;
@@ -102,12 +102,12 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
 
     @OneToMany(mappedBy = "ruleAttribute",cascade = {CascadeType.PERSIST,CascadeType.REMOVE} , orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
-    public List<RuleAttributeValue> getRuleAttributeValues() {
-        return ruleAttributeValues;
+    public List<RuleValue> getRuleValues() {
+        return ruleValues;
     }
 
-    public void setRuleAttributeValues(List<RuleAttributeValue> ruleAttributeValues) {
-        this.ruleAttributeValues = ruleAttributeValues;
+    public void setRuleValues(List<RuleValue> ruleValues) {
+        this.ruleValues = ruleValues;
     }
 
     @Column(name = "created", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", insertable = false, updatable = false)
@@ -126,6 +126,18 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
 
     public void setUpdated(LocalDateTime updated) {
         this.updated = updated;
+    }
+
+    public void addRuleValue(final RuleValue ruleValue){
+        Objects.requireNonNull(ruleValue, "RuleValue is null");
+        ruleValues.add(ruleValue);
+        ruleValue.setRuleAttribute(this);
+    }
+
+    public void removeRuleValue(final RuleValue ruleValue) {
+        Objects.requireNonNull(ruleValue, "RuleValue is null");
+        ruleValues.remove(ruleValue);
+        ruleValue.setRuleAttribute(null);
     }
 
     @Override
@@ -149,7 +161,7 @@ public class RuleAttribute implements WorkflowItem<Long>, Serializable {
                 ", ruleType='" + ruleType + '\'' +
                 ", version=" + version +
                 ", displayName='" + displayName + '\'' +
-                ", ruleAttributeValues=" + ruleAttributeValues +
+                ", ruleValues=" + ruleValues +
                 '}';
     }
 }

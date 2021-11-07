@@ -5,7 +5,6 @@ import com.umar.apps.rule.dao.api.RuleDao;
 import com.umar.apps.rule.dao.api.RuleValueDao;
 import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
-import com.umar.apps.rule.domain.RuleAttributeValue;
 import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.web.exceptions.ElementAlreadyExistException;
@@ -17,7 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static com.umar.apps.infra.dao.api.core.AbstractTxExecutor.doInJPA;
 
@@ -47,7 +49,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                     throw new ElementAlreadyExistException("Rule already exist:" + rule);
                 },
                 /*Otherwise persist the new business Rule*/
-                () -> doInJPA(()-> ruleDao.getEMF(), entityManager -> { entityManager.persist(businessRule); }, null));
+                () -> doInJPA(ruleDao::getEMF, entityManager -> { entityManager.persist(businessRule); }, null));
     }
 
     @Override
@@ -59,7 +61,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         var persistedAttribute = findExistingAttribute(ruleAttribute);
         persistedAttribute.ifPresentOrElse(attribute -> {
             logger.debug("Found attribute {}", attribute);
-            doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+            doInJPA(ruleAttributeDao::getEMF, entityManager -> {
                 var session = entityManager.unwrap(Session.class);
                 var attributeEntity = session.find(RuleAttribute.class, attribute.getId());
                 var businessRuleEntity = session.find(BusinessRule.class, businessRule.getId());
@@ -69,7 +71,7 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
             }, null);
         }, /* The Else Clause */() -> {
             logger.debug("No Rule Attribute found in database. Saving RuleAttribute");
-            doInJPA(() -> ruleAttributeDao.getEMF(), entityManager -> {
+            doInJPA(ruleAttributeDao::getEMF, entityManager -> {
                 var session = entityManager.unwrap(Session.class);
                 var businessRuleEntity = session.find(BusinessRule.class, businessRule.getId());
                 businessRuleEntity.addRuleAttribute(ruleAttribute);
@@ -89,39 +91,38 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
         var optionalAttribute = findExistingAttribute(ruleAttribute);
         var existingValue = optionalValue.orElse(null);
         var existingAttribute = optionalAttribute.orElse(null);
-        if(null != existingValue && null != existingAttribute
-                && existingValue.getRuleAttributeValues().contains(new RuleAttributeValue(existingAttribute, existingValue))) {
+        if(null != existingValue && existingValue.getRuleAttribute().equals(existingAttribute)) {
             logger.debug("RuleValue{} already exist for the given operand {}", existingValue, operand);
             return;
         }
         if(null == existingValue) {
             logger.debug("No RuleValue exist {} for operand", operand);
-            doInJPA(()-> ruleValueDao.getEMF() ,entityManager -> {
+            doInJPA(ruleValueDao::getEMF, entityManager -> {
                 Session session = entityManager.unwrap(Session.class);
                 var attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
                 logger.debug("Found RuleAttribute {} for operand {}. ", attribute, operand);
-                ruleValue.addRuleAttribute(attribute);
+                ruleValue.setRuleAttribute(attribute);
                 session.save(ruleValue);
                 logger.debug("Saved Operand {} successfully", ruleValue);
             }, null);
         }
-        else if(null != existingAttribute && !existingValue.getRuleAttributeValues().contains(new RuleAttributeValue(existingAttribute, existingValue))){
-            logger.debug("Existing RuleAttributes {} does not contain RuleValue {} ", existingValue.getRuleAttributeValues(), existingValue);
-            doInJPA(()-> ruleValueDao.getEMF(), entityManager -> {
+        else if(null != existingAttribute && !existingValue.getRuleAttribute().equals(existingAttribute)){
+            logger.debug("Existing RuleAttributes {} does not contain RuleValue {} ", existingValue.getRuleAttribute(), existingValue);
+            doInJPA(ruleValueDao::getEMF, entityManager -> {
                 Session session = entityManager.unwrap(Session.class);
                 var value = session.find(RuleValue.class, existingValue.getId());
                 var attrib = session.find(RuleAttribute.class, existingAttribute.getId());
-                value.addRuleAttribute(attrib);
+                value.setRuleAttribute(attrib);
                 session.saveOrUpdate(value);
                 logger.debug("Updated existing RuleAttributes with RuleValue {} ", value);
             }, null);
         }
         else {
-            doInJPA(()-> ruleValueDao.getEMF(), entityManager -> {
+            doInJPA(ruleValueDao::getEMF, entityManager -> {
                 Session session = entityManager.unwrap(Session.class);
                 var attribute = session.find(RuleAttribute.class, ruleAttribute.getId());
                 var value = session.find(RuleValue.class, existingValue.getId());
-                value.addRuleAttribute(attribute);
+                value.setRuleAttribute(attribute);
                 session.saveOrUpdate(value);
                 logger.debug("Updated existing RuleAttribute {} with RuleValue {} ", attribute,  value);
             }, null);
@@ -238,10 +239,9 @@ public class BusinessRuleServiceImpl implements BusinessRuleService {
                 //Find the saved attribute from database
                 var optAttr = findRuleAttribute(attribName, ruleType);
                 optAttr.ifPresentOrElse(ruleAttr -> {
-                    var ravs = attr.getRuleAttributeValues();
-                    ravs.forEach(rav -> {
-                        var ruleVal = rav.getRuleValue();
-                        var operand = ruleVal.getOperand();
+                    var ravs = attr.getRuleValues();
+                    ravs.forEach(rv -> {
+                        var operand = rv.getOperand();
                         //Use the persisted RuleAttribute
                         createValue(ruleAttr, operand);
                     });

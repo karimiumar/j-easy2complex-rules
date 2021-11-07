@@ -2,7 +2,6 @@ package com.umar.apps.rule.web.rest.api;
 
 import com.umar.apps.rule.domain.BusinessRule;
 import com.umar.apps.rule.domain.RuleAttribute;
-import com.umar.apps.rule.domain.RuleAttributeValue;
 import com.umar.apps.rule.domain.RuleValue;
 import com.umar.apps.rule.service.api.BusinessRuleService;
 import com.umar.apps.rule.web.rest.BusinessRuleDTO;
@@ -78,9 +77,12 @@ public class BusinessRuleRestFacade {
     }
 
     private RuleAttribute toRuleAttribute(RuleAttributeDTO dto) {
-        var ruleAttributeValues = new ArrayList<RuleAttributeValue>();
-        var ruleValues = dto.ruleValues();
-        var ruleAttribute = GenericBuilder.of(RuleAttribute::new)
+        var ruleDTOValues = dto.ruleValues();
+        var ruleValues = new ArrayList<RuleValue>(ruleDTOValues.size());
+        ruleDTOValues.forEach(rvDTO-> {
+            ruleValues.add(toRuleValue(rvDTO));
+        });
+        return GenericBuilder.of(RuleAttribute::new)
                 .with(RuleAttribute::setId, dto.id())
                 .with(RuleAttribute::setAttributeName, dto.attributeName())
                 .with(RuleAttribute::setRuleType, dto.ruleType())
@@ -88,13 +90,8 @@ public class BusinessRuleRestFacade {
                 .with(RuleAttribute::setCreated, dto.created())
                 .with(RuleAttribute::setUpdated, dto.updated())
                 .with(RuleAttribute::setVersion, dto.version())
-                .with(RuleAttribute::setRuleAttributeValues, ruleAttributeValues)
+                .with(RuleAttribute::setRuleValues, ruleValues)
                 .build();
-        ruleValues.forEach(rvDTO -> {
-            var rv = toRuleValue(rvDTO);
-            ruleAttributeValues.add(new RuleAttributeValue(ruleAttribute, rv));
-        });
-        return ruleAttribute;
     }
 
     private RuleValue toRuleValue(RuleValueDTO dto) {
@@ -135,8 +132,8 @@ public class BusinessRuleRestFacade {
             var created = ra.getCreated();
             var updated = ra.getUpdated();
             var version = ra.getVersion();
-            var ravs = ra.getRuleAttributeValues();
-            var ruleValues = toRuleValues(ravs);
+            var rvs = ra.getRuleValues();
+            var ruleValues = toRuleValues(rvs);
             var ruleValueDTOs = toRuleValueDTO(ruleValues);
             var instance = new RuleAttributeDTO(id, attributeName, ruleType, displayName,
                     created, updated, version, ruleValueDTOs);
@@ -145,12 +142,9 @@ public class BusinessRuleRestFacade {
         return ruleAttrDTOs;
     }
 
-    private Set<RuleValue> toRuleValues(List<RuleAttributeValue> ravs) {
-        var ruleValues = new HashSet<RuleValue>(ravs.size());
-        ravs.forEach(rav -> {
-            var ruleValue = rav.getRuleValue();
-            ruleValues.add(ruleValue);
-        });
+    private Set<RuleValue> toRuleValues(List<RuleValue> rvs) {
+        var ruleValues = new HashSet<RuleValue>(rvs.size());
+        ruleValues.addAll(rvs);
         return ruleValues;
     }
 

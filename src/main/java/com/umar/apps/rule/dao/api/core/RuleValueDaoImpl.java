@@ -37,8 +37,7 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
         LOGGER.info("findByOperand() with operand {}", operand);
         String sql = """
                 SELECT ruleVal FROM RuleValue ruleVal
-                LEFT JOIN FETCH ruleVal.ruleAttributeValues rav
-                LEFT JOIN FETCH rav.ruleAttribute
+                LEFT JOIN FETCH ruleVal.ruleAttribute ra
                 WHERE ruleVal.operand = :operand
                 """;
         var result = doInJPA(() -> emf, entityManager -> {
@@ -59,10 +58,9 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
     public Optional<RuleValue> findByRuleAttributeAndValue(RuleAttribute ruleAttribute, String operand) {
         LOGGER.info("findByRuleAttributeAndValue() for params ruleAttribute{}, operand{}", ruleAttribute, operand);
         String sql = """
-                SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute ra
-                WHERE ruleVal = rav.ruleValue
-                AND rav.ruleAttribute = ra
-                AND ra.attributeName = :attributeName
+                SELECT ruleVal FROM RuleValue ruleVal
+                LEFT JOIN FETCH ruleVal.ruleAttribute ra
+                WHERE ra.attributeName = :attributeName
                 AND ra.ruleType = :ruleType
                 AND ruleVal.operand = :operand
                 """;
@@ -82,10 +80,9 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
         LOGGER.info("findByRuleAttribute() for params ruleAttribute{}", ruleAttribute);
         List<RuleValue> ruleValues = new ArrayList<>(0);
         String sql = """
-                SELECT "ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute ra
-                WHERE ruleVal = rav.ruleValue
-                AND rav.ruleAttribute = ra
-                AND ra.attributeName = :attributeName
+                SELECT "ruleVal FROM RuleValue ruleVal
+                LEFT JOIN FETCH ruleVal.ruleAttribute ra
+                WHERE ra.attributeName = :attributeName
                 AND ra.ruleType = :ruleType
                 """;
         doInJPA(() -> emf, entityManager -> {
@@ -105,10 +102,8 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
     public List<RuleValue> findValuesOf(long attributeId) {
         var sql = """
                 SELECT rv FROM RuleValue rv
-                LEFT JOIN FETCH rv.ruleAttributeValues ravs
-                LEFT JOIN FETCH ravs.ruleAttribute
-                LEFT JOIN FETCH ravs.ruleValue
-                WHERE ravs.ruleAttribute.id = :attributeId
+                LEFT JOIN FETCH rv.ruleAttribute ra
+                WHERE ra.id = :attributeId
                 """;
         return doInJPA(this::getEMF, entityManager ->  {
             var session = entityManager.unwrap(Session.class);
@@ -158,13 +153,13 @@ public class RuleValueDaoImpl extends GenericJpaDao<RuleValue, Long> implements 
     public Collection<RuleValue> findByNameAndAttribute(String ruleName, String ruleType, RuleAttribute ruleAttribute, boolean isActive) {
         LOGGER.info("findByNameAndAttribute() with ruleName: {}, ruleType: {}, ruleAttribute: {}, isActive: {}", ruleName, ruleType, ruleAttribute, isActive);
         String sql = """
-                SELECT ruleVal FROM RuleValue ruleVal, RuleAttributeValue rav, RuleAttribute attr, BusinessRule rule
+                SELECT rv FROM RuleValue rv
+                LEFT JOIN FETCH rv.ruleAttribute ra
+                LEFT JOIN FETCH ra.businessRule rule
                 WHERE rule.ruleName = :ruleName
                 AND rule.ruleType = :ruleType
-                AND attr.attributeName =:attributeName
-                AND rav.ruleValue = ruleVal
-                AND rav.ruleAttribute = attr
-                AND rule.ruleType = attr.ruleType
+                AND ra.attributeName =:attributeName
+                AND rule.ruleType = ra.ruleType
                 AND rule.active = :active
                 """;
         return doInJPA(() -> emf, entityManager -> {

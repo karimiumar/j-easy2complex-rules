@@ -1,6 +1,6 @@
 package com.umar.apps.rule.domain;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.umar.apps.infra.dao.api.WorkflowItem;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalIdCache;
@@ -8,7 +8,7 @@ import org.hibernate.annotations.NaturalIdCache;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Objects;
 
 @Entity(name = "RuleValue")
 @Table(name = "[values]")
@@ -21,7 +21,7 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
     private LocalDateTime created;
     private LocalDateTime updated;
     private int version;
-    private Set<RuleAttributeValue> ruleAttributeValues = new HashSet<>();
+    private RuleAttribute ruleAttribute;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,14 +53,21 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
         this.version = version;
     }
 
-    @OneToMany(mappedBy = "ruleValue", cascade = {CascadeType.PERSIST,CascadeType.REMOVE}, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    public Set<RuleAttributeValue> getRuleAttributeValues() {
-        return ruleAttributeValues;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "attribute_value",
+            joinColumns = @JoinColumn(name = "attribute_id"),
+            inverseJoinColumns = @JoinColumn(name = "value_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"attribute_id","value_id"})
+    )
+    @JsonBackReference
+    public RuleAttribute getRuleAttribute() {
+        return ruleAttribute;
     }
 
-    public void setRuleAttributeValues(Set<RuleAttributeValue> ruleAttributeValues) {
-        this.ruleAttributeValues = ruleAttributeValues;
+    public void setRuleAttribute(RuleAttribute ruleAttribute) {
+        Objects.requireNonNull(ruleAttribute,"RuleAttribute is null");
+        this.ruleAttribute = ruleAttribute;
     }
 
     @Column(name = "created", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", insertable = false, updatable = false)
@@ -79,24 +86,6 @@ public class RuleValue implements WorkflowItem<Long>, Serializable {
 
     public void setUpdated(LocalDateTime updated) {
         this.updated = updated;
-    }
-
-    public void addRuleAttribute(RuleAttribute ruleAttribute) {
-        RuleAttributeValue ruleAttributeValue = new RuleAttributeValue(ruleAttribute, this);
-        ruleAttributeValues.add(ruleAttributeValue);
-        ruleAttribute.getRuleAttributeValues().add(ruleAttributeValue);
-    }
-
-    public void removeRuleAttribute(RuleAttribute ruleAttribute) {
-        for(Iterator<RuleAttributeValue> iterator = ruleAttributeValues.iterator(); iterator.hasNext();) {
-            RuleAttributeValue ruleAttributeValue = iterator.next();
-            if(ruleAttributeValue.getRuleValue().equals(this) && ruleAttributeValue.getRuleAttribute().equals(ruleAttribute)) {
-                iterator.remove();
-                ruleAttributeValue.getRuleAttribute().getRuleAttributeValues().remove(ruleAttributeValue);
-                ruleAttributeValue.setRuleValue(null);
-                ruleAttributeValue.setRuleAttribute(null);
-            }
-        }
     }
 
     @Override

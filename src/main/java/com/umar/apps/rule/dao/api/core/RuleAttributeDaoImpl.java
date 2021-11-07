@@ -49,8 +49,7 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
         String sql = """
                 SELECT ra FROM RuleAttribute ra
                 LEFT JOIN FETCH ra.businessRule br
-                LEFT JOIN FETCH ra.ruleAttributeValues ravs
-                LEFT JOIN FETCH ravs.ruleValue rv
+                LEFT JOIN FETCH ra.ruleValues rv
                 WHERE ra.attributeName = :attributeName
                 AND ra.ruleType = :ruleType
                 """;
@@ -86,8 +85,7 @@ public class RuleAttributeDaoImpl extends GenericJpaDao<RuleAttribute, Long> imp
             var sql = """
                     SELECT ra FROM RuleAttribute  ra
                     LEFT JOIN FETCH ra.businessRule
-                    LEFT JOIN FETCH ra.ruleAttributeValues ravs
-                    LEFT JOIN FETCH ravs.ruleValue rv
+                    LEFT JOIN FETCH ra.ruleValues rv
                     WHERE ra.id = :id
                     """;
             return entityManager.createQuery(sql, RuleAttribute.class)

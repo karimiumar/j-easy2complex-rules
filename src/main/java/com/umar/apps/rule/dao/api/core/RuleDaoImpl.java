@@ -39,8 +39,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             var result = session.createQuery("""
                         SELECT DISTINCT rule FROM BusinessRule rule
                         LEFT JOIN FETCH rule.ruleAttributes ras
-                        LEFT JOIN FETCH ras.ruleAttributeValues ravs
-                        LEFT JOIN FETCH ravs.ruleValue rv
+                        LEFT JOIN FETCH ras.ruleValues rv
                         ORDER BY rule.active DESC, rule.priority , rule.ruleName , rule.ruleType ASC
                     """, BusinessRule.class).getResultList();
             logger.debug("findAll() returning BusinessRules with size {}", result.size());
@@ -54,8 +53,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         String sql = """
                 SELECT rule FROM BusinessRule rule
                 LEFT JOIN FETCH rule.ruleAttributes ras
-                LEFT JOIN FETCH ras.ruleAttributeValues ravs
-                LEFT JOIN FETCH ravs.ruleValue rv
+                LEFT JOIN FETCH ras.ruleValues rv
                 WHERE rule.ruleName = :ruleName
                 AND rule.active = :active
                 """;
@@ -73,8 +71,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         String sql = """
                 SELECT rule FROM BusinessRule rule
                 LEFT JOIN FETCH rule.ruleAttributes ras
-                LEFT JOIN FETCH ras.ruleAttributeValues ravs
-                LEFT JOIN FETCH ravs.ruleValue rv
+                LEFT JOIN FETCH ras.ruleValues rv
                 WHERE rule.ruleType = :type
                 AND rule.active = :active
                 """;
@@ -92,8 +89,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         String sql = """
                 SELECT rule FROM BusinessRule rule
                 LEFT JOIN FETCH rule.ruleAttributes ras
-                LEFT JOIN FETCH ras.ruleAttributeValues ravs
-                LEFT JOIN FETCH ravs.ruleValue rv
+                LEFT JOIN FETCH ras.ruleValues rv
                 WHERE rule.active = :active
                 """;
         return doInJPA(() -> emf, entityManager -> {
@@ -109,8 +105,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
         String sql = """
                 SELECT rule FROM BusinessRule rule
                 LEFT JOIN FETCH rule.ruleAttributes ra
-                LEFT JOIN FETCH ra.ruleAttributeValues ravs
-                LEFT JOIN FETCH ravs.ruleValue rv
+                LEFT JOIN FETCH ra.ruleValues rv
                 WHERE rule.ruleName = :ruleName
                 AND rule.ruleType = :ruleType
                 AND rule.active = :active
@@ -167,8 +162,7 @@ public class RuleDaoImpl extends GenericJpaDao<BusinessRule, Long> implements Ru
             var sql = """
                     SELECT rule FROM BusinessRule rule
                     LEFT JOIN FETCH rule.ruleAttributes ras
-                    LEFT JOIN FETCH ras.ruleAttributeValues ravs
-                    LEFT JOIN FETCH ravs.ruleValue rv
+                    LEFT JOIN FETCH ras.ruleValues rv
                     WHERE rule.id = :id
                     """;
             var session = entityManager.unwrap(Session.class);
