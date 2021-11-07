@@ -51,7 +51,7 @@ public class AbstractTxExecutor {
 
     public static <T> T doInJPA(
             Supplier<EntityManagerFactory> factorySupplier,
-            JPATxFunction<T> function,Map properties) {
+            JPATxFunction<T> function,Map<String, String> properties) {
         T result;
         EntityManager em = null;
         EntityTransaction txn = null;
@@ -86,7 +86,7 @@ public class AbstractTxExecutor {
     public static void doInJPA(
             Supplier<EntityManagerFactory> factorySupplier,
             JPATransactionVoidFunction function,
-            Map properties) {
+            Map<String, String> properties) {
         EntityManager entityManager = null;
         EntityTransaction txn = null;
         try {
