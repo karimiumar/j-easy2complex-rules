@@ -3,12 +3,11 @@ package com.umar.apps.rule.domain;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class BusinessRuleTest {
+public class BusinessRuleUnitTest {
 
     @Test
     void given_params_a_rule_is_instantiated_with_empty_rule_attributes() {
@@ -45,7 +44,7 @@ public class BusinessRuleTest {
         assertThat(rule).isNotNull();
         assertThat(rule.getRuleAttributes()).isNotEmpty();
         assertThat(rule.getRuleAttributes().size()).isEqualTo(2);
-        assertThat(rule.getRuleAttributes()).containsAll(List.of(attrib1, attrib2));
+        assertThat(rule.getRuleAttributes()).containsExactly(attrib1, attrib2);
     }
 
     @Test
@@ -60,11 +59,11 @@ public class BusinessRuleTest {
         assertThat(rule).isNotNull();
         assertThat(rule.getRuleAttributes()).isNotEmpty();
         assertThat(rule.getRuleAttributes().size()).isEqualTo(3);
-        assertThat(rule.getRuleAttributes()).containsAll(List.of(attrib1, attrib2, attrib3));
+        assertThat(rule.getRuleAttributes()).containsExactly(attrib1, attrib2, attrib3);
 
         rule.removeRuleAttribute(attrib2);
         assertThat(rule.getRuleAttributes().size()).isEqualTo(2);
-        assertThat(rule.getRuleAttributes()).containsAll(List.of(attrib1, attrib3));
+        assertThat(rule.getRuleAttributes()).containsExactly(attrib1, attrib3);
     }
 
     @Test
@@ -79,7 +78,7 @@ public class BusinessRuleTest {
         assertThat(rule).isNotNull();
         assertThat(rule.getRuleAttributes()).isNotEmpty();
         assertThat(rule.getRuleAttributes().size()).isEqualTo(3);
-        assertThat(rule.getRuleAttributes()).containsAll(List.of(attrib1, attrib2, attrib3));
+        assertThat(rule.getRuleAttributes()).containsExactly(attrib1, attrib2, attrib3);
 
         rule.setRuleAttributes(new HashSet<>());
         assertThat(rule.getRuleAttributes()).isEmpty();
