@@ -84,6 +84,7 @@ public class BusinessRulesEntityTest {
         assertThat(rule.getCreated()).isNotNull();
         assertThat(rule.getUpdated()).isNotNull();
         assertThat(rule.getVersion()).isEqualTo(0);
+        assertThat(rule.getCreated()).isEqualTo(rule.getUpdated());
         assertThat(rule.getRuleAttributes()).hasSize(hasSize);
     }
 
@@ -126,6 +127,17 @@ public class BusinessRulesEntityTest {
         rule.ifPresent(businessRule -> {
             assertThat(businessRule.getVersion()).isEqualTo(0);
             assertThat(businessRule.getCreated()).isEqualTo(businessRule.getUpdated());
+            var attribs = businessRule.getRuleAttributes();
+            attribs.forEach(attr -> {
+                assertThat(businessRule.getCreated()).isBefore(attr.getCreated());
+                assertThat(businessRule.getUpdated()).isBefore(attr.getUpdated());
+                assertThat(attr.getCreated()).isEqualTo(attr.getUpdated());
+                assertThat(attr.getVersion()).isEqualTo(0);
+                assertThat(attr.getId()).isGreaterThan(0);
+                assertThat(attr.getBusinessRule()).isEqualTo(businessRule);
+                assertThat(attr.getAttributeName()).isNotEmpty();
+                assertThat(attr.getDisplayName()).isNotEmpty();
+            });
         });
     }
 
