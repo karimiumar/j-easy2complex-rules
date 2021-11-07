@@ -39,6 +39,12 @@ public class BusinessRulesEntityTest {
         }
     }
 
+    /**
+     * Create three {@link BusinessRule} and persist them using JPA Entity Manager
+     * All the three {@link BusinessRule} should be persisted.
+     *
+     * The associated {@link RuleAttribute} of the persisted {@link BusinessRule} is empty.
+     */
     @Test
     void when_rules_created_without_attributes_then_attributes_is_empty() {
         doInJPA(() -> emf, entityManager -> {
@@ -81,8 +87,14 @@ public class BusinessRulesEntityTest {
         assertThat(rule.getRuleAttributes()).hasSize(hasSize);
     }
 
+    /**
+     * Create a {@link BusinessRule} and persist it using JPA Entity Manager.
+     * Now find the {@link BusinessRule} and add a {@link RuleAttribute} to it and persist it.
+     * The version property of {@link BusinessRule} is 0
+     * The updated property of {@link BusinessRule} is same as the created property.
+     */
     @Test
-    void when_an_attribute_is_added_to_rule_then_fetchRules_fetches_associated_attributes(){
+    void when_an_attribute_is_added_to_rule_then_rule_gets_amended(){
         doInJPA(() -> emf, entityManager -> {
             var rule= GenericBuilder.of(BusinessRule::new)
                     .with(BusinessRule::setRuleName, "Rule Attribute Rule")
@@ -111,8 +123,18 @@ public class BusinessRulesEntityTest {
         var rule = findRuleByNameAndType("Rule Attribute Rule", "RuleAttribute With Rule");
         assertThat(rule).isPresent();
         assertThat(rule.get().getRuleAttributes()).hasSize(1);
+        rule.ifPresent(businessRule -> {
+            assertThat(businessRule.getVersion()).isEqualTo(0);
+            assertThat(businessRule.getCreated()).isEqualTo(businessRule.getUpdated());
+        });
     }
 
+    /**
+     * Create a {@link BusinessRule} and add a {@link RuleAttribute} to it.
+     * Now save the {@link BusinessRule} using JPA Entity Manager.
+     *
+     * On saving the {@link BusinessRule}, the associated {@link RuleAttribute} is also persisted.
+     */
     @Test
     void when_rules_created_with_attributes_then_attributes_is_populated() {
         doInJPA(() -> emf, entityManager -> {
@@ -138,6 +160,13 @@ public class BusinessRulesEntityTest {
         assertThat(optRule.get().getRuleAttributes().stream().findFirst().get().getAttributeName()).isEqualTo("testAttribute");
     }
 
+    /**
+     * Create a {@link BusinessRule} and add {@link RuleAttribute} to it and save the {@link BusinessRule} using JPA Entity Manager.
+     * On saving, the {@link BusinessRule} and the {@link RuleAttribute} are persisted and relation is maintained.
+     *
+     * Now remove one of the {@link RuleAttribute} from the persisted {@link BusinessRule} and persist the {@link BusinessRule}
+     * The {@link BusinessRule} should now have only one {@link RuleAttribute} associated with it.
+     */
     @Test
     void when_an_attribute_is_removed_from_rule_then_associated_attributes_is_shrinked(){
         doInJPA(() -> emf, entityManager -> {
@@ -186,7 +215,12 @@ public class BusinessRulesEntityTest {
         assertThat(shrinkedRule).isPresent();
         assertThat(shrinkedRule.get().getRuleAttributes()).hasSize(1); //One Attribute removed so size is now 1
     }
-
+    /**
+     * Create a {@link BusinessRule} and save it using JPA Entity Manager.
+     * On saving, the created and updated properties of type {@link java.time.LocalDateTime} is initialized by
+     * DEFAULT TIMESTAMP of underlying database.
+     * Also, the version property is maintained by Hibernate and is initialized to 0.
+     */
     @Test
     void when_a_rule_is_created_then_created_and_updated_have_same_values_and_version_is_0() {
         doInJPA(() -> emf, entityManager -> {
@@ -211,6 +245,16 @@ public class BusinessRulesEntityTest {
         });
     }
 
+    /**
+     * Create a {@link BusinessRule} and save it using JPA Entity Manager.
+     * On saving, the created and updated properties of type {@link java.time.LocalDateTime} is initialized by
+     * DEFAULT TIMESTAMP of underlying database.
+     * Also, the version property is maintained by Hibernate and is initialized to 0.
+     *
+     * Amend a property of {@link BusinessRule} is a separate JPA Entity Manager and persist the changes.
+     * On saving the changes, the underlying database triggers ON UPDATE on updated property of {@link BusinessRule}
+     * and gives it a new TIMESTAMP. Hibernate maintains the version property and increments it by one.
+     */
     @Test
     void when_a_rule_is_amended_then_created_and_updated_have_different_values_and_version_is_incremented() {
         doInJPA(() -> emf, entityManager -> {
@@ -246,6 +290,11 @@ public class BusinessRulesEntityTest {
         });
     }
 
+    /**
+     * Create a {@link BusinessRule}. Then persist it using JPA Entity Manager
+     * Then delete the {@link BusinessRule}.
+     * On deletion of {@link BusinessRule} should be deleted from database.
+     */
     @Test
     void when_a_rule_is_deleted_then_not_present_in_database() {
         doInJPA(() -> emf, entityManager -> {
@@ -274,6 +323,12 @@ public class BusinessRulesEntityTest {
         });
     }
 
+    /**
+     * Create a {@link BusinessRule} and add two {@link RuleAttribute} to it.
+     * On saving the {@link BusinessRule}, the associated {@link RuleAttribute} should be persisted too.
+     * Then delete the {@link BusinessRule}.
+     * On deletion of {@link BusinessRule} all the associated {@link RuleAttribute} should be deleted.
+     */
     @Test
     void when_a_rule_is_deleted_then_associated_attributes_also_deleted() {
         doInJPA(() -> emf, entityManager -> {
