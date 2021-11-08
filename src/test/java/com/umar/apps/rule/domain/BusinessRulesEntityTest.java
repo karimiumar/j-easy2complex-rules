@@ -43,7 +43,11 @@ public class BusinessRulesEntityTest {
      * Create three {@link BusinessRule} and persist them using JPA Entity Manager
      * All the three {@link BusinessRule} should be persisted.
      *
-     * The associated {@link RuleAttribute} of the persisted {@link BusinessRule} is empty.
+     * The persisted {@link BusinessRule} should have id greater than 0 (i.e,a db key)
+     * The persisted {@link BusinessRule} should have created property populated
+     * The persisted {@link BusinessRule} should have updated property populated
+     * The persisted {@link BusinessRule} should have version property managed by Hibernate
+     * The persisted {@link BusinessRule} should have ruleAttributes property empty.
      */
     @Test
     void when_rules_created_without_attributes_then_attributes_is_empty() {
@@ -405,7 +409,7 @@ public class BusinessRulesEntityTest {
         });
     }
 
-    private Optional<BusinessRule> findRuleByNameAndType(String ruleName, String ruleType) {
+    private static Optional<BusinessRule> findRuleByNameAndType(String ruleName, String ruleType) {
         return doInJPA(() -> emf, entityManager -> {
             var query = entityManager.createQuery("""
                     SELECT rule FROM BusinessRule rule
@@ -421,7 +425,7 @@ public class BusinessRulesEntityTest {
         }, persistenceConfig);
     }
 
-    private Optional<RuleAttribute> findAttributeByNameAndType(String attribName, String ruleType) {
+    private static Optional<RuleAttribute> findAttributeByNameAndType(String attribName, String ruleType) {
         return doInJPA(() -> emf, entityManager -> {
             var query = entityManager.createQuery("""
                     SELECT ra FROM RuleAttribute ra
